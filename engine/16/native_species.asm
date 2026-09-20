@@ -782,6 +782,19 @@ LoadBaseDataFromNonzeroNativeIDBC:
 	and a
 	ret
 
+GetBaseDataFromEnemyBattleNativeSpecies::
+; Load base data directly from the active enemy's native identity shadow.
+; Preserve bc/de/hl and species globals; carry set for an empty shadow.
+	push hl
+	push de
+	push bc
+	ld hl, wEnemyMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
 GetBaseDataFromActiveBattleNativeSpecies::
 ; Load base data from the native identity shadow of the active battler.
 ; hBattleTurn selects player (0) or enemy (1). Preserve bc/de/hl and species
