@@ -114,6 +114,9 @@ def main():
                                 expected[dst:dst + end - start] = original[start:end]
                             expected[0] = original[0] if enemy else root
                             memory[dest_start:dest_end] = [0xA5] * len(expected)
+                            shadow_name = "wEnemyMonNativeSpecies" if enemy else "wBattleMonNativeSpecies"
+                            shadow_addr = addr(shadow_name)
+                            memory[shadow_addr:shadow_addr + 2] = [0xA5, 0x5A]
                             entry_bank, entry_addr = symbols["SendInUserPkmn.got_partymon"]
                             memory[0x2000] = entry_bank
                             memory[addr("hROMBank")] = entry_bank
@@ -128,6 +131,14 @@ def main():
                                 assert memory[addr(name)] == expected[0], name
                             for name in ("wCurForm", temp + "Form"):
                                 assert memory[addr(name)] == form | metadata, name
+                            # Player send-ins always have a known native identity. For
+                            # opponents, the legacy-format cases do too; transient-marker
+                            # opponent fixtures intentionally keep their old byte value.
+                            if not enemy or not transient:
+                                got_native = int.from_bytes(
+                                    bytes(memory[shadow_addr:shadow_addr + 2]), "little")
+                                assert got_native == native, (
+                                    "active-native", transient, native, slot, metadata, enemy, got_native)
                             integration_count += 1
         print(f"PASS: {count} decoder CPU cases and {integration_count} send-in cases; legacy/transient identities, both battle sides, six slots, extended species, variant forms, metadata and register/bank preservation")
     finally:
