@@ -7744,6 +7744,20 @@ TextJump_GoodComeBack:
 	text_farend Text_GoodComeBack
 TextJump_ComeBack:
 	text_farend Text_ComeBack
+ResetSafariCatchRateFromEnemyNativeSpecies::
+; Restore the wild opponent's normal catch rate after bait/rock modifiers.
+; Preserve the legacy species/form globals as before, but use the direct native
+; active-enemy identity for the base-data lookup.
+	ld a, [wEnemyMonSpecies]
+	ld [wCurSpecies], a
+	ld a, [wEnemyMonForm]
+	ld [wCurForm], a
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
+	ret c
+	ld a, [wBaseCatchRate]
+	ld [wEnemyMonCatchRate], a
+	ret
+
 HandleSafariAngerEatingStatus:
 	ld hl, wSafariMonEating
 	ld a, [hl]
@@ -7762,14 +7776,7 @@ HandleSafariAngerEatingStatus:
 	ld hl, BattleText_WildPkmnIsAngry
 	jr nz, .finish
 	push hl
-	; reset the catch rate to normal if bait/rock effects have worn off
-	ld a, [wEnemyMonSpecies]
-	ld [wCurSpecies], a
-	ld a, [wEnemyMonForm]
-	ld [wCurForm], a
-	call GetBaseData
-	ld a, [wBaseCatchRate]
-	ld [wEnemyMonCatchRate], a
+	call ResetSafariCatchRateFromEnemyNativeSpecies
 	pop hl
 
 .finish
