@@ -54,7 +54,7 @@ def main():
         memory[0xC100:0xC106] = [0xF3, 0xCD, target & 255, target >> 8, 0x18, 0xFE]
         # Stop the send-in path at its first base-data lookup, after identity
         # publication. This patches only the emulator's ROM view.
-        base_bank, base_addr = symbols["GetBaseData"]
+        base_bank, base_addr = symbols["GetBaseDataFromActiveBattleNativeSpecies"]
         memory[base_bank, base_addr:base_addr + 3] = [0xC3, 0x04, 0xC1]
         count = 0
         integration_count = 0
