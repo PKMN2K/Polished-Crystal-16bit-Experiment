@@ -423,3 +423,14 @@ check, Professor Elm's evolution calls, script-driven Poképics, Wonder Trade
 restrictions, NPC-trade metadata, the Judge Machine, and poison-step ability
 checks. Egg flags and structural offsets remain direct byte reads because they
 are representation-independent.
+
+Player battle entry now resolves the source party record before publishing
+legacy battle identity. Only the player side uses the persistent-format decoder;
+trainer/link opponent parties retain their legacy representation. The decoded
+form is merged into the copied battle form without changing gender or Egg bits,
+and both temporary battle identity and base-data globals read that result.
+Player HUD base-data access and experience-growth lookup use the same existing
+party decoder, preserving the experience recipient pointer across the call.
+The focused CPU test in `tests/test_battle_party_identity.py` exercises the
+compiled decoder and send-in boundary. Persistent-format activation, opponent
+conversion, catch/write-back auditing, and Newbox migration are still pending.

@@ -1285,6 +1285,12 @@ endr
 	rst CopyBytes ; copy Level, Status, Unused, HP, MaxHP, Stats
 	pop de
 
+	; Player records may contain transient IDs; battle structs remain legacy.
+	; Opponent parties still use their established legacy representation.
+	ldh a, [hBattleTurn]
+	and a
+	call z, .decode_player_identity
+
 	ldh a, [hBattleTurn]
 	and a
 	ld hl, wTempBattleMonSpecies
@@ -1295,8 +1301,12 @@ endr
 	ld [wCurSpecies], a
 	ld [wCurPartySpecies], a
 	ld [hl], a
-	pop hl
-	ld bc, MON_FORM - MON_SPECIES
+	pop hl ; discard the saved source pointer
+	; Read the decoded battle form, including its preserved metadata bits.
+	ld h, d
+	ld l, e
+	assert wBattleMonForm - wBattleMonSpecies == wEnemyMonForm - wEnemyMonSpecies
+	ld bc, wBattleMonForm - wBattleMonSpecies
 	add hl, bc
 	ldh a, [hBattleTurn]
 	and a
@@ -1456,6 +1466,26 @@ endr
 	ld hl, wEnemySwitchTarget
 .got_switch_target
 	ld [hl], 0
+	ret
+
+.decode_player_identity
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld a, [wCurPartyMon]
+	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
+	ld a, c
+	ld [wBattleMonSpecies], a
+	ld a, [wBattleMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wBattleMonForm], a
+	pop bc
+	pop de
+	pop hl
 	ret
 
 .get_user_mon_attr_de
@@ -4042,13 +4072,7 @@ endr
 	ld a, [wCurBattleMon]
 	ld hl, wPartyMon1Species
 	call GetPartyLocation
-	ld a, [hl]
-	ld [wCurPartySpecies], a
-	ld [wCurSpecies], a
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	ld a, [hl]
-	ld [wCurForm], a
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	call GetBaseData
 
 	pop hl
@@ -6647,11 +6671,9 @@ GiveExperiencePoints:
 .skip2
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
-	ld [wCurSpecies], a
-	ld de, MON_FORM - MON_SPECIES
-	add hl, de
-	ld a, [hl]
-	ld [wCurForm], a
+	push bc ; experience recipient's party pointer
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
+	pop bc
 	call GetBaseData
 	push bc
 	ld d, MAX_LEVEL

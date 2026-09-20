@@ -1,5 +1,26 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Current continuation checkpoint (2026-09-20)
+
+- Continued from repository `master` at `e47d19bd1e94fdfc4e85e6f252ae5c2757836c28`.
+- The archived overworld/special-event reader slice is now imported source;
+  its previously pending debug build has passed.
+- Player battle entry now decodes persistent party identity before populating
+  legacy battle species/form globals. Opponent parties remain explicitly legacy.
+- The player HUD and experience-growth lookup now decode player party identity.
+- Clean normal and debug builds passed with RGBDS 1.0.3. Reported ROM free
+  space: 19,557 bytes normal; 19,443 bytes debug.
+- Isolated PyBoy 2.7.0 CPU tests passed: 144 decoder cases on the normal ROM;
+  144 decoder plus 288 send-in cases on the debug ROM. Tests cover both storage
+  formats, all six slots, native ID 256, Alolan Raichu, metadata preservation,
+  untouched source records, and legacy opponent battle entry.
+- These are routine-level tests, not gameplay, save-upgrade, or species-above-
+  `$01ff` end-to-end validation. The persistent-format marker remains disabled.
+
+The snapshot sections below describe the original archive, including its
+historical uncommitted state; use this checkpoint and the next-step section for
+current progress.
+
 ## Snapshot identity
 
 - Branch: `migration/16bit-species`
@@ -104,13 +125,15 @@ direct byte reads by design.
 
 ## Next recommended step
 
-Finish the present special-event reader slice first: run a clean debug build,
-review the nine modified source files, and commit the checkpoint if it passes.
-Then audit and convert the remaining battle initialization and player/opponent
-party consumers as one coherent boundary. Do not activate the persistent-format
-marker until every downstream consumer can distinguish transient RAM IDs from
-legacy species bytes; the numeric ranges overlap and ambiguous decoding caused
-an earlier trainer-ingestion attempt to be reverted.
+Continue the battle/party boundary audit: remaining ability/AI and item readers,
+opponent-party construction, wild catches, and battle-to-party write-back.
+The central player send-in, player HUD, and experience-growth reads are now
+format-aware; this does not authorize switching opponent records to transient
+IDs. Reconcile shared temporary-record loaders and garbage-collection roots
+with the chosen opponent/battle representation before enabling allocation there.
+Do not activate the persistent-format marker until downstream consumers and
+atomic old-save conversion are ready. Newbox remains a separate unfinished
+native-identity boundary.
 
 ## Build commands
 
@@ -132,3 +155,19 @@ make -j2 debug
 The generated `.gbc`, `.map`, `.sym`, object files, and compiled assets are
 build products and are not included in the export. The project can regenerate
 them from the included source and tool code.
+
+## Focused battle identity regression test
+
+After building, install the optional emulator test dependency and run:
+
+```sh
+python -m pip install pyboy==2.7.0
+python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
+# Or, after the debug build:
+python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
+```
+
+The test uses the matching `.sym` file and executes compiled assembly directly.
+It seeds a conversion-table entry whose slot differs from its species identity,
+checks player decoding and unchanged opponent interpretation, and stops the
+send-in path before base-data loading. It does not load or write a game save.
