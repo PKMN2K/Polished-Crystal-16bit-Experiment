@@ -208,13 +208,7 @@ endr
 	pop hl
 
 ; Random nature from 0 to 24
-	push hl
-	ld hl, wPartyMon1Personality
-	ld a, [wPartyMon1Species]
-	ld c, a
-	call GetAbility
-	pop hl
-	ld a, b
+	call GetLeadAbility
 	cp SYNCHRONIZE
 	jr nz, .no_synchronize
 	ld a, [wPartyMon1Nature]
@@ -421,6 +415,7 @@ endr
 	ld [hl], b
 	pop bc
 	pop hl
+	farcall PrepareGeneratedPlayerMonForStorage
 	scf ; When this function returns, the carry flag indicates success vs failure.
 	ret
 

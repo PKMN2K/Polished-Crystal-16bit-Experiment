@@ -210,24 +210,8 @@ GetNature::
 	ret
 
 GetLeadAbility::
-; Returns ability of lead mon unless it's an Egg. Used for field
-; abilities
-	ld a, [wPartyMon1IsEgg]
-	and IS_EGG_MASK
-	xor IS_EGG_MASK
-	ret z
-	ld a, [wPartyMon1Species]
-	inc a
-	ret z
-	dec a
-	ret z
-	push hl
-	push de
-	push bc
-	ld c, a
-	ld hl, wPartyMon1Personality
-	call GetAbility
-	jmp PopBCDEHL
+; Returns the lead's field ability, decoding persistent identity first.
+	farjp GetLeadAbilityFromPokemonData
 
 GetAbility::
 ; 'hl' contains the target personality to check (ability and form)

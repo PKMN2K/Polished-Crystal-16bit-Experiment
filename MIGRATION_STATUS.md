@@ -1,6 +1,24 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: collection roots and ordinary catches (2026-09-20)
+## Latest checkpoint: lead abilities and generated insertion (2026-09-20)
+
+- Continues PR #1 from `d232f17`.
+- Lead field abilities now decode persistent species before lookup while
+  preserving caller registers and current species/form globals. Synchronize
+  nature selection uses this helper and excludes Eggs from field abilities.
+- `TryAddMonToParty` converts completed player records after legacy generation
+  and stat calculation. Generated opponent records remain legacy, including
+  wild/trainer records and gift staging. Successful insertion still sets carry.
+- Normal and clean debug builds pass with RGBDS 1.0.3. Free space is 19,556
+  bytes normal and 19,442 bytes debug.
+- Both ROMs pass **2,024 CPU cases**: all previous 1,592 plus 288 lead-ability
+  cases and 144 complete generated-party insertions. New cases cover absent,
+  partial and valid format markers, species/forms, ability slots/options,
+  gender/Egg flags, all six target slots and player/opponent destinations.
+- This does not validate complete trade UI or nature distributions. Persistent
+  format activation, old-save conversion and gameplay validation remain pending.
+
+## Previous checkpoint: collection roots and ordinary catches (2026-09-20)
 
 - Continues PR #1 from `482db5e`.
 - Conversion-table collection scans player/daycare records only when the
@@ -166,15 +184,15 @@ direct byte reads by design.
 
 ## Next recommended step
 
-Continue the battle/party boundary audit: remaining ability/AI and item readers,
-opponent-party construction, wild catches, and battle-to-party write-back.
+Continue the remaining battle/party boundary audit: species-dependent AI and
+item readers, opponent-party consumers, and battle-to-party write-back.
 The central player send-in, player HUD, and experience-growth reads are now
 format-aware; this does not authorize switching opponent records to transient
 IDs. The shared temporary-record loader distinguishes legacy opponent sources, and
 collection now follows those representation boundaries. Ordinary catches convert
-the player destination after copying. Next audit remaining lead-ability and
-battle/AI readers and generated player-party insertion, then prepare atomic
-old-save conversion. If opponent or battle records later become transient, add
+the player destination after copying. Lead-ability lookup and generated player insertion are now
+format-aware. Next finish the remaining battle/AI and write-back audit, then
+prepare atomic old-save conversion alongside the unfinished Newbox boundary. If opponent or battle records later become transient, add
 their roots back to collection in the same checkpoint.
 Do not activate the persistent-format marker until downstream consumers and
 atomic old-save conversion are ready. Newbox remains a separate unfinished
@@ -210,10 +228,12 @@ python -m pip install pyboy==2.7.0
 python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-3.2.3.gbc
 python tests/test_species_collection_and_catch.py polishedcrystal-3.2.3.gbc
+python tests/test_lead_and_generated_identity.py polishedcrystal-3.2.3.gbc
 # Or, after the debug build:
 python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_species_collection_and_catch.py polishedcrystal-debug-3.2.3.gbc
+python tests/test_lead_and_generated_identity.py polishedcrystal-debug-3.2.3.gbc
 ```
 
 The test uses the matching `.sym` file and executes compiled assembly directly.

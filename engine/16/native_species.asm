@@ -456,3 +456,42 @@ CopyCaughtPokemonToParty::
 	rst CopyBytes
 	pop hl
 	jp PrepareLegacyPokemonDataStructForStorage
+
+GetLeadAbilityFromPokemonData::
+; Returns a = lead ability (zero for an Egg/empty record), preserving bc/de/hl
+; and the current species/form globals and base data.
+	ld a, [wPartyMon1IsEgg]
+	and IS_EGG_MASK
+	xor IS_EGG_MASK
+	ret z
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	inc a
+	jr z, .done
+	dec a
+	jr z, .done
+	ld hl, wPartyMon1Personality
+	call GetAbility
+.done
+	jp PopBCDEHL
+
+PrepareGeneratedPlayerMonForStorage::
+; TryAddMonToParty has finished its legacy construction. Convert only player
+; records; trainer/wild/temporary gift opponent workspaces remain legacy.
+; Preserves bc/de/hl; caller sets carry to report successful insertion.
+	ld a, [wMonType]
+	and $f
+	ret nz
+	push hl
+	push de
+	push bc
+	ldh a, [hMoveMon]
+	dec a
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	call PrepareLegacyPokemonDataStructForStorage
+	jp PopBCDEHL

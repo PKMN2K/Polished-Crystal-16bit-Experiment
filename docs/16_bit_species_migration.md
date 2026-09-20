@@ -464,3 +464,18 @@ Full-party PC delivery remains on the legacy Newbox path. The focused collection
 and catch CPU suite forces table exhaustion and checks live-root preservation,
 slot reclamation and copied identities in both formats; it does not simulate
 the entire interactive capture sequence or enable persistent-format activation.
+
+Lead field-ability lookup now resolves the persistent player identity before
+using the existing personality/form-based ability lookup. It preserves the
+current species/form globals and caller registers. Synchronize's nature
+selection now uses that same lead helper, including its Egg exclusion, as the
+other field-ability paths do.
+
+`TryAddMonToParty` now converts a generated player record only after its legacy
+construction and stat calculation finish. Generated opponent records, including
+wild/trainer parties and gift staging workspaces, remain legacy. Its successful
+return still sets carry after conversion. The lead helper resides with the
+format helpers, with a home-bank entry point, to avoid increasing ROM0 usage.
+The new CPU suite checks lead ability slots/options and executes complete
+player/opponent generation for each of the six target slots. Trade dialog,
+nature distribution, full gameplay and save-upgrade validation remain pending.
