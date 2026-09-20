@@ -1,6 +1,25 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: lead abilities and generated insertion (2026-09-20)
+## Latest checkpoint: held items and post-battle abilities (2026-09-20)
+
+- Continues PR #1 from `3530fb3`.
+- Shared user/opponent party identity helpers decode player records according
+  to the persistent marker and leave opponent records legacy.
+- Eviolite, non-faithful Metal Powder and essential-item protection use those
+  helpers. Faithful Metal Powder retains its current battle-species rule.
+- Post-battle ability processing now decodes the party species before Natural
+  Cure/Pickup/Honey Gather checks, while retaining Egg exclusion.
+- The existing player/opponent HP/status write-back needs no identity change;
+  tests verify it preserves every byte outside the intended level/status/HP span.
+- Normal and clean debug builds pass with RGBDS 1.0.3. Free space: 19,518 bytes
+  normal; 19,404 bytes debug.
+- Each ROM passes **2,600 CPU cases**: the previous 2,024 plus 480 held-item,
+  48 Natural Cure and 48 write-back cases. These test marker variants, both
+  sides, all six party slots, essential form matching and Egg exclusion.
+- Full battles, item acquisition distributions and faithful builds are not
+  tested by this checkpoint. Persistent-format activation remains disabled.
+
+## Previous checkpoint: lead abilities and generated insertion (2026-09-20)
 
 - Continues PR #1 from `d232f17`.
 - Lead field abilities now decode persistent species before lookup while
@@ -191,8 +210,10 @@ format-aware; this does not authorize switching opponent records to transient
 IDs. The shared temporary-record loader distinguishes legacy opponent sources, and
 collection now follows those representation boundaries. Ordinary catches convert
 the player destination after copying. Lead-ability lookup and generated player insertion are now
-format-aware. Next finish the remaining battle/AI and write-back audit, then
-prepare atomic old-save conversion alongside the unfinished Newbox boundary. If opponent or battle records later become transient, add
+format-aware. Next migrate Future Sight delayed-attacker species and gender-dependent battle
+checks (Attract/Rivalry), then finish the remaining battle/AI audit. Normal
+HP/status write-back has been verified to preserve identity. Prepare atomic
+old-save conversion alongside the unfinished Newbox boundary afterward. If opponent or battle records later become transient, add
 their roots back to collection in the same checkpoint.
 Do not activate the persistent-format marker until downstream consumers and
 atomic old-save conversion are ready. Newbox remains a separate unfinished
@@ -229,11 +250,13 @@ python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-3.2.3.gbc
 python tests/test_species_collection_and_catch.py polishedcrystal-3.2.3.gbc
 python tests/test_lead_and_generated_identity.py polishedcrystal-3.2.3.gbc
+python tests/test_battle_item_identity.py polishedcrystal-3.2.3.gbc
 # Or, after the debug build:
 python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_species_collection_and_catch.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_lead_and_generated_identity.py polishedcrystal-debug-3.2.3.gbc
+python tests/test_battle_item_identity.py polishedcrystal-debug-3.2.3.gbc
 ```
 
 The test uses the matching `.sym` file and executes compiled assembly directly.

@@ -479,3 +479,19 @@ format helpers, with a home-bank entry point, to avoid increasing ROM0 usage.
 The new CPU suite checks lead ability slots/options and executes complete
 player/opponent generation for each of the six target slots. Trade dialog,
 nature distribution, full gameplay and save-upgrade validation remain pending.
+
+Species-dependent held-item checks now use shared user/opponent party identity
+helpers. Player records decode through the persistent marker; opponent records
+stay legacy. Eviolite, non-faithful Metal Powder, and essential-item protection
+therefore compare canonical legacy-compatible species/form pairs instead of
+transient slot numbers. Faithful Metal Powder continues checking the current
+legacy battle identity, preserving its different Transform behavior.
+
+Post-battle ability processing decodes each player's identity before checking
+Natural Cure, Pickup or Honey Gather. Egg filtering remains representation-
+independent. The focused suite executes held-item checks and Natural Cure across
+both formats, both sides and all six slots. It also verifies the unchanged
+player/opponent HP/status write-back routines copy only their intended fields
+and leave species/form and all other party bytes intact. Future Sight's delayed
+attacker and gender-dependent battle identity reads remain to be migrated;
+item acquisition distributions and full battles have not been validated.

@@ -495,3 +495,38 @@ PrepareGeneratedPlayerMonForStorage::
 	call GetPartyLocation
 	call PrepareLegacyPokemonDataStructForStorage
 	jp PopBCDEHL
+
+GetUserPartySpeciesAndForm::
+; Return a=c=legacy species, b=encoded form, hl=source species address.
+; Preserve de; player records follow the marker, opponents remain legacy.
+	ld a, MON_SPECIES
+	call UserPartyAttr
+	ldh a, [hBattleTurn]
+	jr DecodeBattlePartySpeciesAndForm
+
+GetOpponentPartySpeciesAndForm::
+	ld a, MON_SPECIES
+	call OpponentPartyAttr
+	ldh a, [hBattleTurn]
+	xor 1
+	; fallthrough
+DecodeBattlePartySpeciesAndForm:
+	push de
+	and a
+	jr nz, .legacy
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	pop de
+	ret
+.legacy
+	ld c, [hl]
+	push hl
+	ld de, MON_FORM - MON_SPECIES
+	add hl, de
+	ld a, [hl]
+	and SPECIESFORM_MASK
+	ld b, a
+	ld a, c
+	pop hl
+	pop de
+	ret

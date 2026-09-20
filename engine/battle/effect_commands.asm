@@ -1456,19 +1456,22 @@ UserCanLoseItem:
 	jmp PopBCDEHL
 
 .CompareUserSpecies:
+	push de
 	push hl
-	ld a, MON_SPECIES
-	call UserPartyAttr
+	push bc
+	farcall GetUserPartySpeciesAndForm
+	ld a, c
+	ld e, b
+	pop bc
+	pop hl
 	cp c
-	pop hl
-	ret nz
-	push hl
-	ld a, MON_FORM
-	call UserPartyAttr
-	pop hl
-	ld b, a
+	jr nz, .comparison_done
+	ld b, e
 	ld a, [hl]
-	jmp CompareSpeciesForm
+	call CompareSpeciesForm
+.comparison_done
+	pop de
+	ret
 
 .EssentialItemTable:
 	species_battle_item ARMOR_SUIT, MEWTWO, MEWTWO_ARMORED_FORM
@@ -3850,12 +3853,13 @@ DittoMetalPowder:
 	assert !HIGH(DITTO)
 if !DEF(FAITHFUL)
 	; grabs true species -- works even if transformed to non-Ditto
-	ld a, MON_FORM
-	call OpponentPartyAttr
+	push bc
+	farcall GetOpponentPartySpeciesAndForm
+	ld a, b
 	and EXTSPECIES_MASK
+	ld a, c
+	pop bc
 	ret nz
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
 else
 	; only works if current species is Ditto
 	ld hl, wBattleMonForm
@@ -3881,16 +3885,8 @@ endc
 UnevolvedEviolite:
 	push hl
 	push bc
-	; c = species
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
-	ld c, a
-	; b = form
-	ld a, MON_FORM
-	call OpponentPartyAttr
-	and SPECIESFORM_MASK
-	ld b, a
-	; bc = index
+	farcall GetOpponentPartySpeciesAndForm
+	; bc = decoded species/form
 	farcall GetEvosAttacksPointer
 	ld a, BANK(EvosAttacks)
 	call GetFarByte
