@@ -546,3 +546,24 @@ The remaining architectural limit is the legacy runtime bridge: a byte and bit
 ends at `$0151`. Full activation still needs native-aware opponent/battle
 consumers, an actual species above `$01ff` with complete data, integration of the
 RAM conversion into load/new-game paths, and full gameplay/save-recovery tests.
+
+
+## Direct native party base-data lookup
+
+The player HUD and experience recipient previously decoded persistent identity
+into legacy globals and then reconstructed a native ID for `GetBaseData`.
+They now retain legacy-global publication for surrounding consumers but obtain
+base data directly through `GetBaseDataFromPokemonDataStruct`.
+
+The shared native reader follows the player/daycare format marker, preserves
+HL/DE, and neither allocates IDs nor changes globals. The base-data wrapper also
+preserves BC and returns carry without touching the buffer for an empty identity.
+Its table lookup uses the stored native word even if the legacy form byte would
+resolve to a different record. This removes a round-trip at these two lookup
+sites; other battle, opponent, naming and presentation consumers remain pending.
+
+`tests/test_native_party_base_data.py` adds 512 CPU cases. It compares the full
+base-data buffer against the compiled ROM records, tests all party/daycare slots
+and marker states, checks metadata/register/global/table preservation, and tests
+empty records. Values above `$01ff` exercise only the native identity reader;
+they are not a substitute for the outstanding playable high-ID proof.

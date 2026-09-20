@@ -40,7 +40,7 @@ example:
 PATH="/path/to/rgbds-1.0.3:$PATH" make -j2
 ```
 
-Normal and clean debug builds pass 4,267 CPU regression cases each. See
+Normal and clean debug builds pass 4,779 CPU regression cases each. See
 `MIGRATION_STATUS.md` for test commands and coverage. Successful assembly and
 CPU tests do not establish complete gameplay validation; persistent party
 format activation and end-to-end runtime tests remain pending.

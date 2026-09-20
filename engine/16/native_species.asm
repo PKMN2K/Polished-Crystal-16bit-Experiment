@@ -720,3 +720,50 @@ MigrateLegacyPlayerPokemonData::
 	pop hl
 	inc c
 	ret
+
+GetNativeSpeciesIDFromPokemonDataStruct::
+; in: hl = player/daycare species byte, de = form offset
+; out: bc = one-based native ID (zero for an empty record)
+; Preserve hl/de and do not publish legacy globals or allocate a table slot.
+	push hl
+	push de
+	call PokemonDataUsesTransientSpecies
+	jr nz, .legacy
+	ld a, [hl]
+	farcall GetNativeSpeciesIDFromTransientID
+	jr .done
+.legacy
+	ld a, [hl]
+	ld c, a
+	ld b, 0
+	and a
+	jr z, .done
+	add hl, de
+	ld a, [hl]
+	and SPECIESFORM_MASK
+	ld b, a
+	call GetSpeciesAndFormIndex
+	inc bc
+.done
+	pop de
+	pop hl
+	ret
+
+GetBaseDataFromPokemonDataStruct::
+; Load base data directly from a persistent native identity. This avoids a
+; native -> legacy root/form -> native round-trip at the data lookup boundary.
+; in: hl = player/daycare species byte; preserves bc/de/hl and species globals
+; out: carry set for an empty identity (base-data buffer left unchanged)
+	push hl
+	push de
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	ld a, b
+	or c
+	scf
+	jr z, .done
+	farcall GetBaseDataFromNativeIDBC
+	and a
+.done
+	jp PopBCDEHL

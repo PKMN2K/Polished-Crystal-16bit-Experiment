@@ -1,6 +1,28 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: PC identities, save integrity and deferred battle users (2026-09-20)
+## Latest checkpoint: direct native party base-data lookup (2026-09-20)
+
+- Player HUD and experience-recipient base-data reads now resolve the stored
+  native identity directly. The lookup no longer reconstructs its ID from the
+  transitional species/form globals. Those globals are still populated for
+  surrounding legacy consumers; this does not switch battle representation.
+- `GetNativeSpeciesIDFromPokemonDataStruct` reads native IDs from a marked
+  player/daycare record or translates an unmarked legacy record. It preserves
+  source/form-offset pointers and does not allocate slots or change globals.
+- `GetBaseDataFromPokemonDataStruct` preserves caller registers and globals.
+  Empty identities return carry and leave the previous base-data buffer intact.
+- 512 new CPU cases check all eight party/daycare slots, four marker states,
+  ordinary/extended/regional identities, metadata, exact ROM base data, empty
+  records, and unchanged conversion tables. Deliberately conflicting form bytes
+  prove that transient base-data lookup uses the native ID itself.
+- Normal and clean debug builds pass without assembler/linker warnings with
+  RGBDS 1.0.3. Each passes **4,779 CPU cases** under PyBoy 2.7.0. Free space:
+  18,989 bytes normal and 18,875 bytes debug.
+- High native words are tested for identity preservation only. No new playable
+  species is added, and automatic migration activation remains disabled.
+
+
+## Previous checkpoint: PC identities, save integrity and deferred battle users (2026-09-20)
 
 - PC party/temp transfers decode player IDs on withdrawal into the temporary
   workspace and encode them when returning to a transient party. OT records

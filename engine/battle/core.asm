@@ -4073,7 +4073,7 @@ endr
 	ld hl, wPartyMon1Species
 	call GetPartyLocation
 	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
-	call GetBaseData
+	farcall GetBaseDataFromPokemonDataStruct
 
 	pop hl
 	dec hl
@@ -6674,7 +6674,7 @@ GiveExperiencePoints:
 	push bc ; experience recipient's party pointer
 	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	pop bc
-	call GetBaseData
+	farcall GetBaseDataFromPokemonDataStruct
 	push bc
 	ld d, MAX_LEVEL
 	farcall CalcExpAtLevel
