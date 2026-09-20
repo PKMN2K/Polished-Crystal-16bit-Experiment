@@ -618,3 +618,28 @@ and the existing send-in regression test now hooks the new native lookup
 boundary. Those PyBoy tests are committed but were not executed on this head in
 this chat; the last executed full CPU checkpoint remains 5,979 cases per
 normal/debug ROM.
+
+
+## Second active-battle consumer: Safari catch-rate reset
+
+When Safari bait or rock effects expire, the engine must restore the wild
+opponent's normal catch rate from its base data. That path previously rebuilt
+base data from `wEnemyMonSpecies` and `wEnemyMonForm`.
+
+`ResetSafariCatchRateFromEnemyNativeSpecies` now preserves the old publication
+of those legacy fields into `wCurSpecies` and `wCurForm`, but performs the
+actual base-data lookup through `wEnemyMonNativeSpecies`. The new
+`GetBaseDataFromEnemyBattleNativeSpecies` helper is side-specific and does not
+depend on the current `hBattleTurn` value. If the native shadow is empty, it
+returns carry and the existing catch rate is left untouched.
+
+This is intentionally narrower than replacing the enemy battle structure. The
+legacy species/form bytes remain available to all unconverted consumers; the
+Safari catch-rate source alone is now native.
+
+`tests/test_safari_native_catch_rate.py` adds four focused CPU cases covering
+an ordinary species, species #256, a native regional/mechanical identity and an
+empty shadow. Conflicting legacy/native fixtures prove the catch-rate record is
+selected from the native word while the legacy-global side effects remain.
+These new PyBoy cases are committed but were not run in this chat. GitHub
+Actions run #17 passes all eight configured ROM build variants.
