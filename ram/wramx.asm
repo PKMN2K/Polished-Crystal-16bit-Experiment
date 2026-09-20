@@ -1510,7 +1510,8 @@ wPokemonData::
 wPartyCount::   db ; number of Pokémon in party
 
 wPokemonDataFormat:: dw
-	ds 5 ; unused
+wPokemonIndexTableFormat:: dw ; checksummed save-envelope version
+	ds 3 ; unused
 
 wPartyMons::
 assert wPartyMons - wPartyCount == 8

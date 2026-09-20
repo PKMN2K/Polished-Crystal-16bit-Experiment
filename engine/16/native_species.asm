@@ -152,9 +152,11 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 ; representation.
 ; in: bc = one-based native species ID, a = raw form
 ; out: a = c = root species byte, b = encoded form
+	push hl
 	push af
 	call GetRootSpeciesFromNativeIDBC
 	pop af
+	pop hl
 	ld e, a
 	ld a, b
 	assert MON_EXTSPECIES_F == 5
@@ -276,6 +278,8 @@ StoreRoamMonNativeSpecies::
 ; Store a native species ID in a structure's transient species byte.
 ; in: bc = one-based native species ID, hl = structure species byte
 	push hl
+	ld h, b
+	ld l, c
 	call GetPokemonIDFromIndex
 	pop hl
 	ld [hl], a
@@ -529,4 +533,190 @@ DecodeBattlePartySpeciesAndForm:
 	ld a, c
 	pop hl
 	pop de
+	ret
+
+GetTrueUserPartySpeciesAndForm::
+; TrueUserPartyAttr accounts for a delayed Future Sight user off the field.
+	ld a, MON_SPECIES
+	call TrueUserPartyAttr
+	ldh a, [hBattleTurn]
+	jp DecodeBattlePartySpeciesAndForm
+
+BattlePartyRootsMatch::
+; z if the true user and opponent have the same root species (forms ignored).
+	push hl
+	push de
+	push bc
+	call GetTrueUserPartySpeciesAndForm
+	ld d, b
+	ld e, c
+	call GetOpponentPartySpeciesAndForm
+	ld a, c
+	cp e
+	jr nz, .done
+	ld a, b
+	xor d
+	and EXTSPECIES_MASK
+.done
+	jp PopBCDEHL
+
+ConvertCopiedPartyTempIdentity::
+; After CopyBetweenPartyAndTemp copies a record: b=direction/type flags,
+; c=zero-based slot. Both the OT workspace and temp records remain legacy.
+	bit 7, b
+	ret nz
+	push hl
+	push de
+	push bc
+	ld a, c
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	bit 0, b
+	jr z, .to_party
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	ld a, c
+	ld [wTempMonSpecies], a
+	ld a, [wTempMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wTempMonForm], a
+	jr .done
+.to_party
+	call PrepareLegacyPokemonDataStructForStorage
+.done
+	jp PopBCDEHL
+
+EncodeNativeBoxIdentity::
+; Newbox reserves species byte zero as an explicit native-record tag.
+; Native ID lives in the two formerly unused extra bytes; layout is unchanged.
+	ld a, [wEncodedTempMonSpecies]
+	ld c, a
+	ld a, [wEncodedTempMonForm]
+	and SPECIESFORM_MASK
+	ld b, a
+	call GetSpeciesAndFormIndex
+	inc bc
+	ld a, c
+	ld [wEncodedTempMonExtra + 1], a
+	ld a, b
+	ld [wEncodedTempMonExtra + 2], a
+	xor a
+	ld [wEncodedTempMonSpecies], a
+	ret
+
+DecodeNativeBoxIdentity::
+; Called only after the stored checksum has been checked. Carry on bad ID.
+; Old nonzero legacy species records need no conversion and remain readable.
+	ld a, [wEncodedTempMonSpecies]
+	and a
+	ret nz
+	ld a, [wEncodedTempMonExtra + 1]
+	ld c, a
+	ld a, [wEncodedTempMonExtra + 2]
+	ld b, a
+	or c
+	jr z, .invalid
+	ld a, b
+	cp HIGH(NUM_NATIVE_SPECIES + 1)
+	jr c, .valid
+	jr nz, .invalid
+	ld a, c
+	cp LOW(NUM_NATIVE_SPECIES + 1)
+	jr nc, .invalid
+.valid
+	; $0100 is the unused root slot, not a storable species.
+	ld a, b
+	cp 1
+	jr nz, .decode
+	ld a, c
+	and a
+	jr z, .invalid
+.decode
+	ld a, [wEncodedTempMonForm]
+	and FORM_MASK
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld a, c
+	ld [wEncodedTempMonSpecies], a
+	ld a, [wEncodedTempMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wEncodedTempMonForm], a
+	and a
+	ret
+.invalid
+	scf
+	ret
+
+RefreshPartyIdentityAfterFormChange::
+; Mechanical forms have their own native IDs; refresh the stored slot after
+; a form-byte edit without ever treating the transient byte as a root species.
+	call PokemonDataUsesTransientSpecies
+	ret nz
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld a, [wCurPartyMon]
+	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	push hl
+	farcall GetTransientIDFromLegacySpeciesAndForm
+	pop hl
+	ld [hl], a
+	jp PopBCDEHL
+
+MigrateLegacyPlayerPokemonData::
+; RAM-only migration; publish the format marker after all eight records exist.
+; Dedicated locks keep partially converted records alive during collection,
+; while the old marker still prevents scanning them as transient records.
+; Caller must already have loaded/validated the save's conversion table.
+; Kept behind the activation gate until gameplay and >$01ff proofs pass.
+	call PokemonDataUsesTransientSpecies
+	ret z
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld b, PARTY_LENGTH
+	ld c, MON_LOCK_SAVE_MIGRATION_START
+.party
+	call .convert_and_lock
+	ld de, PARTYMON_STRUCT_LENGTH
+	add hl, de
+	dec b
+	jr nz, .party
+	ld hl, wBreedMon1Species
+	call .convert_and_lock
+	ld hl, wBreedMon2Species
+	call .convert_and_lock
+	ld a, LOW(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat], a
+	ld a, HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat + 1], a
+	ld l, MON_LOCK_SAVE_MIGRATION_START
+.unlock
+	xor a
+	push hl
+	call LockPokemonID
+	pop hl
+	inc l
+	ld a, l
+	cp MON_LOCK_SAVE_MIGRATION_END
+	jr nz, .unlock
+	jp PopBCDEHL
+.convert_and_lock
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	farcall MigrateLegacySpeciesAndFormAtHL
+	pop bc
+	push hl
+	ld a, [hl]
+	ld l, c
+	push bc
+	call LockPokemonID
+	pop bc
+	pop hl
+	inc c
 	ret

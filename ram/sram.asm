@@ -26,7 +26,8 @@ sOptions3:: db
 
 sPokemonIndexTableMagic:: dw
 sPokemonIndexTable:: ds wPokemonIndexTableEnd - wPokemonIndexTable
-	ds 134 ; unused
+sPokemonIndexTableChecksum:: dw
+	ds 132 ; unused
 
 sSRAMAccessCount:: db
 
@@ -57,7 +58,8 @@ sBackupOptions3:: db
 
 sBackupPokemonIndexTableMagic:: dw
 sBackupPokemonIndexTable:: ds wPokemonIndexTableEnd - wPokemonIndexTable
-	ds 135 ; unused
+sBackupPokemonIndexTableChecksum:: dw
+	ds 133 ; unused
 
 sBackupChecksum:: dw
 	assert sBackupChecksum == $bf0d, "Backup checksum has shifted."

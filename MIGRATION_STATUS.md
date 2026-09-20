@@ -1,6 +1,41 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: held items and post-battle abilities (2026-09-20)
+## Latest checkpoint: PC identities, save integrity and deferred battle users (2026-09-20)
+
+- PC party/temp transfers decode player IDs on withdrawal into the temporary
+  workspace and encode them when returning to a transient party. OT records
+  remain legacy. Newbox records now carry a native word in the two previously
+  unused extra bytes, with species byte zero as the format tag. Existing legacy
+  records remain readable and are upgraded when rewritten. Hypertraining,
+  gender/Egg metadata, fixed record sizes and storage addresses are preserved.
+- Delayed Future Sight, Attract/Rivalry and Love Ball comparisons use decoded
+  party identities. Surf, stat-wing naming and move-learning form offsets are
+  corrected. Mewtwo armor changes refresh the persistent native identity.
+- Variant decoding now preserves its source pointer. The native-word roaming
+  store now allocates the supplied species word instead of its destination
+  address. Both defects have regression coverage.
+- Conversion-table saves have their own checksum and publish their magic last.
+  Primary and backup tables are verified before loading their respective save.
+  A version word inside the existing game-data checksum distinguishes a torn
+  new table from an old save with no table. Existing SRAM addresses do not move.
+- Save version 11 reads version 10 lazily and stamps the new version before
+  writing updated Pokémon data. Older ROMs reject version 11. Returning to an
+  older ROM requires an untouched older save; this is not a downgrade format.
+- `MigrateLegacyPlayerPokemonData` converts all six party slots and both daycare
+  records in RAM, locks intermediate IDs during collection, writes the marker
+  last, and releases the locks. Repeating it is a no-op. This routine is tested
+  but **not invoked automatically** while the activation gate remains closed.
+- Normal and clean debug builds pass with RGBDS 1.0.3, with 19,046 and
+  18,932 free bytes respectively. Each ROM passes **4,267 CPU cases** with
+  PyBoy 2.7.0: the prior 2,600 plus 384 deferred/gender/form cases, 1,152 PC
+  transfers, 72 box round-trips and 59 migration/storage/save cases.
+- Full migration is **not complete**. Normal gameplay still uses legacy player
+  identities until activation, and opponent/battle runtime identities remain
+  transitional. The tests of native words above `$01ff` cover allocation and
+  storage only, not a playable species above that boundary.
+
+
+## Previous checkpoint: held items and post-battle abilities (2026-09-20)
 
 - Continues PR #1 from `3530fb3`.
 - Shared user/opponent party identity helpers decode player records according
@@ -163,26 +198,23 @@ direct byte reads by design.
 
 ## Not yet migrated or activated
 
-- The persistent party/daycare format marker remains unset. Existing party and
-  daycare records therefore continue using the legacy species/form encoding.
-- Old-save party/daycare records have not yet been atomically converted to
-  transient IDs.
-- Opponent-party and central battle-engine consumers still require a complete
-  audit before trainer and wild ingestion can safely allocate transient IDs.
-- Ordinary wild catches and opponent-party construction remain legacy at their
-  persistent/runtime boundary.
-- Remaining raw party/opponent/battle species reads must be classified and
-  converted according to whether their input is persistent, transient, or
-  legacy ROM data.
-- Newbox has not yet been converted to native 16-bit stored identities or added
-  to conversion-table garbage collection.
-- Full save/load, catch, evolution, breeding, PC, trade, Battle Tower, link,
-  Hall of Fame, Pokédex, and battle regression testing has not been completed.
-- No end-to-end proof species above `$01ff` has been added or tested.
-- 16-bit move IDs and item IDs are outside the current species milestone and
-  have not been migrated.
+- Automatic party/daycare conversion remains disabled. The RAM conversion
+  routine exists and is tested; it is not wired into old-save load or new-game
+  initialization until the complete consumer audit and gameplay gate pass.
+- Opponent-party and central battle workspaces still store legacy identities.
+  Their ingestion, consumers, temporary references and collection roots need
+  to switch together if they are made transient.
+- `GetLegacySpeciesAndFormFromNativeIDBC` still reduces a root species to a
+  byte plus `EXTSPECIES_MASK`. This cannot represent an arbitrary root above
+  `$01ff`; simply enabling the marker does not remove this limit. The current
+  catalog ends at native ID `$0151`.
+- Full save/load recovery, catch, evolution, breeding, PC, trade, Battle Tower,
+  link, Hall of Fame, Pokédex and battle gameplay regressions remain pending.
+  CPU calls into individual routines do not establish those complete flows.
+- No end-to-end playable proof species above `$01ff` has been added or tested.
+- 16-bit move and item IDs are outside the species milestone.
 
-## Known build state and temporary workarounds
+## Historical imported-archive build notes and workarounds
 
 - The last committed checkpoint passed clean normal and debug builds with RGBDS
   1.0.3.
@@ -201,23 +233,16 @@ direct byte reads by design.
   use previously unused SRAM padding so existing checksum and Newbox addresses
   do not move.
 
-## Next recommended step
+## Remaining implementation sequence
 
-Continue the remaining battle/party boundary audit: species-dependent AI and
-item readers, opponent-party consumers, and battle-to-party write-back.
-The central player send-in, player HUD, and experience-growth reads are now
-format-aware; this does not authorize switching opponent records to transient
-IDs. The shared temporary-record loader distinguishes legacy opponent sources, and
-collection now follows those representation boundaries. Ordinary catches convert
-the player destination after copying. Lead-ability lookup and generated player insertion are now
-format-aware. Next migrate Future Sight delayed-attacker species and gender-dependent battle
-checks (Attract/Rivalry), then finish the remaining battle/AI audit. Normal
-HP/status write-back has been verified to preserve identity. Prepare atomic
-old-save conversion alongside the unfinished Newbox boundary afterward. If opponent or battle records later become transient, add
-their roots back to collection in the same checkpoint.
-Do not activate the persistent-format marker until downstream consumers and
-atomic old-save conversion are ready. Newbox remains a separate unfinished
-native-identity boundary.
+Replace the nine-bit runtime boundary with native-aware battle/opponent data
+access, including every writer and the collection roots for any new transient
+workspace. Add an actual species above `$01ff` with complete lookup data and
+prove generation, battle, party, PC and save/load identity round-trips. Then
+wire the tested RAM conversion into save loading/new-game setup and run the
+complete gameplay and backup-recovery matrix before enabling the format by
+default. Native Newbox entries contain words directly and do not pin transient
+conversion-table slots.
 
 ## Build commands
 
@@ -240,26 +265,20 @@ The generated `.gbc`, `.map`, `.sym`, object files, and compiled assets are
 build products and are not included in the export. The project can regenerate
 them from the included source and tool code.
 
-## Focused battle identity regression test
+## CPU regression tests
 
-After building, install the optional emulator test dependency and run:
+After building, install the optional emulator dependency and run all tests:
 
 ```sh
 python -m pip install pyboy==2.7.0
-python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
-python tests/test_tempmon_identity.py polishedcrystal-3.2.3.gbc
-python tests/test_species_collection_and_catch.py polishedcrystal-3.2.3.gbc
-python tests/test_lead_and_generated_identity.py polishedcrystal-3.2.3.gbc
-python tests/test_battle_item_identity.py polishedcrystal-3.2.3.gbc
-# Or, after the debug build:
-python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
-python tests/test_tempmon_identity.py polishedcrystal-debug-3.2.3.gbc
-python tests/test_species_collection_and_catch.py polishedcrystal-debug-3.2.3.gbc
-python tests/test_lead_and_generated_identity.py polishedcrystal-debug-3.2.3.gbc
-python tests/test_battle_item_identity.py polishedcrystal-debug-3.2.3.gbc
+for test in tests/test_*.py; do
+  python "$test" polishedcrystal-3.2.3.gbc || break
+done
 ```
 
-The test uses the matching `.sym` file and executes compiled assembly directly.
-It seeds a conversion-table entry whose slot differs from its species identity,
-checks player decoding and unchanged opponent interpretation, and stops the
-send-in path before base-data loading. It does not load or write a game save.
+After a debug build, substitute `polishedcrystal-debug-3.2.3.gbc`. Each ROM must
+have its matching `.sym` file alongside it. Tests use disposable emulator state
+and synthetic SRAM; they do not read or overwrite user saves. Coverage includes
+party and battle identities, temporary records, collection, caught/generated
+insertion, abilities/items, deferred users, gender, armor forms, PC encoding,
+RAM migration, save version acceptance and primary/backup table integrity.

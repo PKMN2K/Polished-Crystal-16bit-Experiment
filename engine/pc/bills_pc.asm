@@ -632,6 +632,7 @@ CopyBetweenPartyAndTemp:
 	ld de, wTempMon
 	ld a, PARTYMON_STRUCT_LENGTH
 	call .Copy
+	farcall ConvertCopiedPartyTempIdentity
 
 	ld hl, wPartyMonNicknames
 	ld de, wTempMonNickname
@@ -785,6 +786,8 @@ EncodeTempMon:
 	ld bc, 3
 	rst CopyBytes
 
+	farcall EncodeNativeBoxIdentity
+
 	; Move name-related bytes.
 	ld hl, wTempMonNickname
 	ld de, wEncodedTempMonNickname
@@ -889,6 +892,15 @@ DecodeTempMon:
 	; First, run a checksum check. Don't use the result until we've done
 	; character replacements back to their original state
 	call ChecksumTempMon
+	jr nz, .checked_identity
+	farcall DecodeNativeBoxIdentity
+	ld a, 1
+	jr c, .bad_identity
+	xor a
+	jr .checked_identity
+.bad_identity
+	and a
+.checked_identity
 	push af
 
 	; Move extra data back

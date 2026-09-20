@@ -1719,10 +1719,10 @@ WingCase_MonSelected:
 	call _GetStatString
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	ld [wNamedObjectIndex], a
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	ld a, [hl]
+	ld a, b
 	ld [wNamedObjectIndex+1], a
 	call GetPokemonName
 	ld hl, ItemStatRoseText

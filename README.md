@@ -4,6 +4,10 @@ This is a custom Pokémon game based on [the Pokémon Crystal disassembly](https
 
 ## 16-bit species migration workspace
 
+The current checkpoint reads version-10 saves and writes version 11. Native PC
+records and conversion-table checksums are enabled; automatic party/daycare
+conversion remains disabled. New saves require this migration build or newer.
+
 This copy is an **unfinished development snapshot** of the Polished Crystal to
 pokecrystal16 species-ID migration. It is not a release build. Read
 [`MIGRATION_STATUS.md`](MIGRATION_STATUS.md) before making changes; it records
@@ -36,10 +40,9 @@ example:
 PATH="/path/to/rgbds-1.0.3:$PATH" make -j2
 ```
 
-The last committed checkpoint passed clean normal and debug builds. The
-uncommitted special-event reader slice included in this snapshot passed a
-normal build but was exported before its final debug verification. Successful
-assembly does not mean the 16-bit migration is complete; persistent party
+Normal and clean debug builds pass 4,267 CPU regression cases each. See
+`MIGRATION_STATUS.md` for test commands and coverage. Successful assembly and
+CPU tests do not establish complete gameplay validation; persistent party
 format activation and end-to-end runtime tests remain pending.
 
 My goal is to create what the title says: an improved, polished version of Pokémon Crystal. It fixes bugs, takes into account the official game changes since 2001, and adds some new ideas of my own. Many features restore what was removed from R/B/Y, or original to HG/SS.

@@ -495,3 +495,54 @@ player/opponent HP/status write-back routines copy only their intended fields
 and leave species/form and all other party bytes intact. Future Sight's delayed
 attacker and gender-dependent battle identity reads remain to be migrated;
 item acquisition distributions and full battles have not been validated.
+
+
+## PC storage, save envelope and remaining activation boundary
+
+Newbox keeps its existing record size and pointer/allocation protocol. A stored
+species byte of zero tags a native word in `SAVEMON_EXTRA + 1` and `+ 2`; the
+first extra byte retains hypertraining. Zero was not a valid stored legacy
+species (`$0100` is unused). Encoding computes the native ID before the record
+checksum. Decoding checks the checksum before interpreting the tag, validates
+the native range and unused root slot, and sends invalid records through the
+existing Bad Egg path. Old nonzero species records retain the legacy decoder.
+Rewritten entries adopt the new format without scanning all boxes up front.
+
+Party/temp transfers respect direction and source: the player party follows
+its format marker, while temp and opponent parties remain legacy. Mechanical
+form changes, including adding/removing Mewtwo armor, update the transient ID.
+Variant decoding must preserve HL because callers use it as the struct pointer;
+the root lookup formerly overwrote it with the resolved root word.
+
+The conversion table is outside `sGameData`, so the existing save checksum did
+not protect it. The new `$16be` envelope adds a table checksum in unused padding
+and publishes magic only after the table and checksum are copied. A second
+version word in unused, checksummed Pokémon data prevents a torn table header
+from masquerading as an older save. Primary and backup integrity checks run
+before loading their respective records; failed primary checks select backup.
+The `$16bd` legacy table remains loadable for legacy player records. A transient
+player marker without a protected table is rejected rather than guessed at.
+
+Save format 11 accepts version 10 on read. Pokémon-data writers stamp version
+11 before updating records, ensuring older ROMs stop at their version check.
+Existing struct, main-checksum and Newbox addresses remain fixed. This supports
+forward migration; new saves cannot be used with older ROMs.
+
+`MigrateLegacyPlayerPokemonData` is RAM-only and not automatically enabled. It
+converts six party records (including contest-hidden slots) and two daycare
+records, protects intermediate IDs with dedicated locks, publishes the format
+marker last, and clears its locks. It is idempotent. CPU tests force collection
+with an occupied 100-slot table and verify the resulting records and lock state.
+
+The deferred Future Sight user, gender-dependent battle comparisons, Love Ball
+root comparison, Surf identity, stat-wing naming and move-learning form offset
+now use the corresponding decoded identity boundary. Native roaming storage
+also now passes the native BC word to the allocator rather than the destination
+HL address. Tests include high native words for storage, which is deliberately
+not described as a playable high-ID proof.
+
+The remaining architectural limit is the legacy runtime bridge: a byte and bit
+5 of the form can encode only nine root-species bits. The current native catalog
+ends at `$0151`. Full activation still needs native-aware opponent/battle
+consumers, an actual species above `$01ff` with complete data, integration of the
+RAM conversion into load/new-game paths, and full gameplay/save-recovery tests.

@@ -1529,13 +1529,13 @@ BattleCommand_stab:
 	ld b, a
 	call GetFutureSightUser
 	jr z, .not_external
-	ld a, MON_SPECIES
-	call TrueUserPartyAttr
+	push bc ; retain move type for STAB comparison
+	farcall GetTrueUserPartySpeciesAndForm
+	ld a, c
 	ld [wCurSpecies], a
-	ld a, MON_FORM
-	call TrueUserPartyAttr
-	and SPECIESFORM_MASK
+	ld a, b
 	ld [wCurForm], a
+	pop bc
 	call GetBaseData
 	ld hl, wBaseType
 	jr .got_attacker_types
