@@ -1,6 +1,34 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native active-battler base data (2026-09-20)
+## Latest checkpoint: native Safari catch-rate reset (2026-09-20)
+
+- The Safari bait/rock expiry path is now the second active-battle consumer to
+  use the 16-bit enemy identity shadow. `HandleSafariAngerEatingStatus` calls
+  `ResetSafariCatchRateFromEnemyNativeSpecies`, which restores the normal
+  catch rate from `wEnemyMonNativeSpecies`.
+- `GetBaseDataFromEnemyBattleNativeSpecies` provides a side-specific native
+  base-data reader that does not depend on `hBattleTurn`. It preserves
+  BC/DE/HL and the legacy species globals.
+- The Safari reset still publishes `wEnemyMonSpecies` and `wEnemyMonForm`
+  into `wCurSpecies`/`wCurForm`, preserving the old side effect for
+  surrounding legacy battle code. Only the base-data identity source changed.
+- An empty native enemy shadow returns carry and leaves the current catch rate
+  unchanged rather than applying stale base data.
+- `tests/test_safari_native_catch_rate.py` adds four focused CPU cases:
+  ordinary, species #256, regional/mechanical identity, and an empty shadow.
+  The fixtures deliberately make the legacy enemy identity disagree with the
+  native word and compare the restored catch rate with the compiled ROM record.
+- GitHub Actions CI run #17 passes all eight configured build variants: normal,
+  faithful, VC, faithful VC, debug, debug-faithful, debug VC and
+  debug-faithful VC.
+- The new PyBoy test is committed but was **not executed on this head in this
+  chat**; the available GitHub workflow builds ROM variants only. The last
+  executed full CPU checkpoint remains **5,979 cases per normal/debug ROM**.
+- Active battle structs still retain the legacy byte/form representation and
+  automatic persistent-format activation remains disabled.
+
+
+## Previous checkpoint: native active-battler base data (2026-09-20)
 
 - Active player and enemy battlers now have direct 16-bit native identity
   shadows: `wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies`. They reuse
