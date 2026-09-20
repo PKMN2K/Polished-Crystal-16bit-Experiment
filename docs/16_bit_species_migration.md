@@ -586,3 +586,35 @@ identities and metadata. It verifies exact compiled base data, source/global/
 table preservation and empty-record behavior. Full damage execution, active
 battle representation migration and a playable species above `$01ff` are still
 outside this checkpoint.
+
+
+## Native active-battler identity and first consumer
+
+The battle runtime now keeps a direct native word for each active battler in
+`wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies`. These words occupy
+bytes that were already reserved as battle scratch, so this change does not
+shift neighboring WRAM addresses. They are native species IDs, not conversion-
+table slots, and therefore do not need to become collection roots.
+
+`SendInUserPkmn` stores the native identity before decoding the existing legacy
+battle species/form fields. Player send-ins resolve through the persistent
+format marker, while opponent records still resolve through the explicit legacy
+reader. This preserves the established battle struct representation while
+creating a 16-bit source for consumers that migrate one at a time.
+
+The first consumer is the send-in base-data lookup.
+`GetBaseDataFromActiveBattleNativeSpecies` selects the player or enemy shadow
+with `hBattleTurn` and loads the native base-data record directly. Existing
+legacy globals remain published for unconverted code. Empty shadows return
+carry and leave the base-data buffer untouched.
+
+The legacy reader also now treats species byte `$00` plus the extended-species
+form bit as species #256 rather than an empty record. A zero species byte is
+empty only when no extended-species identity bit is present.
+
+GitHub Actions run #12 passes all normal, faithful, VC and debug combinations.
+`tests/test_active_battle_native_base_data.py` adds eight focused PyBoy cases,
+and the existing send-in regression test now hooks the new native lookup
+boundary. Those PyBoy tests are committed but were not executed on this head in
+this chat; the last executed full CPU checkpoint remains 5,979 cases per
+normal/debug ROM.
