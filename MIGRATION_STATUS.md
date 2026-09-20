@@ -1,6 +1,37 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native original-attacker base data (2026-09-20)
+## Latest checkpoint: native active-battler base data (2026-09-20)
+
+- Active player and enemy battlers now have direct 16-bit native identity
+  shadows: `wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies`. They reuse
+  existing battle scratch bytes and do not move the surrounding WRAM layout.
+- `SendInUserPkmn` publishes the native word whenever either side enters
+  battle. Player records use the persistent-format-aware reader; opponent
+  records remain explicitly legacy while the larger opponent migration is
+  still pending.
+- The send-in base-data lookup now uses
+  `GetBaseDataFromActiveBattleNativeSpecies`, selected by `hBattleTurn`.
+  Legacy species/form globals and the byte-sized battle structs are still
+  populated for consumers that have not yet migrated.
+- The legacy-to-native reader now distinguishes a truly empty record from
+  species #256, whose legacy representation uses species byte `$00` together
+  with the extended-species form bit.
+- GitHub Actions CI run #12 passes all eight configured build variants: normal,
+  faithful, VC, faithful VC, debug, debug-faithful, debug VC and
+  debug-faithful VC.
+- `tests/test_active_battle_native_base_data.py` adds eight direct CPU cases
+  covering both active sides, ordinary/extended/variant IDs, exact base data,
+  empty shadows and register/global preservation. The existing send-in test was
+  moved to stop at the new native lookup boundary. The PyBoy suite was **not
+  rerun on this head in this chat** because the available GitHub workflow only
+  builds ROM variants and this runtime cannot clone GitHub directly. The last
+  executed PyBoy checkpoint remains **5,979 cases per normal/debug ROM**.
+- Automatic persistent-format activation remains disabled. Active battle
+  structures still carry their legacy byte/form representation alongside the
+  new native shadows; this checkpoint migrates only the first consumer.
+
+
+## Previous checkpoint: native original-attacker base data (2026-09-20)
 
 - Delayed Future Sight's attacker-type lookup now uses the original party
   record directly. Player records resolve their stored native IDs; opponent
