@@ -742,12 +742,17 @@ GetNativeSpeciesIDFromLegacyPokemonDataStruct::
 	ld a, [hl]
 	ld c, a
 	ld b, 0
-	and a
-	jr z, .done
 	add hl, de
 	ld a, [hl]
 	and SPECIESFORM_MASK
 	ld b, a
+	ld a, c
+	and a
+	jr nz, .convert
+	ld a, b
+	and EXTSPECIES_MASK
+	jr z, .done
+.convert
 	call GetSpeciesAndFormIndex
 	inc bc
 .done
