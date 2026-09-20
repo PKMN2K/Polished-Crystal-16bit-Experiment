@@ -25,15 +25,23 @@ _CopyPkmnToTempMon:
 	ld de, wTempMon
 	ld bc, PARTYMON_STRUCT_LENGTH
 	rst CopyBytes
-	farcall PokemonDataUsesTransientSpecies
+	farcall PokemonDataSourceUsesTransientSpecies
 	ret nz
 	; Keep the transitional temporary structure compatible with its remaining
 	; legacy consumers. The canonical native identity remains in the source
 	; structure's transient ID and the persisted conversion table.
 	ld a, [wCurSpecies]
 	ld [wTempMonSpecies], a
+	; The form byte also carries gender and Egg flags. Preserve those bits
+	; from the copied record while replacing only its species/form identity.
+	push bc
+	ld a, [wTempMonForm]
+	and ~SPECIESFORM_MASK
+	ld b, a
 	ld a, [wCurForm]
+	or b
 	ld [wTempMonForm], a
+	pop bc
 	ret
 
 GetPkmnSpecies:
@@ -77,7 +85,7 @@ GetPkmnSpecies:
 	jr .done2
 
 .decode_transient
-	farcall PokemonDataUsesTransientSpecies
+	farcall PokemonDataSourceUsesTransientSpecies
 	ret nz
 	ld de, MON_FORM - MON_SPECIES
 	farcall GetLegacySpeciesAndFormFromTransientStruct
@@ -90,7 +98,7 @@ GetPkmnSpecies:
 	ret
 
 GetPkmnForm:
-	farcall PokemonDataUsesTransientSpecies
+	farcall PokemonDataSourceUsesTransientSpecies
 	ret z ; GetPkmnSpecies decoded both fields together.
 	ld a, [wMonType]
 	and a ; PARTYMON

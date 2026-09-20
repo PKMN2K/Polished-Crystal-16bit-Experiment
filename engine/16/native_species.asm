@@ -417,11 +417,26 @@ PrepareLegacyPokemonDataStructForStorage::
 	ret
 
 PokemonDataUsesTransientSpecies::
-; Return z when party, opponent-party, and daycare structures use transient
-; conversion-table species IDs.
+; Return z when persistent player-party and daycare structures use transient
+; conversion-table species IDs. This marker does not describe legacy opponent
+; workspaces; source-selecting loaders must also check their record type.
 	ld a, [wPokemonDataFormat]
 	cp LOW(POKEMON_DATA_TRANSIENT_FORMAT)
 	ret nz
 	ld a, [wPokemonDataFormat + 1]
 	cp HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	ret
+
+PokemonDataSourceUsesTransientSpecies::
+; Opponent/link parties remain legacy even when player/daycare records use
+; transient IDs. Match GetPkmnSpecies/GetPkmnForm's source selection; do not
+; apply the player save-format marker to an opponent record.
+; out: z for a transient source, nz for a legacy source; preserves bc/de/hl
+	ld a, [wMonType]
+	cp OTPARTYMON
+	jr z, .legacy_opponent
+	jp PokemonDataUsesTransientSpecies
+.legacy_opponent
+	ld a, 1
+	and a
 	ret

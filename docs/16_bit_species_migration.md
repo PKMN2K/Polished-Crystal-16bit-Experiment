@@ -434,3 +434,14 @@ party decoder, preserving the experience recipient pointer across the call.
 The focused CPU test in `tests/test_battle_party_identity.py` exercises the
 compiled decoder and send-in boundary. Persistent-format activation, opponent
 conversion, catch/write-back auditing, and Newbox migration are still pending.
+
+The shared temporary-Pokémon loader now checks both the persistent format marker
+and source record type. Opponent/link records stay legacy even when the player
+format marker is set, so catch/item and summary consumers do not mistake an
+opponent species byte for a conversion-table slot. Decoding a player record
+merges only species/form bits into `wTempMonForm`, preserving the gender and Egg
+flags copied from the source. The helper lives beside the existing format
+helpers because the original loader's ROM bank has little remaining space.
+`tests/test_tempmon_identity.py` exercises the complete copy and real base-data
+lookup with valid, absent, and partial format markers. Catch insertion and
+conversion-table garbage-collection representation auditing remain pending.

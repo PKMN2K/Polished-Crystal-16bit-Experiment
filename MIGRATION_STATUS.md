@@ -1,6 +1,23 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Current continuation checkpoint (2026-09-20)
+## Latest checkpoint: temporary-record identity boundary (2026-09-20)
+
+- Continues the player battle-reader checkpoint from PR #1 (`c7079f1`).
+- `CopyPkmnToTempMon`, `GetPkmnSpecies`, and `GetPkmnForm` now distinguish
+  persistent player/daycare records from legacy opponent/link records.
+- Player transient decoding preserves gender/Egg bits in the temporary form
+  byte instead of overwriting them with the masked identity form.
+- The source-type guard resides with the format helpers to fit the loader's
+  nearly full ROM bank. Persistent-format activation is still disabled.
+- Normal and clean debug builds pass with RGBDS 1.0.3; free space is 19,534
+  bytes normal and 19,420 bytes debug. No new build warnings remain.
+- Both ROMs pass 576 full temporary-record copy cases and all 432 existing
+  battle-boundary cases under PyBoy 2.7.0: **1,008 cases per configuration**.
+  Coverage includes absent/partial/valid markers, both party types, six slots,
+  extended and variant identities, metadata, source preservation, and bank/
+  stack preservation. These isolated CPU tests are not gameplay validation.
+
+## Previous checkpoint: player battle readers (2026-09-20)
 
 - Continued from repository `master` at `e47d19bd1e94fdfc4e85e6f252ae5c2757836c28`.
 - The archived overworld/special-event reader slice is now imported source;
@@ -129,8 +146,10 @@ Continue the battle/party boundary audit: remaining ability/AI and item readers,
 opponent-party construction, wild catches, and battle-to-party write-back.
 The central player send-in, player HUD, and experience-growth reads are now
 format-aware; this does not authorize switching opponent records to transient
-IDs. Reconcile shared temporary-record loaders and garbage-collection roots
-with the chosen opponent/battle representation before enabling allocation there.
+IDs. The shared temporary-record loader now distinguishes legacy opponent sources.
+Audit garbage-collection roots against the chosen opponent/battle representation
+before enabling allocation there; then convert catch insertion at its completed
+player-record boundary.
 Do not activate the persistent-format marker until downstream consumers and
 atomic old-save conversion are ready. Newbox remains a separate unfinished
 native-identity boundary.
@@ -163,8 +182,10 @@ After building, install the optional emulator test dependency and run:
 ```sh
 python -m pip install pyboy==2.7.0
 python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
+python tests/test_tempmon_identity.py polishedcrystal-3.2.3.gbc
 # Or, after the debug build:
 python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
+python tests/test_tempmon_identity.py polishedcrystal-debug-3.2.3.gbc
 ```
 
 The test uses the matching `.sym` file and executes compiled assembly directly.
