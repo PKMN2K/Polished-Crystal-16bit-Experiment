@@ -737,7 +737,11 @@ wLinkBattleRNs:: ds 10
 
 NEXTU
 ; battle data
-	ds 7
+; Direct native identities for the active battlers. These are native words,
+; not transient conversion-table IDs, so battle state does not create table roots.
+wBattleMonNativeSpecies:: dw
+wEnemyMonNativeSpecies:: dw
+	ds 3
 wCurEnemyItem:: db
 	ds 15
 
