@@ -445,3 +445,22 @@ helpers because the original loader's ROM bank has little remaining space.
 `tests/test_tempmon_identity.py` exercises the complete copy and real base-data
 lookup with valid, absent, and partial format markers. Catch insertion and
 conversion-table garbage-collection representation auditing remain pending.
+
+Conversion-table collection now follows the active representation boundaries:
+player/daycare slots are scanned only when the persistent marker is valid;
+roamers and four contest winner/work records remain transient roots. All six
+player slots are scanned because the contest temporarily hides five by changing
+only the party count. Legacy opponent, battle, temporary, contest-catch and Odd
+Egg identities, and legacy species globals, are not slot references. Locks and
+recent allocations remain protected. Contest result memory overlaps unrelated
+scratch buffers, so this checkpoint conservatively retains those four values;
+phase-specific suppression is deferred.
+
+Ordinary catches now copy the legacy wild opponent through a shared destination
+boundary and convert the player record only after the full structure is copied.
+Opponent bytes and the destination's non-identity data remain unchanged. The
+existing nickname, caught-data and ball-effect processing follows the copy.
+Full-party PC delivery remains on the legacy Newbox path. The focused collection
+and catch CPU suite forces table exhaustion and checks live-root preservation,
+slot reclamation and copied identities in both formats; it does not simulate
+the entire interactive capture sequence or enable persistent-format activation.

@@ -1,6 +1,30 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: temporary-record identity boundary (2026-09-20)
+## Latest checkpoint: collection roots and ordinary catches (2026-09-20)
+
+- Continues PR #1 from `482db5e`.
+- Conversion-table collection scans player/daycare records only when the
+  persistent format marker is valid. All six player slots stay protected,
+  including those hidden by the Bug-Catching Contest's temporary party count.
+- Roamers, all three contest winners and the temporary contestant record remain
+  roots. Locked/recent IDs remain protected by the existing table machinery.
+- Legacy opponent, battle, temporary, contest-catch and Odd Egg records, plus
+  legacy species globals, no longer pin coincidentally equal slot numbers.
+- Ordinary catches now copy the legacy opponent record through
+  `CopyCaughtPokemonToParty`, converting only the player destination identity.
+  Naming, caught-data, Friend Ball and Heal Ball handling continue afterward;
+  full-party PC catches still use the existing Newbox path.
+- Clean normal/debug builds pass with RGBDS 1.0.3, without assembler/linker
+  warnings. Free space: 19,585 bytes normal; 19,471 bytes debug.
+- Each ROM passes **1,592 isolated CPU cases**: the previous 1,008, plus eight
+  collection/allocation cases and 576 caught-record copies. New tests include
+  a full conversion table, locks/recent IDs, contest-hidden slots, format-marker
+  variants, Mismagius, Alolan Raichu, and gender/Egg metadata.
+- These tests cover the storage helper, not interactive capture animations,
+  nickname prompts, ball effects, or PC delivery. Persistent-format activation
+  remains disabled; save conversion and full gameplay testing remain pending.
+
+## Previous checkpoint: temporary-record identity boundary (2026-09-20)
 
 - Continues the player battle-reader checkpoint from PR #1 (`c7079f1`).
 - `CopyPkmnToTempMon`, `GetPkmnSpecies`, and `GetPkmnForm` now distinguish
@@ -146,10 +170,12 @@ Continue the battle/party boundary audit: remaining ability/AI and item readers,
 opponent-party construction, wild catches, and battle-to-party write-back.
 The central player send-in, player HUD, and experience-growth reads are now
 format-aware; this does not authorize switching opponent records to transient
-IDs. The shared temporary-record loader now distinguishes legacy opponent sources.
-Audit garbage-collection roots against the chosen opponent/battle representation
-before enabling allocation there; then convert catch insertion at its completed
-player-record boundary.
+IDs. The shared temporary-record loader distinguishes legacy opponent sources, and
+collection now follows those representation boundaries. Ordinary catches convert
+the player destination after copying. Next audit remaining lead-ability and
+battle/AI readers and generated player-party insertion, then prepare atomic
+old-save conversion. If opponent or battle records later become transient, add
+their roots back to collection in the same checkpoint.
 Do not activate the persistent-format marker until downstream consumers and
 atomic old-save conversion are ready. Newbox remains a separate unfinished
 native-identity boundary.
@@ -183,9 +209,11 @@ After building, install the optional emulator test dependency and run:
 python -m pip install pyboy==2.7.0
 python tests/test_battle_party_identity.py polishedcrystal-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-3.2.3.gbc
+python tests/test_species_collection_and_catch.py polishedcrystal-3.2.3.gbc
 # Or, after the debug build:
 python tests/test_battle_party_identity.py polishedcrystal-debug-3.2.3.gbc
 python tests/test_tempmon_identity.py polishedcrystal-debug-3.2.3.gbc
+python tests/test_species_collection_and_catch.py polishedcrystal-debug-3.2.3.gbc
 ```
 
 The test uses the matching `.sym` file and executes compiled assembly directly.

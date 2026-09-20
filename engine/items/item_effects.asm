@@ -273,14 +273,8 @@ PokeBallEffect:
 	ld hl, wPartyCount
 	ld a, [hl]
 	inc [hl]
-	ld hl, wPartyMon1
 	push af
-	call GetPartyLocation
-	ld d, h
-	ld e, l
-	ld hl, wOTPartyMon1
-	ld bc, PARTYMON_STRUCT_LENGTH
-	rst CopyBytes
+	farcall CopyCaughtPokemonToParty
 	pop af
 	push af
 	ld hl, wPartyMonOTs

@@ -440,3 +440,19 @@ PokemonDataSourceUsesTransientSpecies::
 	ld a, 1
 	and a
 	ret
+
+CopyCaughtPokemonToParty::
+; Copy the legacy wild opponent into a player slot, then convert only the
+; completed destination identity to the active persistent format.
+; in: a = zero-based player-party slot (caller has increased wPartyCount)
+; The opponent record and all non-identity bytes remain unchanged.
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	push hl
+	ld d, h
+	ld e, l
+	ld hl, wOTPartyMon1Species
+	ld bc, PARTYMON_STRUCT_LENGTH
+	rst CopyBytes
+	pop hl
+	jp PrepareLegacyPokemonDataStructForStorage
