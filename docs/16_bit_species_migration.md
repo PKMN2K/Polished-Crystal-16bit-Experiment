@@ -567,3 +567,22 @@ base-data buffer against the compiled ROM records, tests all party/daycare slots
 and marker states, checks metadata/register/global/table preservation, and tests
 empty records. Values above `$01ff` exercise only the native identity reader;
 they are not a substitute for the outstanding playable high-ID proof.
+
+
+## Native base data for the original attacker
+
+The external-user branch of Future Sight STAB now calls
+`GetBaseDataFromTrueUserParty` after publishing the existing legacy globals.
+The helper uses `TrueUserPartyAttr` to select the original attacker and reads
+player identity through the format-aware native reader. Enemy party records
+use `GetNativeSpeciesIDFromLegacyPokemonDataStruct` explicitly, so a transient
+player marker cannot reinterpret an opponent's species byte as a table slot.
+The helper preserves the move-type register and other caller registers/globals.
+Empty identities share the existing no-write/carry behavior.
+
+`tests/test_native_deferred_base_data.py` checks 1,200 lookup cases across both
+sides, six slots, deferred/current users, marker variants, regional/extended
+identities and metadata. It verifies exact compiled base data, source/global/
+table preservation and empty-record behavior. Full damage execution, active
+battle representation migration and a playable species above `$01ff` are still
+outside this checkpoint.

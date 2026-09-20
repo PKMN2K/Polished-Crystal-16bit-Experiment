@@ -1536,7 +1536,7 @@ BattleCommand_stab:
 	ld a, b
 	ld [wCurForm], a
 	pop bc
-	call GetBaseData
+	farcall GetBaseDataFromTrueUserParty
 	ld hl, wBaseType
 	jr .got_attacker_types
 .not_external

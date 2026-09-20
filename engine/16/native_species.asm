@@ -725,14 +725,20 @@ GetNativeSpeciesIDFromPokemonDataStruct::
 ; in: hl = player/daycare species byte, de = form offset
 ; out: bc = one-based native ID (zero for an empty record)
 ; Preserve hl/de and do not publish legacy globals or allocate a table slot.
+	call PokemonDataUsesTransientSpecies
+	jr nz, GetNativeSpeciesIDFromLegacyPokemonDataStruct
 	push hl
 	push de
-	call PokemonDataUsesTransientSpecies
-	jr nz, .legacy
 	ld a, [hl]
 	farcall GetNativeSpeciesIDFromTransientID
-	jr .done
-.legacy
+	pop de
+	pop hl
+	ret
+
+GetNativeSpeciesIDFromLegacyPokemonDataStruct::
+; Same contract, for opponent records independent of the player format marker.
+	push hl
+	push de
 	ld a, [hl]
 	ld c, a
 	ld b, 0
@@ -759,11 +765,35 @@ GetBaseDataFromPokemonDataStruct::
 	push bc
 	ld de, MON_FORM - MON_SPECIES
 	call GetNativeSpeciesIDFromPokemonDataStruct
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
+LoadBaseDataFromNonzeroNativeIDBC:
 	ld a, b
 	or c
 	scf
-	jr z, .done
+	ret z
 	farcall GetBaseDataFromNativeIDBC
 	and a
+	ret
+
+GetBaseDataFromTrueUserParty::
+; Load the original attacker's base data, including delayed Future Sight.
+; Player records follow their format marker; opponent records remain legacy.
+; Preserve bc/de/hl and species globals; carry set for an empty identity.
+	push hl
+	push de
+	push bc
+	ld a, MON_SPECIES
+	call TrueUserPartyAttr
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .player
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jr .done
+.player
+	call GetBaseDataFromPokemonDataStruct
 .done
 	jp PopBCDEHL

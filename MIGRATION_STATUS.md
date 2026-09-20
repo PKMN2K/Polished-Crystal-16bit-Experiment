@@ -1,6 +1,28 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: direct native party base-data lookup (2026-09-20)
+## Latest checkpoint: native original-attacker base data (2026-09-20)
+
+- Delayed Future Sight's attacker-type lookup now uses the original party
+  record directly. Player records resolve their stored native IDs; opponent
+  records explicitly use the legacy species/form reader regardless of the
+  player format marker.
+- `GetBaseDataFromTrueUserParty` handles current and off-field delayed users,
+  preserves BC/DE/HL and species globals, and leaves base data unchanged for an
+  empty identity. This preserves the move-type register used by STAB.
+- The legacy native-ID reader is shared with the player/daycare fallback, and
+  both base-data wrappers share the empty-identity check.
+- 1,200 new CPU cases check both battle sides, all six slots, current/delayed
+  users, four marker states, metadata, exact ROM data, register/global/table
+  preservation and empty records. These are lookup tests, not full Future Sight
+  damage/animation or end-to-end high-species gameplay tests.
+- Normal and clean debug builds pass without assembler/linker warnings with
+  RGBDS 1.0.3. Each ROM passes **5,979 CPU cases** under PyBoy 2.7.0. Free space
+  is 18,952 bytes normal and 18,838 bytes debug.
+- Automatic migration activation and battle/opponent representation changes
+  remain disabled.
+
+
+## Previous checkpoint: direct native party base-data lookup (2026-09-20)
 
 - Player HUD and experience-recipient base-data reads now resolve the stored
   native identity directly. The lookup no longer reconstructs its ID from the
