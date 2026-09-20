@@ -40,10 +40,12 @@ example:
 PATH="/path/to/rgbds-1.0.3:$PATH" make -j2
 ```
 
-Normal and clean debug builds pass 5,979 CPU regression cases each. See
-`MIGRATION_STATUS.md` for test commands and coverage. Successful assembly and
-CPU tests do not establish complete gameplay validation; persistent party
-format activation and end-to-end runtime tests remain pending.
+The current native active-battle checkpoint passes all eight GitHub Actions
+build variants. The last locally executed PyBoy checkpoint passed 5,979 CPU
+regression cases on both normal and debug ROMs; additional active-battle CPU
+coverage is committed but has not yet been rerun on the current head. See
+`MIGRATION_STATUS.md` for exact validation scope. Persistent party-format
+activation and end-to-end runtime testing remain pending.
 
 My goal is to create what the title says: an improved, polished version of Pokémon Crystal. It fixes bugs, takes into account the official game changes since 2001, and adds some new ideas of my own. Many features restore what was removed from R/B/Y, or original to HG/SS.
 
