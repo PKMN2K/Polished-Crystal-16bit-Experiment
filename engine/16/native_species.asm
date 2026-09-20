@@ -782,6 +782,25 @@ LoadBaseDataFromNonzeroNativeIDBC:
 	and a
 	ret
 
+GetBaseDataFromActiveBattleNativeSpecies::
+; Load base data from the native identity shadow of the active battler.
+; hBattleTurn selects player (0) or enemy (1). Preserve bc/de/hl and species
+; globals; carry set for an empty shadow, leaving base data unchanged.
+	push hl
+	push de
+	push bc
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_shadow
+	ld hl, wEnemyMonNativeSpecies
+.got_shadow
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
 GetBaseDataFromTrueUserParty::
 ; Load the original attacker's base data, including delayed Future Sight.
 ; Player records follow their format marker; opponent records remain legacy.
