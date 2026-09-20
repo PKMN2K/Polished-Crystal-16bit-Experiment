@@ -1265,6 +1265,7 @@ endr
 .got_partymon
 	ld a, [wCurPartyMon]
 	call GetPartyLocation
+	call .store_native_identity
 	push hl
 	ld de, wBattleMonSpecies
 	call .get_user_mon_attr_de
@@ -1466,6 +1467,32 @@ endr
 	ld hl, wEnemySwitchTarget
 .got_switch_target
 	ld [hl], 0
+	ret
+
+.store_native_identity
+; Preserve a full native identity beside the legacy active-battle structure.
+; Player records follow the persistent format marker; opponent records remain
+; legacy until the broader battle/opponent representation migration.
+	push hl
+	push de
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	ldh a, [hBattleTurn]
+	and a
+	jr nz, .store_enemy_native
+	farcall GetNativeSpeciesIDFromPokemonDataStruct
+	ld hl, wBattleMonNativeSpecies
+	jr .store_native_word
+.store_enemy_native
+	farcall GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	ld hl, wEnemyMonNativeSpecies
+.store_native_word
+	ld [hl], c
+	inc hl
+	ld [hl], b
+	pop bc
+	pop de
+	pop hl
 	ret
 
 .decode_player_identity
