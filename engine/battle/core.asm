@@ -1321,7 +1321,7 @@ endr
 .got_temp_form
 	ld [de], a
 
-	call GetBaseData
+	farcall GetBaseDataFromActiveBattleNativeSpecies
 	ld de, wBattleMonType1
 	call .get_user_mon_attr_de
 	ld hl, wBaseType1
