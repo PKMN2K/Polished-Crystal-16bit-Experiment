@@ -1,6 +1,36 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native Low Kick weight lookup (2026-09-22)
+## Latest checkpoint: native battle picture-refresh identity (2026-09-22)
+
+- `DropPlayerSub` and `DropEnemySub` now derive renderer identity from the
+  corresponding current 16-bit active shadow, independently of `hBattleTurn`.
+- `PreparePlayerBattlePictureIdentity` / `PrepareEnemyBattlePictureIdentity`
+  bridge native identity into `wCurPartySpecies` and `wCurForm`, preserving
+  BC/DE/HL. Mechanical variants use the canonical presentation form in
+  `NativeVariantIdentityTable`. Root species retain cosmetic overlays only
+  when those overlays resolve to the same native identity; conflicting
+  mechanical forms fall back to the plain form.
+- Empty shadows and reserved root $0100 return carry without publishing globals
+  or calling a renderer. Both refresh paths restore the caller's party species
+  and form. The enemy path loads base data through its direct native helper.
+- Ghost-image dispatch is retained. This is a compatibility bridge: the shared
+  picture loaders still consume legacy presentation values and the animated
+  front loader still performs its own compatible base-data lookup.
+- `tests/test_battle_picture_native_identity.py` covers 254 CPU cases: both
+  sides and turns, all 46 mechanical variants, extended roots, cosmetic
+  examples, conflicting legacy identities, empty/reserved IDs, preserved
+  registers/banks, renderer dispatch, restoration and enemy base-data inputs.
+  Integration cases stub renderer entry points; they do not test decompression,
+  VRAM output, or on-screen appearance.
+- Validation: normal and clean debug builds with RGBDS 1.0.3; 254 picture CPU
+  cases passed on each with PyBoy 2.7.0. The prior 36 Low Kick CPU cases also
+  passed on the normal build. Full regression suite, remaining six build
+  configurations and visual gameplay testing were not run at this checkpoint.
+- No persistent record format or automatic activation setting changed.
+- Next recommended step: migrate Transform's Armored Mewtwo restriction,
+  which still checks the opponent's legacy species byte and held item.
+
+## Previous checkpoint: native Low Kick weight lookup (2026-09-22)
 
 - `BattleCommand_lowkick` selects the opposing active native species word using
   `hBattleTurn` and calls `GetNativeSpeciesWeight`. It no longer reconstructs

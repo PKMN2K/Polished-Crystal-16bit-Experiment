@@ -7932,12 +7932,11 @@ DropPlayerSub:
 	push af
 	ld a, [wCurForm]
 	push af
-	ld a, [wBattleMonSpecies]
-	ld [wCurPartySpecies], a
-	ld a, [wBattleMonForm]
-	ld [wCurForm], a
+	farcall PreparePlayerBattlePictureIdentity
+	jr c, .restore_identity
 	ld de, vTiles2 tile $31
 	farcall GetBackpic
+.restore_identity
 	pop af
 	ld [wCurForm], a
 	pop af
@@ -7966,13 +7965,13 @@ DropEnemySub:
 	push af
 	ld a, [wCurForm]
 	push af
-	ld a, [wEnemyMonSpecies]
+	farcall PrepareEnemyBattlePictureIdentity
+	jr c, .restore_identity
+	ld a, [wCurPartySpecies]
 	ld [wCurSpecies], a
-	ld [wCurPartySpecies], a
-	ld a, [wEnemyMonForm]
-	ld [wCurForm], a
-	call GetBaseData
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
 	call GetFrontpicOrGhostpic
+.restore_identity
 	pop af
 	ld [wCurForm], a
 	pop af

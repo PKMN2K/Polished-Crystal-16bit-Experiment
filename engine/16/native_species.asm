@@ -904,6 +904,92 @@ GetBaseDataFromEnemyBattleNativeSpecies::
 	call LoadBaseDataFromNonzeroNativeIDBC
 	jp PopBCDEHL
 
+PreparePlayerBattlePictureIdentity::
+; Publish renderer-compatible species/form from the current native shadow.
+; Preserve bc/de/hl; carry for an empty/reserved identity, globals unchanged.
+	push hl
+	push de
+	push bc
+	ld hl, wBattleMonNativeSpecies
+	ld a, [wBattleMonForm]
+	jr PrepareBattlePictureIdentity
+
+PrepareEnemyBattlePictureIdentity::
+	push hl
+	push de
+	push bc
+	ld hl, wEnemyMonNativeSpecies
+	ld a, [wEnemyMonForm]
+PrepareBattlePictureIdentity:
+	and FORM_MASK
+	ld e, a
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	ld a, b
+	or c
+	jr z, .invalid
+	; The reserved root $0100 has no renderable legacy species byte.
+	ld a, b
+	cp 1
+	jr nz, .valid
+	ld a, c
+	and a
+	jr z, .invalid
+.valid
+	ld a, b
+	cp HIGH(NUM_SPECIES)
+	jr c, .root
+	jr nz, .variant
+	ld a, c
+	cp LOW(NUM_SPECIES) + 1
+	jr c, .root
+.variant
+	; Mechanical form comes from native identity, not a stale legacy form.
+	push bc
+	farcall GetNativeVariantIdentityPointer
+	ld de, 4
+	add hl, de
+	ld a, BANK(NativeVariantIdentityTable)
+	call GetFarByte
+	pop bc
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	jr .publish
+.root
+	; Keep cosmetic overlays only when they resolve to the same native root.
+	push bc
+	ld a, e
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	push bc
+	call GetSpeciesAndFormIndex
+	inc bc
+	pop de
+	pop hl
+	ld a, b
+	cp h
+	jr nz, .plain
+	ld a, c
+	cp l
+	jr nz, .plain
+	ld b, d
+	ld c, e
+	jr .publish
+.plain
+	ld b, h
+	ld c, l
+	ld a, PLAIN_FORM
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+.publish
+	ld a, c
+	ld [wCurPartySpecies], a
+	ld a, b
+	ld [wCurForm], a
+	and a
+	jp PopBCDEHL
+.invalid
+	scf
+	jp PopBCDEHL
+
 GetBaseDataFromActiveBattleNativeSpecies::
 ; Load base data from the native identity shadow of the active battler.
 ; hBattleTurn selects player (0) or enemy (1). Preserve bc/de/hl and species
