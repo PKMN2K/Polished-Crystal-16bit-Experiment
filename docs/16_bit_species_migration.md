@@ -750,3 +750,28 @@ high-byte native identity with the same low byte does not compare equal.
 `tests/test_opponent_native_species_match.py` covers both battle turns,
 full-word mismatch, wrong-side guards, conflicting legacy bytes and empty
 native shadows.
+
+
+## Native species-restricted held-item checks
+
+`UserValidBattleItem` controls species-restricted held-item effects such as
+Light Ball, Leek, Lucky Punch, Quick Powder and Thick Club. The old path read
+the current battle species byte and form, then matched a three-byte table record
+containing item + legacy species/form.
+
+The table is now `ValidBattleItemTableNative`, with the same three-byte record
+width but a simpler identity representation: item byte + 16-bit native species
+ID. The caller selects the current user's `wBattleMonNativeSpecies` or
+`wEnemyMonNativeSpecies` shadow from `hBattleTurn` and compares the full
+native word directly.
+
+This remains a current-battle-species rule, not an original-party-species rule.
+Transform therefore changes which species-restricted item effects apply, just as
+the legacy active species/form fields did; the Transform synchronization
+checkpoint ensures the native shadow follows that behavior. Exact native
+matching also means a regional/mechanical identity does not inherit a root
+species' item effect unless it is explicitly listed.
+
+`tests/test_native_species_battle_items.py` covers both active sides,
+legacy/native disagreement, full-word high-byte mismatches, empty native
+shadows and wrong-item guards.
