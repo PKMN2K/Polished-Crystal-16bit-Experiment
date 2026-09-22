@@ -643,3 +643,42 @@ empty shadow. Conflicting legacy/native fixtures prove the catch-rate record is
 selected from the native word while the legacy-global side effects remain.
 These new PyBoy cases are committed but were not run in this chat. GitHub
 Actions run #17 passes all eight configured ROM build variants.
+
+
+## Third active-battle consumer: Heavy Ball weight lookup
+
+Heavy Ball previously rebuilt the enemy identity from `wEnemyMonSpecies` and
+`wEnemyMonForm` before looking up body weight. That made its weight threshold
+logic depend on the transitional byte/form representation even though the active
+enemy now has a direct native identity shadow.
+
+`HeavyBallMultiplier` now reads `wEnemyMonNativeSpecies` and calls
+`GetNativeSpeciesWeight`, which uses the one-based native ID directly with
+`GetBodyDataPointerFromNativeIDBC`. The existing weight thresholds and catch-
+rate adjustments are unchanged. A zero native shadow returns without changing
+the current catch rate instead of falling back to a stale legacy identity.
+
+`tests/test_heavy_ball_native_weight.py` covers light, medium and heavy weight
+bands, species #256, Alolan Raichu, deliberately conflicting legacy identity and
+an empty native shadow. GitHub Actions run #21 passed all eight configured ROM
+build variants for the Heavy Ball code head.
+
+
+## Fourth active-battle consumer: ability reset
+
+The active ability reset path still passed the byte-sized battle species into
+the legacy `GetAbility` routine. That meant a mechanically distinct native
+identity could still select its ability table through reconstructed legacy
+species/form state.
+
+`GetAbilityFromNativeIDBC` now accepts a one-based native species ID directly.
+It keeps the existing personality byte as the ability-slot selector, loads the
+ability list from the native base-data record and returns no active ability for
+native ID zero. `ResetPlayerAbility` and `ResetEnemyAbility` read their
+respective native battle shadows and use this helper.
+
+`tests/test_active_battle_native_ability.py` adds focused cases for both battle
+sides, ordinary species, species #256, Alolan Raichu, conflicting legacy
+species bytes and empty native shadows. The battle structs themselves remain
+legacy-compatible; only this consumer's identity source has moved to the native
+word.
