@@ -3143,10 +3143,12 @@ NewEnemyMonStatus:
 
 ResetEnemyAbility:
 	push hl
+	ld hl, wEnemyMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
 	ld hl, wEnemyMonPersonality
-	ld a, [wEnemyMonSpecies]
-	ld c, a
-	call GetAbility
+	call GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wEnemyAbility], a
@@ -3155,10 +3157,12 @@ ResetEnemyAbility:
 
 ResetPlayerAbility:
 	push hl
+	ld hl, wBattleMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
 	ld hl, wBattleMonPersonality
-	ld a, [wBattleMonSpecies]
-	ld c, a
-	call GetAbility
+	call GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wPlayerAbility], a
