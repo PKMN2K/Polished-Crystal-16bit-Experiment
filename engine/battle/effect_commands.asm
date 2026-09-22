@@ -1339,24 +1339,29 @@ TrueUserValidBattleItem:
 	ret nz
 	; fallthrough
 UserValidBattleItem:
-; Checks if the user's held item applies to the species+form.
+; Checks if the user's held item applies to the current native species identity.
 ; Used for items like Leek, Lucky Punch, Thick Club, etc.
 ; Returns z if the item is valid.
 	push hl
 	push de
 	push bc
 
-	; Get item, species and form data.
+	; Get the current held item.
 	ld hl, wBattleMonItem
 	call GetUserMonAttr
-	ld a, [hl]
-	ld de, wBattleMonSpecies - wBattleMonItem
-	add hl, de
+	ld d, [hl]
+
+	; Get the current active native identity. This deliberately follows
+	; Transform rather than the original party species.
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_native
+	ld hl, wEnemyMonNativeSpecies
+.got_native
 	ld c, [hl]
-	ld de, wBattleMonForm - wBattleMonSpecies
-	add hl, de
+	inc hl
 	ld b, [hl]
-	ld d, a
 	ld hl, .ValidBattleItemTable
 
 .loop
@@ -1369,17 +1374,17 @@ UserValidBattleItem:
 	dec a
 	cp d
 	ld a, [hli]
-	jr nz, .next
+	jr nz, .skip_high
 
-	; Does the item apply to the species?
+	; Does the full native species ID match?
 	cp c
-	jr nz, .next
-
-	; Check exact species+form.
-	ld a, [hl]
-	call CompareSpeciesForm
+	jr nz, .skip_high
+	ld a, [hli]
+	cp b
 	jr z, .matched
-.next
+	jr .loop
+
+.skip_high
 	inc hl
 	jr .loop
 .matched
@@ -1392,8 +1397,7 @@ UserValidBattleItem:
 
 MACRO species_battle_item
 	db \1
-	shift
-	dp \#
+	dw \2
 ENDM
 
 .ValidBattleItemTable:
