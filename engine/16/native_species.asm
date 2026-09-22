@@ -231,6 +231,45 @@ LoadLegacySpeciesFromNativeWord::
 	xor a
 	jp GetLegacySpeciesAndFormFromNativeIDBC
 
+IsActiveBattleNativeSpeciesInList::
+; Test the current move user's direct native battle identity against a
+; zero-terminated native-ID word list. hBattleTurn selects player (0) or enemy.
+; in: hl = native-ID list
+; out: carry set if found; preserves de
+	push de
+	push hl
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_shadow
+	ld hl, wEnemyMonNativeSpecies
+.got_shadow
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	pop hl
+.loop
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	inc hl
+	ld a, d
+	or e
+	jr z, .not_found
+	ld a, e
+	cp c
+	jr nz, .loop
+	ld a, d
+	cp b
+	jr nz, .loop
+	scf
+	pop de
+	ret
+.not_found
+	and a
+	pop de
+	ret
+
 IsLegacySpeciesInNativeList::
 ; Test a transitional species/form pair against a zero-terminated native-ID
 ; word list.
