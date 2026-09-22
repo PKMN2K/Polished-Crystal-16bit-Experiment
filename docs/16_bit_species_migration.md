@@ -705,3 +705,27 @@ checks without incorrectly using the send-in identity.
 
 `tests/test_transform_native_identity.py` covers both transform directions,
 ordinary species, species #256, Alolan Raichu and a zero native shadow.
+
+
+## Native current-species lists for battle animation substitution
+
+`CheckBattleAnimSubstitution` uses curated species lists to swap a move's
+battle animation for particular users. Those lists are already stored as native
+16-bit IDs, but the old path first rebuilt a native ID from the user's legacy
+battle species/form bytes before comparing it.
+
+`IsActiveBattleNativeSpeciesInList` now selects the current move user's
+`wBattleMonNativeSpecies` or `wEnemyMonNativeSpecies` shadow with
+`hBattleTurn` and compares that word directly against the native list. This
+removes a native→legacy→native round-trip from the active battle path and keeps
+the animation check aligned with transformed identity because the preceding
+Transform checkpoint synchronizes the active native shadow.
+
+The helper preserves DE so the caller can keep its candidate replacement
+animation ID there. An empty native shadow never matches. The Fresh Snack/Milk
+Drink, Fury Strikes/Fury Attack and Defense Curl variation checks now use this
+path.
+
+`tests/test_active_native_species_list.py` covers both active sides, ordinary
+and extended IDs, Alolan Raichu, deliberate legacy/native disagreement,
+wrong-side selection guards and empty active native shadows.
