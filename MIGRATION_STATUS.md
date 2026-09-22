@@ -1,6 +1,24 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native battle-animation species lists (2026-09-22)
+## Latest checkpoint: faithful Metal Powder native Ditto check (2026-09-22)
+
+- The faithful-mode `DittoMetalPowder` rule now checks the opponent's current
+  16-bit active native identity instead of reading the legacy battle species and
+  extended-species form bit.
+- `IsOpponentActiveNativeSpeciesBC` selects the opposing active shadow from
+  `hBattleTurn` and compares the full 16-bit native word. This correctly
+  distinguishes high-byte identities and follows the current transformed
+  species because Transform now synchronizes the native shadows.
+- The non-faithful rule is intentionally unchanged: it still checks Ditto's
+  original party species so Metal Powder continues to work after Ditto
+  transforms, matching that mode's existing behavior.
+- `tests/test_opponent_native_species_match.py` adds eight focused CPU cases
+  covering both battle turns, exact full-word matching, wrong-side guards,
+  deliberately conflicting legacy species bytes and an empty native shadow.
+- No opponent party representation was changed by this checkpoint.
+
+
+## Previous checkpoint: native battle-animation species lists (2026-09-22)
 
 - `CheckBattleAnimSubstitution` no longer reconstructs the current move user's
   identity from `wBattleMonSpecies` / `wEnemyMonSpecies` plus the legacy
