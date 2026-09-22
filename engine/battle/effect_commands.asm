@@ -6768,16 +6768,7 @@ CheckBattleAnimSubstitution:
 	ld hl, HardenUsers
 	; fallthrough
 .check_species_list
-	push hl
-	ld hl, wBattleMonSpecies
-	call GetUserMonAttr
-	ld a, [hl]
-	ld bc, wBattleMonForm - wBattleMonSpecies
-	add hl, bc
-	ld c, a
-	ld b, [hl]
-	pop hl
-	farcall IsLegacySpeciesInNativeList
+	farcall IsActiveBattleNativeSpeciesInList
 	ret nc
 	ld a, e
 	ld [wFXAnimIDLo], a
