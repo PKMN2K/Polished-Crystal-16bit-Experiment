@@ -3862,17 +3862,10 @@ if !DEF(FAITHFUL)
 	ret nz
 else
 	; only works if current species is Ditto
-	ld hl, wBattleMonForm
-	call GetOpponentMonAttr
-	ld a, [hl]
-	and EXTSPECIES_MASK
+	ld bc, DITTO
+	farcall IsOpponentActiveNativeSpeciesBC
 	ret nz
-	ld hl, wBattleMonSpecies
-	call GetOpponentMonAttr
-	ld a, [hl]
 endc
-	cp DITTO
-	ret nz
 
 	push bc
 	call GetOpponentItem
