@@ -1,6 +1,28 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: Transform native-shadow synchronization (2026-09-22)
+## Latest checkpoint: native battle-animation species lists (2026-09-22)
+
+- `CheckBattleAnimSubstitution` no longer reconstructs the current move user's
+  identity from `wBattleMonSpecies` / `wEnemyMonSpecies` plus the legacy
+  form byte before checking curated native species lists.
+- `IsActiveBattleNativeSpeciesInList` selects
+  `wBattleMonNativeSpecies` or `wEnemyMonNativeSpecies` with `hBattleTurn`
+  and compares the direct native word against the zero-terminated native-ID
+  list. The helper preserves DE because the animation substitution path keeps
+  its replacement animation ID there.
+- This path intentionally uses the current active native identity rather than
+  original party identity. The preceding Transform checkpoint keeps that shadow
+  synchronized when a battler transforms.
+- The Milk Drink/Fresh Snack, Fury Strikes/Fury Attack and Defense Curl
+  animation-variation checks now use this direct native matcher.
+- `tests/test_active_native_species_list.py` adds ten focused CPU cases across
+  both battle sides, ordinary species, species #256, Alolan Raichu, wrong-side
+  guards, deliberately conflicting legacy identities and empty native shadows.
+- Legacy battle species/form fields remain populated for other unconverted
+  consumers.
+
+
+## Previous checkpoint: Transform native-shadow synchronization (2026-09-22)
 
 - Transform now keeps the direct native active-battle identity shadow in sync
   with the legacy battle species/form representation it already copies.
