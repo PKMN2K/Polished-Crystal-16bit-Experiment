@@ -682,3 +682,26 @@ sides, ordinary species, species #256, Alolan Raichu, conflicting legacy
 species bytes and empty native shadows. The battle structs themselves remain
 legacy-compatible; only this consumer's identity source has moved to the native
 word.
+
+
+## Transform synchronization for active native identity
+
+The direct native battle shadows originally represented the identity published
+at send-in. That is insufficient for consumers which intentionally inspect the
+battler's current species after Transform, because Transform already replaces
+the legacy active species/form fields.
+
+`CopyTransformNativeIdentity` now mirrors that operation for the native word.
+When the player transforms, `wEnemyMonNativeSpecies` is copied into
+`wBattleMonNativeSpecies`; when the enemy transforms, the player native word
+is copied into `wEnemyMonNativeSpecies`. The source shadow is unchanged, and
+a zero source remains zero.
+
+This does not alter the original party record or the existing transformed
+substatus. It only keeps the current active-battle native identity parallel to
+the current legacy battle representation. This is a prerequisite for migrating
+current-species consumers such as animation-variation and transformed-species
+checks without incorrectly using the send-in identity.
+
+`tests/test_transform_native_identity.py` covers both transform directions,
+ordinary species, species #256, Alolan Raichu and a zero native shadow.
