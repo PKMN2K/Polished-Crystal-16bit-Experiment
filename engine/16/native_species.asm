@@ -6,6 +6,53 @@ GetBaseDataFromNativeIDBC::
 	dec bc
 	jp GetBaseDataFromIndexBC
 
+
+GetAbilityFromNativeIDBC::
+; in: bc = one-based native species ID, hl = target personality
+; out: ability in a and b; preserves hl, de and c
+; Reads the base-data ability bytes through a far pointer so this routine can
+; live outside ROM0 without disturbing the current base-data buffer.
+	ld a, b
+	or c
+	jr z, .no_ability
+
+	ld a, [wInitialOptions]
+	and ABILITIES_OPTMASK
+	jr z, .got_ability
+
+	push de
+	push hl
+	ld a, [hl]
+	and ABILITY_MASK
+	push af
+	push bc
+
+	ld hl, BaseData
+	ld a, BANK(BaseData)
+	call LoadIndirectPointer
+	ld d, a
+
+	pop bc
+	pop af
+	cp ABILITY_1
+	jr z, .got_ability_ptr
+	inc hl
+	cp ABILITY_2
+	jr z, .got_ability_ptr
+	inc hl
+.got_ability_ptr
+	ld a, d
+	call GetFarByte
+	pop hl
+	pop de
+	jr .got_ability
+
+.no_ability
+	xor a
+.got_ability
+	ld b, a
+	ret
+
 GetEggMovePointerFromNativeIDBC::
 ; in: bc = one-based native species ID
 ; out: a:hl = egg-move record pointer
