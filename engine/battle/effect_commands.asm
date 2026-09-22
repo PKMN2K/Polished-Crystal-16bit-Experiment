@@ -1362,7 +1362,7 @@ UserValidBattleItem:
 	ld c, [hl]
 	inc hl
 	ld b, [hl]
-	ld hl, .ValidBattleItemTable
+	ld hl, ValidBattleItemTableNative
 
 .loop
 	; Check if we reached the end of the table.
@@ -1400,7 +1400,7 @@ MACRO species_battle_item
 	dw \2
 ENDM
 
-.ValidBattleItemTable:
+ValidBattleItemTableNative::
 	species_battle_item LIGHT_BALL, PIKACHU
 	species_battle_item LEEK, FARFETCH_D
 	species_battle_item LEEK, SIRFETCH_D
