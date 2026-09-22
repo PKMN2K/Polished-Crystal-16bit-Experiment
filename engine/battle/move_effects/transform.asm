@@ -131,6 +131,7 @@ BattleCommand_transform:
 	ld [hli], a
 	ld [hl], b
 	call GetPokemonName
+	call CopyTransformNativeIdentity
 	ld hl, wEnemyStatLevels
 	ld de, wPlayerStatLevels
 	ld bc, 8
@@ -185,3 +186,24 @@ BattleCommand_transform:
 	ret z ; avoid infinite loop
 
 	farjp RunEntryAbilitiesInner
+
+
+CopyTransformNativeIdentity::
+; Transform replaces the user's current battle identity with the target's.
+; Keep the direct native identity shadow synchronized with the legacy
+; battle species/form fields copied above.
+; hBattleTurn: 0 = player is transforming, 1 = enemy is transforming.
+	ld hl, wEnemyMonNativeSpecies
+	ld de, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .copy
+	ld hl, wBattleMonNativeSpecies
+	ld de, wEnemyMonNativeSpecies
+.copy
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hl]
+	ld [de], a
+	ret
