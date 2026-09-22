@@ -1,6 +1,31 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native battle picture-refresh identity (2026-09-22)
+## Latest checkpoint: native Transform armor restriction (2026-09-22)
+
+- Transform's early Mewtwo/Armor Suit restriction now selects the opponent's
+  current native species word with `hBattleTurn`, resolves its root through
+  `GetRootSpeciesFromNativeIDBC`, and compares the full 16-bit root ID.
+- Root matching preserves the existing form wildcard: both ordinary Mewtwo
+  and Armored Mewtwo are blocked when holding Armor Suit. A matching native
+  identity without that item is not rejected by this particular check.
+- The held-item pointer is preserved across the banked root lookup. Empty
+  shadows do not fall back to stale legacy species bytes. The existing earlier
+  rejection of an already-transformed target is unchanged.
+- `tests/test_transform_native_restriction.py` executes 410 CPU cases covering
+  both turns, all 46 mechanical variants, ordinary/extended/empty identities,
+  held-item and wrong-side guards, deliberately conflicting legacy species,
+  prior transformed status, and stack/bank/global preservation.
+- Tests execute the real Transform entry, then stub its rejection and immediate
+  post-restriction continuation. The rest of Transform and its animations are
+  outside this focused test's scope.
+- Validation: normal and clean debug builds with RGBDS 1.0.3; 410 focused CPU
+  cases passed on each ROM with PyBoy 2.7.0. Full regression suite, other build
+  configurations and end-to-end gameplay were not run at this checkpoint.
+- Persistent record formats and automatic activation remain unchanged.
+- Next recommended step: migrate the fainting cry identity lookup, which still
+  reads the active legacy species/form pair before calling `PlaySlowCryBC`.
+
+## Previous checkpoint: native battle picture-refresh identity (2026-09-22)
 
 - `DropPlayerSub` and `DropEnemySub` now derive renderer identity from the
   corresponding current 16-bit active shadow, independently of `hBattleTurn`.

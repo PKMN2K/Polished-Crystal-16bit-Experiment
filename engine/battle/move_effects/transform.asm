@@ -8,14 +8,25 @@ BattleCommand_transform:
 
 	ldh a, [hBattleTurn]
 	and a
-	ld hl, wEnemyMonSpecies
+	ld hl, wEnemyMonNativeSpecies
 	ld de, wEnemyMonItem
 	jr z, .got_mon_item
-	ld hl, wBattleMonSpecies
+	ld hl, wBattleMonNativeSpecies
 	ld de, wBattleMonItem
 .got_mon_item
-	ld a, [hl]
-	cp MEWTWO
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	; Preserve the old Mewtwo-form wildcard, including Armored Mewtwo,
+	; but compare the full root ID rather than just a legacy species byte.
+	push de
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
+	ld a, b
+	cp HIGH(MEWTWO)
+	jr nz, .not_armored_mewtwo
+	ld a, c
+	cp LOW(MEWTWO)
 	jr nz, .not_armored_mewtwo
 	ld a, [de]
 	cp ARMOR_SUIT
