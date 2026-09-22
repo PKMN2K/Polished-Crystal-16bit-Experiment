@@ -231,6 +231,27 @@ LoadLegacySpeciesFromNativeWord::
 	xor a
 	jp GetLegacySpeciesAndFormFromNativeIDBC
 
+IsOpponentActiveNativeSpeciesBC::
+; Compare the current move user's opponent with a one-based native species ID.
+; hBattleTurn selects which active shadow is the opponent.
+; in: bc = native species ID
+; out: z if the opponent matches exactly; preserves hl
+	push hl
+	ld hl, wEnemyMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_opponent
+	ld hl, wBattleMonNativeSpecies
+.got_opponent
+	ld a, [hli]
+	cp c
+	jr nz, .done
+	ld a, [hl]
+	cp b
+.done
+	pop hl
+	ret
+
 IsActiveBattleNativeSpeciesInList::
 ; Test the current move user's direct native battle identity against a
 ; zero-terminated native-ID word list. hBattleTurn selects player (0) or enemy.
