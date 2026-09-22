@@ -760,18 +760,19 @@ the current battle species byte and form, then matched a three-byte table record
 containing item + legacy species/form.
 
 The table is now `ValidBattleItemTableNative`, with the same three-byte record
-width but a simpler identity representation: item byte + 16-bit native species
-ID. The caller selects the current user's `wBattleMonNativeSpecies` or
-`wEnemyMonNativeSpecies` shadow from `hBattleTurn` and compares the full
-native word directly.
+width but a simpler identity representation: item byte + 16-bit native root
+species ID. The caller selects the current user's `wBattleMonNativeSpecies` or
+`wEnemyMonNativeSpecies` shadow from `hBattleTurn`, resolves that identity
+through `GetRootSpeciesFromNativeIDBC`, and compares the resulting root word.
 
 This remains a current-battle-species rule, not an original-party-species rule.
 Transform therefore changes which species-restricted item effects apply, just as
 the legacy active species/form fields did; the Transform synchronization
-checkpoint ensures the native shadow follows that behavior. Exact native
-matching also means a regional/mechanical identity does not inherit a root
-species' item effect unless it is explicitly listed.
+checkpoint ensures the native shadow follows that behavior. Resolving the
+native identity to its root species also preserves the old zero-form wildcard:
+regional/mechanical forms inherit an item effect attached to their root species,
+while unrelated roots do not.
 
-`tests/test_native_species_battle_items.py` covers both active sides,
-legacy/native disagreement, full-word high-byte mismatches, empty native
-shadows and wrong-item guards.
+`tests/test_native_species_battle_items.py` covers both active sides, a real
+mechanical-variant/root match, legacy/native disagreement, unrelated roots,
+empty native shadows and wrong-item guards.
