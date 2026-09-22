@@ -1,6 +1,23 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native active-battler ability reset (2026-09-22)
+## Latest checkpoint: Transform native-shadow synchronization (2026-09-22)
+
+- Transform now keeps the direct native active-battle identity shadow in sync
+  with the legacy battle species/form representation it already copies.
+- `CopyTransformNativeIdentity` copies the target's native word into the
+  transforming user's shadow using `hBattleTurn`: enemy→player for a player
+  Transform and player→enemy for an enemy Transform.
+- This preserves the distinction between a battler's current transformed
+  identity and its original party identity, which is required before more
+  current-species battle consumers can safely move to native IDs.
+- `tests/test_transform_native_identity.py` adds eight focused CPU cases:
+  both transform directions, an ordinary species, species #256, Alolan Raichu
+  and a zero native shadow.
+- The legacy battle species/form fields are still copied exactly as before;
+  this checkpoint only synchronizes the parallel native shadow.
+
+
+## Previous checkpoint: native active-battler ability reset (2026-09-22)
 
 - `ResetPlayerAbility` and `ResetEnemyAbility` now source species identity from
   `wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies` instead of the
