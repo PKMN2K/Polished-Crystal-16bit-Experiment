@@ -31,6 +31,8 @@ GetAbilityFromNativeIDBC::
 	ld a, BANK(BaseData)
 	call LoadIndirectPointer
 	ld d, a
+	ld bc, BASE_ABILITIES
+	add hl, bc
 
 	pop bc
 	pop af
