@@ -729,3 +729,24 @@ path.
 `tests/test_active_native_species_list.py` covers both active sides, ordinary
 and extended IDs, Alolan Raichu, deliberate legacy/native disagreement,
 wrong-side selection guards and empty active native shadows.
+
+
+## Faithful Metal Powder current-species check
+
+Polished Crystal has two intentional Metal Powder behaviors. In non-faithful
+mode, the effect follows Ditto's true party species and continues to apply after
+Ditto transforms. That path remains party-record based and unchanged.
+
+In faithful mode, the rule instead asks whether the opponent's current battle
+species is Ditto. That check previously read the legacy active species byte and
+extended-species form bit. `IsOpponentActiveNativeSpeciesBC` now selects the
+opponent's direct native shadow using `hBattleTurn` and compares the complete
+16-bit native ID. Because Transform synchronizes the active native shadows, a
+non-Ditto transformed into Ditto matches, while a Ditto transformed into
+something else does not.
+
+This helper is intentionally exact rather than root-species based: a different
+high-byte native identity with the same low byte does not compare equal.
+`tests/test_opponent_native_species_match.py` covers both battle turns,
+full-word mismatch, wrong-side guards, conflicting legacy bytes and empty
+native shadows.
