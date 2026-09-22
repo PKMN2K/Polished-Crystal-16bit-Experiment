@@ -1,6 +1,27 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: faithful Metal Powder native Ditto check (2026-09-22)
+## Latest checkpoint: native species-restricted battle items (2026-09-22)
+
+- `UserValidBattleItem` now reads the current active 16-bit native species
+  identity instead of reconstructing species/form from the legacy battle
+  structure.
+- The converted `ValidBattleItemTableNative` keeps the same three-byte record
+  width as before: one item byte plus one native species word. Light Ball,
+  Leek, Lucky Punch, Quick Powder and Thick Club checks therefore compare the
+  full native identity directly.
+- The check intentionally follows the current transformed species rather than
+  the original party species, matching the old active-battle semantics. The
+  preceding Transform checkpoint keeps the native shadow synchronized.
+- Exact native matching preserves form specificity: a mechanical/regional
+  native identity does not inherit an item effect intended only for the root
+  species unless it has its own table entry.
+- `tests/test_native_species_battle_items.py` adds focused CPU coverage for
+  both active sides, deliberate legacy/native disagreement, high-byte mismatch,
+  empty native shadows and wrong-item guards.
+- No persistent party or opponent-party record format changed in this step.
+
+
+## Previous checkpoint: faithful Metal Powder native Ditto check (2026-09-22)
 
 - The faithful-mode `DittoMetalPowder` rule now checks the opponent's current
   16-bit active native identity instead of reading the legacy battle species and
