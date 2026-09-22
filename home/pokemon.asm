@@ -262,57 +262,6 @@ GetAbility::
 	ret
 
 
-GetAbilityFromNativeIDBC::
-; 'hl' contains the target personality (ability selector)
-; 'bc' contains the one-based native species ID
-; returns ability in a and b; preserves hl, de and c
-; preserves curspecies and base data
-	anonbankpush BaseData
-
-.Function:
-	ld a, b
-	or c
-	jr z, .no_ability
-
-	ld a, [wInitialOptions]
-	and ABILITIES_OPTMASK
-	jr z, .got_ability
-
-	push de
-	ld a, [hl]
-	and ABILITY_MASK
-	push af
-	push hl
-	push bc
-
-	ld hl, BaseData
-	ld a, BANK(BaseData)
-	call LoadIndirectPointer
-	ld bc, BASE_ABILITIES
-	add hl, bc
-
-	pop bc
-	pop de ; original personality pointer
-	pop af
-	cp ABILITY_1
-	jr z, .got_ability_ptr
-	inc hl
-	cp ABILITY_2
-	jr z, .got_ability_ptr
-	inc hl
-.got_ability_ptr
-	ld a, [hl]
-	ld h, d
-	ld l, e
-	pop de
-	jr .got_ability
-
-.no_ability
-	xor a
-.got_ability
-	ld b, a
-	ret
-
 DexCompareWildForm:
 ; Compares wildmon form in a (converting form 0->1) with b.
 ; If b is cosmetic form, only check for matching extspecies.
