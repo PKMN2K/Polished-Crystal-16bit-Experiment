@@ -1,6 +1,38 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native Safari catch-rate reset (2026-09-20)
+## Latest checkpoint: native active-battler ability reset (2026-09-22)
+
+- `ResetPlayerAbility` and `ResetEnemyAbility` now source species identity from
+  `wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies` instead of the
+  legacy byte-sized battle species fields.
+- `GetAbilityFromNativeIDBC` reads the selected ability directly from the
+  native base-data record while retaining the existing personality ability-slot
+  selector. It preserves the caller's personality pointer and treats native ID
+  zero as no active ability rather than falling back to a legacy species byte.
+- `tests/test_active_battle_native_ability.py` adds eight focused CPU cases:
+  both active sides, ordinary species, species #256, Alolan Raichu, conflicting
+  legacy identities and empty native shadows.
+- This remains an incremental active-battle bridge. Legacy species/form fields
+  are still populated for unconverted consumers, and opponent party records
+  remain legacy.
+
+
+## Previous checkpoint: native Heavy Ball weight lookup (2026-09-22)
+
+- `HeavyBallMultiplier` now reads `wEnemyMonNativeSpecies` directly and uses
+  `GetNativeSpeciesWeight` / `GetBodyDataPointerFromNativeIDBC` rather than
+  reconstructing identity from `wEnemyMonSpecies` and `wEnemyMonForm`.
+- An empty native enemy shadow leaves the current catch rate unchanged instead
+  of consulting a possibly stale legacy identity.
+- `tests/test_heavy_ball_native_weight.py` covers light, middle and heavy
+  thresholds plus species #256, Alolan Raichu, deliberately conflicting legacy
+  identities and an empty shadow.
+- GitHub Actions CI run #21 passes all eight configured ROM build variants for
+  the Heavy Ball code head.
+- The focused PyBoy test is committed but was not executed in this chat.
+
+
+## Previous checkpoint: native Safari catch-rate reset (2026-09-20)
 
 - The Safari bait/rock expiry path is now the second active-battle consumer to
   use the 16-bit enemy identity shadow. `HandleSafariAngerEatingStatus` calls
