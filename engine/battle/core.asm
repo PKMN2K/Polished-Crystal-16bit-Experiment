@@ -3148,7 +3148,7 @@ ResetEnemyAbility:
 	inc hl
 	ld b, [hl]
 	ld hl, wEnemyMonPersonality
-	call GetAbilityFromNativeIDBC
+	farcall GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wEnemyAbility], a
@@ -3162,7 +3162,7 @@ ResetPlayerAbility:
 	inc hl
 	ld b, [hl]
 	ld hl, wBattleMonPersonality
-	call GetAbilityFromNativeIDBC
+	farcall GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wPlayerAbility], a
