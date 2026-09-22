@@ -6,18 +6,19 @@
   identity instead of reconstructing species/form from the legacy battle
   structure.
 - The converted `ValidBattleItemTableNative` keeps the same three-byte record
-  width as before: one item byte plus one native species word. Light Ball,
-  Leek, Lucky Punch, Quick Powder and Thick Club checks therefore compare the
-  full native identity directly.
+  width as before: one item byte plus one native root-species word. The active
+  native identity is resolved through `GetRootSpeciesFromNativeIDBC` before
+  matching Light Ball, Leek, Lucky Punch, Quick Powder and Thick Club entries.
 - The check intentionally follows the current transformed species rather than
   the original party species, matching the old active-battle semantics. The
   preceding Transform checkpoint keeps the native shadow synchronized.
-- Exact native matching preserves form specificity: a mechanical/regional
-  native identity does not inherit an item effect intended only for the root
-  species unless it has its own table entry.
+- Root-species matching preserves the old zero-form wildcard behavior: a
+  mechanical/regional form still receives an item effect attached to its root
+  species, while unrelated roots do not.
 - `tests/test_native_species_battle_items.py` adds focused CPU coverage for
-  both active sides, deliberate legacy/native disagreement, high-byte mismatch,
-  empty native shadows and wrong-item guards.
+  both active sides, a real mechanical-variant/root match, deliberate
+  legacy/native disagreement, unrelated roots, empty shadows and wrong-item
+  guards.
 - No persistent party or opponent-party record format changed in this step.
 
 
