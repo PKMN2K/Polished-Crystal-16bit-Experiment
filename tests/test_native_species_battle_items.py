@@ -26,12 +26,37 @@ def main():
         return syms[name][1]
 
     data = rom.read_bytes()
+
+    # Parse the compiled item + native-root table instead of hardcoding item IDs.
     table_bank, table_addr = syms["ValidBattleItemTableNative"]
-    table_off = rom_offset(table_bank, table_addr)
-    item = data[table_off]
-    native = int.from_bytes(data[table_off + 1:table_off + 3], "little")
-    assert item != 0xFF
-    assert native != 0
+    pos = rom_offset(table_bank, table_addr)
+    records = []
+    while data[pos] != 0xFF:
+        records.append((
+            data[pos],
+            int.from_bytes(data[pos + 1:pos + 3], "little"),
+        ))
+        pos += 3
+    assert records
+
+    # Pick a table root that has a native mechanical variant. This verifies the
+    # old zero-form wildcard semantics survived the migration (e.g. a regional
+    # Farfetch'd/Marowak still qualifies for the root species' item effect).
+    roots = {root for _, root in records}
+    variant_bank, variant_addr = syms["NativeVariantIdentityTable"]
+    variant_off = rom_offset(variant_bank, variant_addr)
+    variant_match = None
+    for p in range(variant_off, variant_off + 5 * 100, 5):
+        native = int.from_bytes(data[p:p + 2], "little")
+        root = int.from_bytes(data[p + 2:p + 4], "little")
+        if native and root in roots and native != root:
+            variant_match = (native, root)
+            break
+    assert variant_match is not None
+    variant, root = variant_match
+
+    item = next(item for item, record_root in records if record_root == root)
+    unrelated = next(record_root for _, record_root in records if record_root != root)
 
     pyboy = PyBoy(str(rom), window="null", sound_emulated=False,
                   cgb=True, log_level="ERROR")
@@ -48,7 +73,7 @@ def main():
         regs.DE = 0x5678
         regs.HL = 0xC222
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        pyboy.tick(6, False, False)
+        pyboy.tick(8, False, False)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF)
         assert regs.BC == 0x1234
         assert regs.DE == 0x5678
@@ -74,40 +99,43 @@ def main():
             memory[addr("hBattleTurn")] = turn
             memory[addr(item_addr)] = item
 
-            # Native identity matches while the legacy species/form deliberately
-            # disagrees. The species-restricted item must still be valid.
-            memory[addr(shadow):addr(shadow) + 2] = list(native.to_bytes(2, "little"))
+            # Root native identity matches even when legacy species/form disagrees.
+            memory[addr(shadow):addr(shadow) + 2] = list(root.to_bytes(2, "little"))
             memory[addr(legacy_species)] = 150
             memory[addr(legacy_form)] = 0x20
             assert call_valid()
             count += 1
 
-            # Same low byte but a different high byte must not match.
-            wrong_high = ((native + 0x100) & 0xFFFF) or 0x100
-            memory[addr(shadow):addr(shadow) + 2] = list(wrong_high.to_bytes(2, "little"))
+            # A mechanical native variant with the same root must also match,
+            # preserving the old zero-form wildcard behavior.
+            memory[addr(shadow):addr(shadow) + 2] = list(variant.to_bytes(2, "little"))
+            assert call_valid()
+            count += 1
+
+            # A different root does not qualify, even if legacy bytes claim the
+            # qualifying species.
+            memory[addr(shadow):addr(shadow) + 2] = list(unrelated.to_bytes(2, "little"))
+            memory[addr(legacy_species)] = root & 0xFF
+            memory[addr(legacy_form)] = 0
             assert not call_valid()
             count += 1
 
-            # Empty native identity must not fall back to matching legacy data.
+            # Empty native identity must not fall back to the legacy identity.
             memory[addr(shadow):addr(shadow) + 2] = [0, 0]
-            memory[addr(legacy_species)] = native & 0xFF
-            memory[addr(legacy_form)] = (native >> 8) << 5 & 0x20
             assert not call_valid()
             count += 1
 
-            # Correct native species with a different item is not valid.
-            memory[addr(shadow):addr(shadow) + 2] = list(native.to_bytes(2, "little"))
-            memory[addr(item_addr)] = (item + 1) & 0xFF
-            if memory[addr(item_addr)] == 0xFF:
-                memory[addr(item_addr)] = (item + 2) & 0xFF
+            # Correct root with no held item is invalid.
+            memory[addr(shadow):addr(shadow) + 2] = list(root.to_bytes(2, "little"))
+            memory[addr(item_addr)] = 0
             assert not call_valid()
             count += 1
             memory[addr(item_addr)] = item
 
         print(
             f"PASS: {count} native species-restricted held-item cases; "
-            "both active sides, legacy disagreement, full-word mismatch, "
-            "empty shadows and wrong-item guards"
+            "both active sides, mechanical-variant root matching, legacy "
+            "disagreement, unrelated roots, empty shadows and wrong-item guards"
         )
     finally:
         pyboy.stop(save=False)
