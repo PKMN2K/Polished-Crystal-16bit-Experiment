@@ -1,6 +1,28 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native species-restricted battle items (2026-09-22)
+## Latest checkpoint: native Low Kick weight lookup (2026-09-22)
+
+- `BattleCommand_lowkick` selects the opposing active native species word using
+  `hBattleTurn` and calls `GetNativeSpeciesWeight`. It no longer reconstructs
+  identity from the legacy battle species/form bytes.
+- Existing positive-weight thresholds, Light Metal and ability-ignore behavior
+  are preserved. Current transformed identity follows the native battle shadow.
+- Empty native shadows and zero effective weights return minimum power (20).
+  This also prevents the old loop from scanning beyond its final zero threshold
+  for the reserved zero-weight native entry or an empty identity.
+- Validation executed locally with RGBDS 1.0.3 and PyBoy 2.7.0: normal build
+  passed; clean debug build passed; 36 focused CPU cases passed on each ROM.
+  Cases cover both turns, ordinary/extended/regional identities, conflicting
+  legacy bytes, wrong-side guards, empty identities, Light Metal and ability
+  ignoring, plus BC/E, stack, ROM-bank and WRAM-bank preservation.
+- Only this focused CPU test was run; the complete regression suite and the
+  other six CI build configurations were not run for this checkpoint.
+- Persistent party/opponent formats remain unchanged and automatic activation
+  remains disabled.
+- Next recommended step: inspect the active-battler picture refresh paths
+  (`DropPlayerSub` / `DropEnemySub`) and their native identity boundaries.
+
+## Previous checkpoint: native species-restricted battle items (2026-09-22)
 
 - `UserValidBattleItem` now reads the current active 16-bit native species
   identity instead of reconstructing species/form from the legacy battle

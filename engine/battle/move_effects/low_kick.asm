@@ -3,15 +3,20 @@ BattleCommand_lowkick:
 	push de
 	ldh a, [hBattleTurn]
 	and a
-	ld hl, wBattleMonSpecies
+	ld hl, wBattleMonNativeSpecies
 	jr nz, .got_opp_species
-	ld hl, wEnemyMonSpecies
+	ld hl, wEnemyMonNativeSpecies
 .got_opp_species
 	ld c, [hl]
-	ld de, wBattleMonForm - wBattleMonSpecies
-	add hl, de
+	inc hl
 	ld b, [hl]
-	farcall GetSpeciesWeight
+	; An empty native shadow uses the minimum power, never a stale legacy ID.
+	ld a, b
+	or c
+	ld hl, 0
+	jr z, .got_weight
+	farcall GetNativeSpeciesWeight
+.got_weight
 	ld d, h
 	ld e, l
 
@@ -22,6 +27,12 @@ BattleCommand_lowkick:
 	rr e
 
 .not_light_metal
+	; Zero weight (including an empty/reserved identity) must not scan past
+	; the table's final zero threshold.
+	ld c, 20
+	ld a, d
+	or e
+	jr z, .got_power
 	ld hl, LowKickPowerByWeight
 .loop2
 	ld a, [hli]
