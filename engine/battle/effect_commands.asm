@@ -1362,6 +1362,11 @@ UserValidBattleItem:
 	ld c, [hl]
 	inc hl
 	ld b, [hl]
+	; The old zero-form table entry was a form wildcard. Resolve a mechanical
+	; native variant back to its root species before matching to preserve that.
+	push de
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
 	ld hl, ValidBattleItemTableNative
 
 .loop
