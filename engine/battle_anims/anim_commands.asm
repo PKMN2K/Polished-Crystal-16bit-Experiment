@@ -832,27 +832,28 @@ BattleAnimCmd_Transform:
 	ld a, [wCurPartySpecies]
 	push af
 
+	; Transform already copied the target's native identity into the
+	; acting battler. Publish its current renderer-compatible species/form,
+	; not a potentially stale legacy temporary species byte.
 	ldh a, [hBattleTurn]
 	and a
 	jr z, .player
 
-	ld a, [wTempBattleMonSpecies]
-	ld [wCurPartySpecies], a
-	ld a, [wBattleMonForm]
-	ld [wCurForm], a
+	farcall PrepareEnemyBattlePictureIdentity
+	jr c, .done
 	ld de, vTiles0 tile $00
 	farcall GetFrontpic
 	jr .done
 
 .player
-	ld a, [wTempEnemyMonSpecies]
-	ld [wCurPartySpecies], a
-	ld a, [wEnemyMonForm]
-	ld [wCurForm], a
+	farcall PreparePlayerBattlePictureIdentity
+	jr c, .done
 	ld de, vTiles0 tile $00
 	farcall GetBackpic
 
 .done
+	; Preserve the original command's side effects: party species is
+	; restored, while the rendered form remains in wCurForm on success.
 	pop af
 	ld [wCurPartySpecies], a
 	pop af
