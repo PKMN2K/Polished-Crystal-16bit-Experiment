@@ -17,11 +17,21 @@
   conflicts, cosmetic normalization, empty/reserved identities and
   post-animation renderer-global changes. Frontpic and Dex functions are
   stubbed; displayed pixels and the full ghost battle are not yet verified.
-- GitHub Actions now invokes the focused test for normal and debug ROM builds.
-  CI results for this checkpoint have not yet been confirmed. No save-format
-  activation or party/daycare layout was changed.
-- Next recommended step: inspect CI build and both ghost-reveal regression
-  test results; fix any issues before migrating another live consumer.
+- Validation: GitHub Actions run #35888906288 succeeded on code commit
+  `3225bd9d3bd48747f6396434926bad9653f43cf3` with RGBDS 1.0.3.
+  All eight build configurations passed. PyBoy 2.7.0 passed 106 native
+  ghost-reveal picture/Dex CPU cases on **each** of the normal and debug ROMs.
+  The existing native Transform-animation picture (106 per ROM) and
+  move-animation cry (2,704 per ROM) focused regression tests also passed.
+  All six focused test steps passed; the logs contained no CI error lines.
+- Frontpic and Dex entry points are stubbed in the ghost-reveal CPU cases.
+  Real displayed pixels, the full ghost battle, and the remaining CPU
+  regression suite have not been validated by this run. No save-format
+  activation or party/daycare layout was changed. This status-only commit
+  follows the tested code commit.
+- Next recommended step: inspect the live enemy send-out front-picture
+  preparation in `Function_SetEnemyPkmnAndSendOutAnimation` for any remaining
+  legacy base-data or temporary-record identity round-trips.
 
 ## Previous checkpoint: Beat Up animation reachability audit (2026-09-23)
 
