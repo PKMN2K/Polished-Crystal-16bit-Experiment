@@ -85,10 +85,13 @@ def main():
         mem[base_start:base_end] = [0xA5] * base_len
         mem[address("wMonPicSize")] = 0
         mem[address("wMonAnimationSize")] = 0
-        # Address each VRAM bank explicitly. PyBoy's banked memory view
-        # avoids ambiguity with the hardware VBK value at capture time.
-        mem[0, v0_start:v0_end] = [0x5A] * (v0_end - v0_start)
-        mem[1, v1_start:v1_end] = [0x5A] * (v1_end - v1_start)
+        # Use the hardware VBK register, matching the renderer itself.
+        # Capture the actual animated destination range, including vTiles5.
+        mem[0xFF4F] = 0
+        mem[v0_start:v0_end] = [0x5A] * (v0_end - v0_start)
+        mem[0xFF4F] = 1
+        mem[v1_start:v1_end] = [0x5A] * (v1_end - v1_start)
+        mem[0xFF4F] = 0
         lookups.clear()
         decompressions.clear()
         transfers.clear()
@@ -100,7 +103,13 @@ def main():
         mem[0xC100:0xC106] = [0xF3, 0xCD, target & 255, target >> 8, 0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         regs.D, regs.E = 0x90, 0x00  # vTiles2
-        pyboy.tick(4, False, False)
+        # Real LZ decode + 2bpp copies take longer than the stubbed tests.
+        # _Serve2bppRequest temporarily repurposes SP as its source pointer,
+        # so do not diagnose a mid-copy SP value as stack corruption.
+        for _ in range(32):
+            pyboy.tick(1, False, False)
+            if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
+                break
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             entry, hex(regs.PC), hex(regs.SP)
         )
@@ -109,8 +118,12 @@ def main():
         assert mem[0xFF4F] & 1 == 0, entry
 
     def snapshot():
-        front = bytes(mem[0, v0_start:v0_end])
-        animated = bytes(mem[1, v1_start:v1_end])
+        old_vbk = mem[0xFF4F] & 1
+        mem[0xFF4F] = 0
+        front = bytes(mem[v0_start:v0_end])
+        mem[0xFF4F] = 1
+        animated = bytes(mem[v1_start:v1_end])
+        mem[0xFF4F] = old_vbk
         return (front, animated, mem[address("wMonPicSize")],
                 mem[address("wMonAnimationSize")])
 
