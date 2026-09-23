@@ -1,6 +1,41 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: unstubbed native enemy front-picture VRAM regression (2026-09-23)
+## Latest checkpoint: LCD-on native enemy front-picture VBlank transfer regression (2026-09-23)
+
+- Added `tests/test_native_enemy_frontpic_vblank.py`. It runs the real
+  native enemy front-picture preparation with the LCD enabled and forces
+  each `Get2bpp` call to enter `Request2bpp` late enough in the
+  scanline window that a pending transfer must be serviced through the
+  real VBlank `Serve2bppRequest` path. The LZ decoder, padding,
+  request scheduler, VBlank service and VRAM writes remain real.
+- The regression compares native battle output against the generic
+  renderer for the same presentation identity across ordinary and
+  extended native roots, cosmetic presentations and two regional
+  variants, under both battle-turn values. It verifies that the native
+  route avoids legacy `GetBaseData`, retains exact native base data,
+  executes pending scheduled 2bpp transfers, and produces byte-identical
+  VRAM/dimension results to the generic presentation path.
+- Validation: GitHub Actions run #35930670151 **passed** on CI/test
+  commit `5823f6decf56bc399b438a48f9c0375835c3c490`.
+  All eight ROM build configurations and all sixteen focused regression
+  steps succeeded with no CI errors. Normal **and** debug ROMs each
+  passed 14 LCD-on Request2bpp/VBlank cases in addition to the previous
+  3,219 focused CPU cases, for **3,233 focused cases per ROM**.
+  The LCD-on frame digests matched the previously validated native/generic
+  tile data for the same presentation identities.
+- This checkpoint changes tests/CI only; no gameplay source, persistent
+  Pokémon record or save format changed. It validates scheduled LCD-on
+  transfer servicing and resulting VRAM bytes, but not palette correctness,
+  final on-screen pixels, human-visible animation timing or a complete
+  interactive battle. Existing nonfatal unnecessary-farcall linker
+  warnings remain.
+- Next recommended step: move one level outward and add a focused
+  **battle send-out integration test** that executes the real enemy
+  picture preparation plus the battle animation entry in sequence,
+  checking the native shadow, VRAM result and animation record together
+  without yet attempting full interactive battle automation.
+
+## Previous checkpoint: unstubbed native enemy front-picture VRAM regression (2026-09-23)
 
 - Added `tests/test_native_enemy_frontpic_vram.py`. It executes the
   battle-only enemy front-picture entry with real LZ decompression,
