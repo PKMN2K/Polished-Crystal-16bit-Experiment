@@ -1,6 +1,29 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: Beat Up animation reachability audit (2026-09-23)
+## Latest checkpoint: native Silph Scope ghost reveal (2026-09-23)
+
+- In `engine/battle/core.asm`, the live Silph Scope reveal now calls
+  `RevealGhostEnemyFrontpic` instead of invoking `GetFrontpic` directly
+  with whatever one-byte legacy identity was left in the renderer globals.
+  The helper resolves the current enemy's native 16-bit battle shadow through
+  `PrepareEnemyBattlePictureIdentity` and retains the original `vTiles0`
+  ghost-to-Pokémon animation destination.
+- `RecordRevealedGhostEnemySeen` resolves the same native shadow again after
+  the reveal animation and passes the matching renderer-compatible species/form
+  to `SetSeenMon`. It no longer pairs a possibly stale global species with
+  `wEnemyMonForm`. Empty and reserved roots skip picture and seen calls.
+- Added `tests/test_native_ghost_reveal_picture.py` to exercise both turn
+  values, extended roots, current mechanical variants, legacy-identity
+  conflicts, cosmetic normalization, empty/reserved identities and
+  post-animation renderer-global changes. Frontpic and Dex functions are
+  stubbed; displayed pixels and the full ghost battle are not yet verified.
+- GitHub Actions now invokes the focused test for normal and debug ROM builds.
+  CI results for this checkpoint have not yet been confirmed. No save-format
+  activation or party/daycare layout was changed.
+- Next recommended step: inspect CI build and both ghost-reveal regression
+  test results; fix any issues before migrating another live consumer.
+
+## Previous checkpoint: Beat Up animation reachability audit (2026-09-23)
 
 - Inspected `BattleAnimCmd_BeatUp`, the move/animation tables, and the
   `anim_beatup` macro. Beat Up is not a defined move in
