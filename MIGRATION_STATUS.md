@@ -1,6 +1,34 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native Transform animation picture (2026-09-23)
+## Latest checkpoint: Beat Up animation reachability audit (2026-09-23)
+
+- Inspected `BattleAnimCmd_BeatUp`, the move/animation tables, and the
+  `anim_beatup` macro. Beat Up is not a defined move in
+  `constants/move_constants.asm`; it has no entry in
+  `data/moves/animation_pointers.asm`; and its former animation, including
+  its sole `anim_beatup` invocation in the move animation source, is
+  commented out as removed. The command and its macro remain defined, but
+  the current shipped move-animation scripts do not invoke them.
+- The retained command writes the one-byte `wBattleAnimParam` into
+  `wCurPartySpecies` and gets its form from the active battle mon on the
+  opposite side. This is not sufficient to identify a *different*
+  contributing party member's 16-bit species or form. Replacing it with
+  `PreparePlayerBattlePictureIdentity` or
+  `PrepareEnemyBattlePictureIdentity` would incorrectly draw the active
+  battler when the participating party member differs.
+- No dead Beat Up runtime code was altered. If Beat Up is reinstated, first
+  define its animation parameter contract and pass the contributing party
+  member's full native identity (with correct side/form) into a dedicated
+  picture identity bridge. Do not reinterpret `wBattleAnimParam` as a party
+  index without changing its producer.
+- This audit changes documentation only; the prior native Transform picture
+  and move-animation cry builds/tests remain validated by CI run
+  #35886997786. No new runtime validation or save-format changes.
+- Next recommended step: inspect the next *live* direct battle-picture
+  call, including the Silph Scope ghost reveal `GetFrontpic` path in
+  `engine/battle/core.asm`, for legacy/native identity mismatches.
+
+## Previous checkpoint: native Transform animation picture (2026-09-23)
 
 - `BattleAnimCmd_Transform` now publishes renderer-compatible presentation
   species/form using `PreparePlayerBattlePictureIdentity` or
