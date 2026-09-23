@@ -922,3 +922,37 @@ alone, since shared picture calls may run in other contexts. Both
 rendering and animation-size paths need coverage. The existing bank14
 section is at its size limit, so avoid adding uncompensated code there.
 This checkpoint is documentation-only; no live renderer behavior changed.
+
+
+## Battle-only native enemy front-picture preparation
+
+The battle enemy's non-ghost sprite path now calls
+`PrepareNativeEnemyBattleAnimatedFrontpic`, in the native species ROM section,
+instead of the general `PrepareAnimatedFrontpic`. This explicit battle entry
+resolves `wEnemyMonNativeSpecies` and the enemy's supported presentation form,
+loads exact native base data, and preserves the original `vTiles2` destination
+and `vTiles3` animated-tile setup. Ghost-frontpic decompression remains a
+separate, unchanged branch.
+
+`_GetNativeFrontpic` in the shared graphics bank reuses the existing
+`_PrepareFrontpic` size/picture-pointer/decompression body but enters after
+the generic `GetBaseData` call. `_GetFrontpic` and all public generic
+front-picture functions still take the original legacy base-data side-effect
+path. The battle-only entry therefore does not replace native base data
+with reconstructed legacy data during front-picture preparation, and menu,
+trade, hatch and other non-battle front pictures retain their existing
+behavior. The extra graphics-bank entry is small because bank14 is nearly
+full; the larger battle wrapper lives outside that bank.
+
+`tests/test_native_enemy_frontpic_renderer.py` exercises the real picture
+preparation with only low-level decompression/tile-copy routines stubbed.
+It checks the native base-data buffer and presentation identity at
+preparation and animated-tile boundaries and verifies that the generic
+renderer still invokes `GetBaseData`. It does not verify displayed pixels.
+
+**Still pending:** `GetFrontpicDims` in the shared picture-animation setup
+independently calls legacy `GetBaseData`. That second call may replace
+the native buffer when an enemy front picture is subsequently animated;
+the next scoped migration must address the battle animation-dimension
+boundary without changing non-battle animations. No save-format or party
+layout change was made by this front-picture preparation step.
