@@ -1003,3 +1003,21 @@ sizing, animation-structure dimensions, legacy-call isolation, two battle
 turn values, and generic animation behavior. Its sprite-tick and pic-size
 entry points are stubbed; it does **not** validate displayed frames,
 timing or visual playback. No saved Pokémon structure was changed.
+
+
+### Validation of native enemy front-picture animation dimensions
+
+GitHub Actions run #35902373237 **passed** for corrected code/test commit
+`ada3437afd49db8a844525322f5dc279b9a41fe5`. RGBDS 1.0.3 built all
+eight ROM configurations, and PyBoy 2.7.0 passed all twelve focused regression
+steps. Each normal/debug ROM passed 108 native/generic animation-dimension
+CPU cases. Its other five focused suites also passed (3,203 cases per ROM).
+There were no CI errors; existing nonfatal unnecessary-farcall linker
+warnings remain.
+
+The first test failed because it patched the animation-tick stub after
+registering its PyBoy hook. The corrected fixture patches before registering
+and accesses `wPokeAnimStruct` in its actual WRAM bank. This validates the
+scoped native identity, base-data and dimension handling, not actual sprite
+pixels, animation timing or complete in-game battles. No save format was
+changed.
