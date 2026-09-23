@@ -789,3 +789,21 @@ cry, and empty/egg/reserved identities remain silent. The focused PyBoy test
 is `tests/test_native_move_animation_cry.py`; it is committed but was not
 executed in the chat that introduced this checkpoint. This is still an
 incremental battle bridge, not a persistent-format activation.
+
+
+## Native Transform-animation picture
+
+The active-battle Transform command copies the opposing native species word
+into the acting battler's current native shadow before playing its animation.
+`BattleAnimCmd_Transform` now uses the existing side-specific
+`PreparePlayerBattlePictureIdentity` / `PrepareEnemyBattlePictureIdentity`
+compatibility bridge to select the rendered back/front picture. Mechanical
+variants derive their presentation form from their native identity; cosmetic
+forms are retained only when they resolve to the same native species.
+Legacy temporary species bytes remain available to unconverted callers but
+no longer select Transform's picture. The command keeps the original tile
+destination and WRAM-bank restoration, restores `wCurPartySpecies` as before,
+and retains `wCurForm` for the transformed picture on successful rendering.
+Empty or reserved native identities do not invoke a renderer. Focused PyBoy
+coverage resides in `tests/test_transform_animation_native_picture.py`; it
+stubs the front/back renderer and cannot prove on-screen pixel correctness.
