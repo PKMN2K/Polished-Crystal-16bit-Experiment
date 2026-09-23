@@ -1064,3 +1064,32 @@ change**. It does not prove that every indirect or script-triggered
 animation is covered or that frames display correctly. The next focused
 check is the **real sprite decompression and VRAM tile-copy boundary** for
 enemy native roots and regional variants, which the current CPU tests stub.
+
+
+## Unstubbed native enemy front-picture tile-transfer regression
+
+The `tests/test_native_enemy_frontpic_vram.py` regression now enters the
+battle-only `PrepareNativeEnemyBattleAnimatedFrontpic` with the real
+`FarDecompressInB` LZ decoder, `PadFrontpic` padding logic,
+`Get2bpp` VRAM copies and `GetAnimatedFrontpic` animation-tile
+transfer **unstubbed**. It turns the LCD off in PyBoy so the engine
+takes its direct 2bpp transfer route, without VBlank scheduling. The
+test records the actual byte contents of the 7×7 front picture in
+VRAM bank 0 and animation tiles in VRAM bank 1, plus loaded dimensions
+and the canonical native base-data record.
+
+For roots, an extended root, cosmetic forms and two entries from the
+regional-variant identity table, the test compares the native enemy
+path's VRAM bytes against the generic renderer supplied with the
+**same resolved presentation identity**. It intentionally gives the
+generic path a conflicting native enemy shadow to establish that
+menus and other non-battle callers still render from their own
+species/form. It also checks both battle-turn values, legacy lookup
+isolation, actual decoder/tile-copy entry execution and empty/reserved
+native IDs (which must not decode or modify VRAM).
+
+The test checks offscreen VRAM bytes, not LCD palette mapping,
+sprite animation timing, the screen's final pixels or full battle
+playback. All real decode/transfer checks run in the normal and debug
+CI ROMs. No runtime source, persistent identity layout or save-format
+activation is changed by this regression checkpoint.
