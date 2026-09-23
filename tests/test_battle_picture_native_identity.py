@@ -84,7 +84,7 @@ def main():
         captures = []
         def capture(name):
             captures.append((name, [memory[addr(n)] for n in globals_], list(memory[base_start:base_end])))
-        for name in ('GetBackpic', 'PrepareAnimatedFrontpic', 'DecompressRequest2bpp'):
+        for name in ('GetBackpic', 'PrepareNativeEnemyBattleAnimatedFrontpic', 'DecompressRequest2bpp'):
             bank, address = syms[name]
             memory[bank, address] = 0xC9  # return after capturing renderer inputs
             pyboy.hook_register(bank, address, capture, name)
@@ -102,7 +102,7 @@ def main():
                         assert not captures
                         assert memory[addr('wCurSpecies')] == initial[0]
                     else:
-                        expected_name = 'GetBackpic' if side == 'Player' else 'PrepareAnimatedFrontpic'
+                        expected_name = 'GetBackpic' if side == 'Player' else 'PrepareNativeEnemyBattleAnimatedFrontpic'
                         expected_species = 91 if side == 'Player' else species
                         assert len(captures) == 1 and captures[0][:2] == (expected_name, [expected_species, species, form])
                         if side == 'Enemy':
