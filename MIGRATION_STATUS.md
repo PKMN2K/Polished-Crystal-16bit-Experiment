@@ -16,15 +16,32 @@
   deliberately conflicting enemy shadow to guard non-battle rendering.
   Normal/debug CI tests are wired in commit
   `81b2076068ab9380f0b5df639c486c865ffe5241`.
-- CI run #35917926154 is in progress; new test results are pending.
-  The last confirmed green code checkpoint remains run #35902373237
-  (eight builds, twelve focused regression steps). No gameplay
-  source, persistent Pokémon record or save-format activation changed.
-  This validates offscreen VRAM bytes, **not** LCD palette output,
-  visual playback, animation timing or a complete battle.
-- Next recommended step: verify the new normal/debug real-decoder
-  and VRAM regressions and all eight builds, correcting any actual
-  failures before expanding the test surface.
+- Early runs exposed two **test-fixture** assumptions rather than a
+  renderer mismatch. The first captured VBK1 before the real destination:
+  the animated base frame is copied to `$9000` (the `vTiles5` address
+  under VBK1), with additional animation tiles continuing above it. A later
+  diagnostic stopped after a fixed four frames while
+  `_Serve2bppRequest` was still legitimately using `SP` as its source
+  pointer. The final fixture captures the correct VBK1 range through
+  `rVBK` and advances until the CPU trampoline actually returns.
+- Validation: GitHub Actions run #35929654099 **passed** on corrected
+  test commit `629dac56590a65465fcff06ee8e61749aea9d6fb`.
+  All eight ROM build configurations and all fourteen focused regression
+  steps succeeded with no CI errors. Normal **and** debug ROMs each passed
+  16 real native/generic decoder-and-VRAM-transfer cases in addition to
+  108 animation-dimension, 107 frontpic-renderer, 72 enemy send-out,
+  106 ghost-reveal, 106 Transform-picture and 2,704 move-animation-cry
+  cases: **3,219 focused CPU cases per ROM**. The real-VRAM frame digests
+  matched between native battle and generic presentation paths.
+- This checkpoint changes tests/documentation only; no gameplay source,
+  persistent Pokémon record or save-format activation changed. It proves
+  real LZ decoding, padding and direct LCD-off 2bpp VRAM copies, but not
+  the LCD-on VBlank/request-copy path, palette output, on-screen playback
+  timing or a complete battle. Existing nonfatal linker farcall warnings
+  remain.
+- Next recommended step: exercise the **LCD-on Request2bpp/VBlank copy
+  path** for the same native enemy roots/forms, so the actual scheduled
+  transfer route is checked without yet broadening into full gameplay.
 
 ## Previous checkpoint: live battle front-picture animation call-site audit (2026-09-23)
 
