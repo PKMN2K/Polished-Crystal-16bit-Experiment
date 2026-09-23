@@ -1,3 +1,16 @@
+CopyEnemyBattlePkmnToTempMon::
+; Send-out-only variant: preserve legacy temporary-record contents while
+; obtaining base data from the *active enemy's* canonical native identity.
+; Caller has set wMonType = OTPARTYMON and wCurPartyMon to the enemy slot.
+	call GetPkmnSpecies
+	call GetPkmnForm
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
+	jr nc, _CopyPkmnToTempMon.copy_data
+	; An absent native shadow cannot supply base data. Retain the legacy
+	; lookup as a conservative fallback for this unfinished battle migration.
+	call GetBaseData
+	jr _CopyPkmnToTempMon.copy_data
+
 CopyPkmnToTempMon:
 ; gets the BaseData of a Pkmn
 ; and copys the PkmnStructure to wTempMon
@@ -6,7 +19,7 @@ CopyPkmnToTempMon:
 	call GetPkmnForm
 _CopyPkmnToTempMon:
 	call GetBaseData
-
+.copy_data
 	ld a, [wMonType]
 	ld hl, wPartyMon1Species
 	ld bc, PARTYMON_STRUCT_LENGTH
