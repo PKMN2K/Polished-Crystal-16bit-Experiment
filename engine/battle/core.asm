@@ -7974,7 +7974,8 @@ GetFrontpicOrGhostpic:
 
 .not_ghost_battle
 	ld de, vTiles2
-	farjp PrepareAnimatedFrontpic
+	; Only battle pictures skip the generic legacy base-data lookup.
+	farjp PrepareNativeEnemyBattleAnimatedFrontpic
 
 GetFrontpic_DoAnim:
 	ldh a, [hBattleTurn]
