@@ -1021,3 +1021,46 @@ and accesses `wPokeAnimStruct` in its actual WRAM bank. This validates the
 scoped native identity, base-data and dimension handling, not actual sprite
 pixels, animation timing or complete in-game battles. No save format was
 changed.
+
+
+## Audit of remaining battle front-picture animation call sites
+
+Reviewed the working-branch battle core, battle effect-command helpers,
+return-to-battle Poké Ball screen, battle move effects and related picture
+callers after migrating `AnimateNativeEnemyBattleFrontpic`. The inspected
+live routes are:
+
+- **Trainer send-out:** `Function_SetEnemyPkmnAndSendOutAnimation` calls
+  `GetMonFrontpic` and then `BattleAnimateFrontpic`, which invokes the
+  native enemy animation entry. Its send-out visual effect is a separate
+  battle animation, not a call to generic `AnimateFrontpic`.
+- **Wild encounter:** `LoadTrainerOrWildMonPic` calls `SendInUserPkmn`
+  before `GetFrontpicOrGhostpic`. `BattleStartMessage` then uses
+  `BattleAnimateFrontpic` when the Pokémon can animate. These paths
+  reach native enemy picture preparation and native animation dimensions.
+- **Battle redraws:** the inspected battle menu restores, final-Pokémon
+  slide-in and `_ReturnToBattle_UseBall` reach `GetMonFrontpic`.
+  `BattleCommand_raisesubnoanim` and
+  `BattleCommand_lowersubnoanim` select `GetMonFrontpic` or
+  `DropEnemySub` for the enemy through `CallBattleCore`. They use the
+  native picture path or the intentional substitute-picture branch.
+- **Ghost/substitute exceptions:** `GetFrontpicOrGhostpic` retains the
+  distinct ghost graphic branch; active substitutes may raise the
+  substitute doll instead of drawing the Pokémon. These paths are not
+  opportunities to substitute a generic Pokémon animation.
+
+The generic entry points remain reachable for legitimate **non-battle**
+consumers: `GetTrademonFrontpic`/`AnimateTrademonFrontpic`,
+evolution and hatching, Hall of Fame `HOF_AnimateFrontpic`, and summary
+screen `LoadFrontpicAnim`. The shared
+`LoadMonAnimation`/`GetFrontpicDims` path still has its historical
+legacy base-data side effect by design. The enemy battle entry instead
+selects `LoadNativeEnemyBattleMonAnimation` and
+`GetNativeEnemyFrontpicDims` explicitly.
+
+No additional direct use of generic `AnimateFrontpic` was found in the
+inspected live battle call sites, so this audit makes **no gameplay code
+change**. It does not prove that every indirect or script-triggered
+animation is covered or that frames display correctly. The next focused
+check is the **real sprite decompression and VRAM tile-copy boundary** for
+enemy native roots and regional variants, which the current CPU tests stub.
