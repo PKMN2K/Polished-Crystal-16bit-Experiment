@@ -21,20 +21,26 @@
   byte-exact base data, saved-global restoration and generic animation
   isolation. Sprite ticks and `GetPicSize` are stubbed; the test
   does not verify rendered frames or full animation timing.
-- The normal/debug tests are wired into GitHub Actions. The first
-  run #35902048443 built the normal ROM but exposed a PyBoy test-hook
-  mistake: the tick stub was patched **after** its CPU hook was
-  registered, removing the hook and falsely reporting that no tick
-  occurred. `tests/test_native_enemy_frontpic_dimensions.py` now writes
-  the stub before installing the hook, using the actual animation WRAM
-  bank for its assertions. The corrected test commit is
-  `ada3437afd49db8a844525322f5dc279b9a41fe5`; run
-  #35902373237 is in progress, so its full build/test result is not yet
-  confirmed. No persistent Pokémon layout or save-format activation
-  changed.
-- Next recommended step: inspect CI's eight build configurations
-  and both new animation-dimension regressions, fix any failures
-  before migrating another live consumer.
+- The first CI attempt, run #35902048443, exposed a PyBoy test-hook
+  mistake: the tick stub was patched **after** hook registration, which
+  removed its hook. The corrected fixture patches the stub first and
+  reads the animation structure in its actual WRAM bank.
+- Validation: GitHub Actions run #35902373237 **passed** on corrected
+  code/test commit `ada3437afd49db8a844525322f5dc279b9a41fe5`
+  with RGBDS 1.0.3 and PyBoy 2.7.0. All eight build configurations
+  and all twelve focused regression steps succeeded, with no CI errors.
+  Normal **and** debug ROMs each passed 108 native/generic front-picture
+  animation-dimension CPU cases, 107 front-picture renderer cases,
+  72 enemy send-out temp-record cases, 106 ghost-reveal cases,
+  106 Transform-picture cases and 2,704 move-animation cry cases
+  (3,203 per ROM). Existing nonfatal linker farcall warnings remain.
+- The new regression stubs GetPicSize and the animation tick; sprite
+  frames, visual playback and complete battle animations have not been
+  validated. No persistent Pokémon layout or save-format activation
+  changed. This status-only commit follows the tested code commit.
+- Next recommended step: audit other live battle front-picture animation
+  call sites for direct generic `AnimateFrontpic` usage or legacy
+  dimension/base-data side effects before migrating another consumer.
 
 ## Previous checkpoint: battle-only native enemy front-picture preparation (2026-09-23)
 
