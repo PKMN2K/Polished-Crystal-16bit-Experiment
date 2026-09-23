@@ -3082,7 +3082,7 @@ BattleAnimateFrontpic:
 
 .no_substitute
 	hlcoord 12, 0
-	lb de, $0, ANIM_MON_SLOW
+	lb de, $0, ANIM_MON_BATTLE_SLOW
 	farjp AnimateFrontpic ; also plays cry
 
 .cry_no_anim

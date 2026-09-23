@@ -1,10 +1,17 @@
 PlayPlayerBattleStereoCry::
+	call .no_wait
+	jmp WaitSFX
+.no_wait
 ; Explicit side selection: send-in callers need not set hBattleTurn.
 	push hl
 	ld hl, wBattleMonNativeSpecies
 	jr PlayBattleStereoCryFromShadow
 
 PlayEnemyBattleStereoCry::
+	call PlayEnemyBattleStereoCryNoWait
+	jmp WaitSFX
+
+PlayEnemyBattleStereoCryNoWait::
 	push hl
 	ld hl, wEnemyMonNativeSpecies
 PlayBattleStereoCryFromShadow:
@@ -22,7 +29,7 @@ PlayBattleStereoCryFromShadow:
 	pop bc
 	pop de
 	pop hl
-	jmp WaitSFX
+	ret
 
 PlayFaintCryFromActiveNativeSpecies::
 ; hBattleTurn selects the fainting battler's current native identity.

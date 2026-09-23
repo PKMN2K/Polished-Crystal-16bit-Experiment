@@ -1,6 +1,30 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native explicit battle-entry stereo cries (2026-09-23)
+## Latest checkpoint: native battle front-animation cry (2026-09-23)
+
+- Battle front-sprite animation now uses the appended `ANIM_MON_BATTLE_SLOW`
+  scene, with `NativeEnemyStereoCry` followed by the existing Setup2/Play
+  commands. Existing animation indices and non-battle scenes retain their
+  original behavior.
+- `PokeAnim_NativeEnemyStereoCry` switches from animation WRAM to battle WRAM,
+  plays the enemy's current native identity through
+  `PlayEnemyBattleStereoCryNoWait`, restores WRAM and advances the scene.
+  Playback remains asynchronous and uses the enemy stereo tracks.
+- Blocking player/enemy entry helpers share the same playback implementation
+  and still call WaitSFX. No WRAM fields or persistent formats were added.
+- Validation: normal and clean debug builds with RGBDS 1.0.3; 679 focused
+  animation/legacy-cry CPU cases and 1,352 prior stereo-helper regression cases
+  passed on each ROM with PyBoy 2.7.0. The new test runs TickPokeAnim dispatch
+  across every current native identity and both turn values, checks cry
+  parameters, WRAM restoration, scene advance and absence of WaitSFX, and
+  exercises legacy stereo animation commands.
+- Playback, WaitSFX and tile-map transfer are stubbed in these tests. Audible
+  output, rendered animation, full gameplay, the full regression suite and
+  other build configurations were not tested at this checkpoint.
+- Next recommended step: migrate `BattleAnimCmd_Cry`, the move-animation cry
+  command that still selects legacy battle species/form bytes.
+
+## Previous checkpoint: native explicit battle-entry stereo cries (2026-09-23)
 
 - The explicit player send-out cry now calls `PlayPlayerBattleStereoCry`;
   `BattleAnimateFrontpic.cry_no_anim` calls `PlayEnemyBattleStereoCry`.

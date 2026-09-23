@@ -17,6 +17,7 @@ PokeAnims:
 	dw .Menu ; unused
 	dw .Egg1
 	dw .Egg2
+	dw .BattleSlow
 
 .Slow:   pokeanim StereoCry, Setup2, Play
 .Normal: pokeanim StereoCry, Setup, Play
@@ -26,6 +27,7 @@ PokeAnims:
 .Hatch:  pokeanim Extra, Play, CryNoWait, Setup, Play, SetWait, Wait, Extra, Play
 .Egg1:   pokeanim Setup, Play
 .Egg2:   pokeanim Extra, Play
+.BattleSlow: pokeanim NativeEnemyStereoCry, Setup2, Play
 
 AnimateFrontpic::
 	call IsCurPartySpeciesAPokemon
@@ -140,6 +142,7 @@ PokeAnim_SetupCommands:
 	add_setup_command PokeAnim_Play2
 	add_setup_command PokeAnim_CryNoWait
 	add_setup_command PokeAnim_StereoCry
+	add_setup_command PokeAnim_NativeEnemyStereoCry
 
 PokeAnim_SetWait:
 	ld a, 18
@@ -216,6 +219,21 @@ PokeAnim_CryNoWait:
 	ld a, [wPokeAnimVariant]
 	ld b, a
 	call PlayMonCry2
+	ld hl, wPokeAnimSceneIndex
+	inc [hl]
+	ret
+
+PokeAnim_NativeEnemyStereoCry:
+; Battle-only command: animation WRAM differs from the active battle bank.
+	ldh a, [rWBK]
+	push af
+	ld a, BANK(wEnemyMonNativeSpecies)
+	ldh [rWBK], a
+	ld a, $f
+	ld [wCryTracks], a
+	farcall PlayEnemyBattleStereoCryNoWait
+	pop af
+	ldh [rWBK], a
 	ld hl, wPokeAnimSceneIndex
 	inc [hl]
 	ret

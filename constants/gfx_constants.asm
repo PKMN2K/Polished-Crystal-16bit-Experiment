@@ -33,6 +33,7 @@ DEF SPRITEOAM_SKIP_PAL_APPLY_XFLIP EQU -2 ; Same as above, but with X-flip attri
 	const ANIM_MON_HOF
 	const ANIM_MON_EGG1
 	const ANIM_MON_EGG2
+	const ANIM_MON_BATTLE_SLOW
 
 DEF OAM_YCOORD_HIDDEN EQU 160 ; hides an OAM offscreen
 
