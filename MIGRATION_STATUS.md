@@ -1,6 +1,32 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: live battle front-picture animation call-site audit (2026-09-23)
+## Latest checkpoint: unstubbed native enemy front-picture VRAM regression (2026-09-23)
+
+- Added `tests/test_native_enemy_frontpic_vram.py`. It executes the
+  battle-only enemy front-picture entry with real LZ decompression,
+  padding, direct 2bpp VRAM copying and animation-tile loading (LCD
+  disabled in PyBoy); those low-level routines are **not stubbed**.
+  It compares actual VRAM bank 0/1 tile bytes and sprite dimensions
+  against the generic renderer with the same presentation species/form,
+  while requiring exact native base data and no legacy lookup on the
+  battle-only route.
+- Covers ordinary and extended native roots, cosmetic presentations,
+  two regional-variant identity-table entries, both battle turns and
+  empty/reserved native enemy IDs. The generic comparison uses a
+  deliberately conflicting enemy shadow to guard non-battle rendering.
+  Normal/debug CI tests are wired in commit
+  `81b2076068ab9380f0b5df639c486c865ffe5241`.
+- CI run #35917926154 is in progress; new test results are pending.
+  The last confirmed green code checkpoint remains run #35902373237
+  (eight builds, twelve focused regression steps). No gameplay
+  source, persistent Pokémon record or save-format activation changed.
+  This validates offscreen VRAM bytes, **not** LCD palette output,
+  visual playback, animation timing or a complete battle.
+- Next recommended step: verify the new normal/debug real-decoder
+  and VRAM regressions and all eight builds, correcting any actual
+  failures before expanding the test surface.
+
+## Previous checkpoint: live battle front-picture animation call-site audit (2026-09-23)
 
 - Inspected the live trainer send-out and wild-battle introduction
   paths, battle menu redraws, final-Pokémon slide-in, return-to-battle
