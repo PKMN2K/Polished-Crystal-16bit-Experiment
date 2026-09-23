@@ -1047,3 +1047,31 @@ CopyEnemyBattlePkmnToTempMon::
 	; redundant legacy base-data lookup.
 	farcall _CopyPkmnToTempMon.copy_data
 	ret
+
+
+PrepareNativeEnemyBattleAnimatedFrontpic::
+; Explicit battle-only frontpic entry. Generic renderer consumers retain
+; their legacy GetBaseData side effect. The native shadow is the authority
+; even if the transitional species/form globals disagree.
+; in: de = frontpic VRAM destination (vTiles2 for the enemy)
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld a, [wCurPartySpecies]
+	ld [wCurSpecies], a
+	call GetBaseDataFromEnemyBattleNativeSpecies
+	ret c
+
+	ldh a, [rWBK]
+	push af
+	xor a
+	assert NO_BG_MAP_TRANSFER == 0
+	ldh [hBGMapMode], a
+	farcall _GetNativeFrontpic
+	ld a, BANK(vTiles3)
+	ldh [rVBK], a
+	farcall GetAnimatedFrontpic
+	xor a
+	ldh [rVBK], a
+	pop af
+	ldh [rWBK], a
+	ret
