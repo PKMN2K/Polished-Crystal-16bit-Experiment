@@ -1,6 +1,42 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: LCD-on native enemy front-picture VBlank transfer regression (2026-09-23)
+## Latest checkpoint: native enemy trainer send-out picture/animation integration regression (2026-09-23)
+
+- Added `tests/test_native_enemy_sendout_integration.py`. It enters the real
+  `Function_SetEnemyPkmnAndSendOutAnimation` trainer send-out helper and keeps
+  the native temporary-record bridge, enemy front-picture preparation, LZ
+  decoding, direct VRAM tile copies, battle front-picture dispatch, native
+  animation-record setup and native base-data/dimension lookup real.
+- The regression deliberately stubs only unrelated presentation/audio work
+  (Poké Ball send-out animation playback, shininess branch, music/HUD/effect
+  helpers) plus the final `TickPokeAnim` loop so the test stops after the
+  animation record is created. LCD is kept off here because the preceding
+  checkpoint already validates the real LCD-on Request2bpp/VBlank scheduler.
+- Coverage includes ordinary and extended native roots, cosmetic presentation
+  forms, form normalization and two regional variants across two opponent party
+  slots. A deliberately conflicting legacy opponent-party species/form guards
+  native-shadow authority. The test verifies that the 16-bit enemy native
+  shadow is unchanged, legacy `GetBaseData` is not used, native base data is
+  exact, real VBK0/VBK1 front-picture tiles reach VRAM, and the animation record
+  stores the expected presentation species/form, frontpic height and start tile.
+- Validation: GitHub Actions run #35934058007 **passed** on corrected
+  test/CI commit `356ecbf72ebc216b59d02910c99b7d2e5b6b1ba7`.
+  All eight ROM build configurations and all eighteen focused regression steps
+  succeeded with no CI errors. Normal **and** debug ROMs each passed 14 new
+  send-out integration cases in addition to the previous 3,233 focused CPU
+  cases, for **3,247 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not yet validate
+  full Poké Ball/shiny/HUD/palette/audio playback, real frontpic animation tick
+  timing, or a complete interactive battle. This regression specifically
+  exercises the trainer enemy send-out helper; the live wild-battle
+  introduction remains a separate integration boundary.
+- Next recommended step: add a focused **wild-battle introduction integration
+  regression** through the live wild intro path, checking that its native enemy
+  shadow, real front-picture VRAM output and native animation record stay
+  consistent before broadening into full interactive battle automation.
+
+## Previous checkpoint: LCD-on native enemy front-picture VBlank transfer regression (2026-09-23)
 
 - Added `tests/test_native_enemy_frontpic_vblank.py`. It runs the real
   native enemy front-picture preparation with the LCD enabled and forces
