@@ -13,12 +13,20 @@
 - Added `tests/test_native_move_animation_cry.py` to exercise both battle
   turns, all current native identities, all four script parameters, conflicting
   legacy bytes, stereo selection, silent identities, and state restoration.
-- The new focused test has been committed but has NOT been run locally on this
-  head. CI was in progress when this checkpoint was recorded. The test stubs
-  audio output and cannot prove audible playback or full gameplay.
+- Validation: GitHub Actions run #35876244644 passed all eight configured
+  RGBDS 1.0.3 build variants. PyBoy 2.7.0 passed 2,704 focused
+  move-animation cry CPU cases on each of the normal and debug ROMs.
+  The preceding run exposed a test-harness parameter-injection error: the
+  fourth-byte script parameter was not reliably updated between cases.
+  The test now supplies the command byte from WRAM0 through the real
+  `GetBattleAnimByte` reader and asserts the byte that was consumed.
+- The test stubs audio output and does not establish audible playback or full
+  gameplay. The full CPU regression suite was not rerun on this head; the
+  2,704-case tests ran in CI rather than the local workspace.
 - No persistent formats or automatic party/daycare activation changed.
-- Next recommended step: verify CI and execute the focused test on normal and
-  debug builds before migrating another battle consumer.
+- Next recommended step: inspect remaining legacy-species battle-animation
+  picture consumers, starting with `BattleAnimCmd_Transform`, before changing
+  their rendering identity boundary.
 
 ## Previous checkpoint: native battle front-animation cry (2026-09-23)
 
