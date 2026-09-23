@@ -88,6 +88,10 @@ jobs:
         name: "Test native enemy send-out temporary record (normal)"
         run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-frontpic-renderer
+        name: "Test native enemy frontpic renderer (normal)"
+        run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: build-polishedcrystal-faithful
         name: "Build polishedcrystal-faithful"
         run: |
@@ -139,6 +143,10 @@ jobs:
       - id: test-native-enemy-sendout-tempmon-debug
         name: "Test native enemy send-out temporary record (debug)"
         run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-renderer-debug
+        name: "Test native enemy frontpic renderer (debug)"
+        run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polisheddebug-faithful
         name: "Build polisheddebug-faithful"
