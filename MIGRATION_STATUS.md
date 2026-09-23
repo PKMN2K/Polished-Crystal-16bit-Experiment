@@ -21,10 +21,16 @@
   byte-exact base data, saved-global restoration and generic animation
   isolation. Sprite ticks and `GetPicSize` are stubbed; the test
   does not verify rendered frames or full animation timing.
-- The normal/debug tests are wired into GitHub Actions. Validation
-  for code/CI commit `5715c2d204eb9bc3c291932ea148b1422a2799a2`
-  is in progress in run #35902048443; no build or test pass is yet
-  claimed. No persistent Pokémon layout or save-format activation
+- The normal/debug tests are wired into GitHub Actions. The first
+  run #35902048443 built the normal ROM but exposed a PyBoy test-hook
+  mistake: the tick stub was patched **after** its CPU hook was
+  registered, removing the hook and falsely reporting that no tick
+  occurred. `tests/test_native_enemy_frontpic_dimensions.py` now writes
+  the stub before installing the hook, using the actual animation WRAM
+  bank for its assertions. The corrected test commit is
+  `ada3437afd49db8a844525322f5dc279b9a41fe5`; run
+  #35902373237 is in progress, so its full build/test result is not yet
+  confirmed. No persistent Pokémon layout or save-format activation
   changed.
 - Next recommended step: inspect CI's eight build configurations
   and both new animation-dimension regressions, fix any failures
