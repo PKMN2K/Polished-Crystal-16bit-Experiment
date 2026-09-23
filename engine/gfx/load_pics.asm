@@ -44,7 +44,7 @@ PrepareAnimatedFrontpic:
 
 _GetFrontpic:
 	call _PrepareFrontpic
-	jr .load_tiles
+	jr _GetNativeFrontpic.load_tiles
 
 _GetNativeFrontpic::
 ; The caller has already loaded exact native base data. Keep the generic
