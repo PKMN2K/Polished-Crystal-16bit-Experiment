@@ -1,6 +1,37 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native enemy battle front-picture animation dimensions (2026-09-23)
+## Latest checkpoint: live battle front-picture animation call-site audit (2026-09-23)
+
+- Inspected the live trainer send-out and wild-battle introduction
+  paths, battle menu redraws, final-Pokémon slide-in, return-to-battle
+  Poké Ball UI and no-animation substitute effect commands. Ordinary
+  enemy frontpic redraws route through `GetMonFrontpic` /
+  `GetFrontpicOrGhostpic`, with the battle-only native picture
+  preparation; both trainer and wild encounter animations route through
+  `BattleAnimateFrontpic` to
+  `AnimateNativeEnemyBattleFrontpic` and the native dimension helper.
+  Ghost and substitute branches remain intentional exceptions.
+- Audited the inspected battle effect/move helpers and adjacent
+  graphics/picture consumers for direct `AnimateFrontpic` and
+  `LoadFrontpicAnim` calls. No additional direct generic frontpic
+  animation invocation was found in those battle paths. The identified
+  generic animation callers are trade, evolution, hatch, Hall of Fame
+  and summary-screen flows; they should retain their non-battle
+  legacy base-data side effects.
+- This is a source-path audit; no runtime or test code, save layout or
+  ROM build settings were changed. The last validated code checkpoint
+  remains GitHub Actions run #35902373237 on
+  `ada3437afd49db8a844525322f5dc279b9a41fe5`
+  (eight ROM builds, twelve focused test steps passed). Source-path
+  inspection does not validate actual pixels, animation timing or all
+  indirect/script-triggered playback.
+- Next recommended step: add a focused **unstubbed picture decode and
+  VRAM tile-copy** CPU regression for native enemy root and regional-form
+  front pictures. Compare native battle presentation to equivalent
+  generic visual identities while verifying native base-data retention;
+  retain separate ghost and substitute behavior.
+
+## Previous checkpoint: native enemy battle front-picture animation dimensions (2026-09-23)
 
 - `BattleAnimateFrontpic` now routes its normal, non-substituted enemy
   animation to `AnimateNativeEnemyBattleFrontpic`. That entry preserves
