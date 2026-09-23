@@ -120,11 +120,14 @@ def main():
             ("TickPokeAnim", lambda _: ticks.append(True)),
         ):
             bank, address = symbols[name]
-            mem[bank, address] = 0xC9
+            if name == "TickPokeAnim":
+                # Install SCF; RET *before* registering the PyBoy hook.
+                # Writing the ROM afterward removes the hook instruction.
+                mem[bank, address] = 0x37
+                mem[bank, address + 1] = 0xC9
+            else:
+                mem[bank, address] = 0xC9
             pyboy.hook_register(bank, address, callback, None)
-        bank, address = symbols["TickPokeAnim"]
-        mem[bank, address] = 0x37  # SCF
-        mem[bank, address + 1] = 0xC9  # RET: one animation tick.
 
         for turn in (0, 1):
             for native, raw, species, form in cases:
