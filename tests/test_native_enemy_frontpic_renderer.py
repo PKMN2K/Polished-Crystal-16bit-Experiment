@@ -60,10 +60,18 @@ def main():
         ))
 
     def capture_animated(_):
-        animated_entry.append((
-            tuple(mem[addr(n)] for n in ("wCurSpecies", "wCurPartySpecies", "wCurForm")),
-            list(mem[base_start:base_end]),
-        ))
+        # _PrepareFrontpic switches to decompression WRAM bank 6 before this
+        # callback. Inspect the identity/base buffer in bank 1, then restore
+        # the actual bank so the picture path continues unchanged.
+        original_bank = mem[0xFF70]
+        mem[0xFF70] = 1
+        try:
+            animated_entry.append((
+                tuple(mem[addr(n)] for n in ("wCurSpecies", "wCurPartySpecies", "wCurForm")),
+                list(mem[base_start:base_end]),
+            ))
+        finally:
+            mem[0xFF70] = original_bank
 
     def call(name):
         bank, target = symbols[name]
