@@ -1121,3 +1121,34 @@ regional-form cases, while the battle route retains exact native base
 data and avoids legacy `GetBaseData`. It still does not test the
 LCD-enabled `Request2bpp`/VBlank scheduling path, palettes, final
 screen pixels, animation timing or complete interactive battles.
+
+
+### Validation of LCD-on Request2bpp/VBlank front-picture transfers
+
+`tests/test_native_enemy_frontpic_vblank.py` keeps the LCD enabled and
+redirects each `Get2bpp` call through a small test-only late-scanline
+gate before entering the real `Request2bpp`. This forces the engine to
+queue a pending 2bpp request and complete it through the ordinary VBlank
+`Serve2bppRequest` path instead of the LCD-off direct-copy path. The
+real front-picture LZ decoder, padding, request scheduler, VBlank service
+and VRAM writes execute unchanged.
+
+GitHub Actions run #35930670151 **passed** on CI/test commit
+`5823f6decf56bc399b438a48f9c0375835c3c490`. All eight ROM variants
+built and both normal/debug LCD-on regressions passed. Each ROM executed
+14 native/generic scheduled-transfer cases across root, extended-root,
+cosmetic and regional-variant presentations under both battle-turn
+values. Together with the existing suites this is 3,233 focused CPU
+cases per ROM and sixteen successful regression steps.
+
+The native battle path retained byte-exact native base data, did not call
+legacy `GetBaseData`, generated actual pending Request2bpp work that was
+observed by VBlank, and produced the same final VRAM bytes and picture
+dimensions as the generic renderer supplied with the equivalent visual
+identity. The test uses a RAM trampoline and a test-only Get2bpp redirect;
+those do not change runtime source.
+
+This still does not verify CGB palette output, actual LCD-composited screen
+pixels, human-visible animation timing, or a complete interactive battle.
+The next useful boundary is the battle send-out sequence that combines
+native picture preparation and battle animation state in one execution.
