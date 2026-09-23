@@ -885,3 +885,40 @@ the shared temporary-record layout. GitHub Actions run #35895629364
 compiled all eight ROM configurations and passed 72 focused enemy send-out
 CPU cases on each normal/debug ROM. The existing focused cry, Transform
 picture and ghost-reveal regressions also passed in that run.
+
+
+## Shared front-picture base-data lookup audit
+
+`engine/gfx/load_pics.asm:_PrepareFrontpic` is a shared renderer used by
+`GetFrontpic`, `PrepareFrontpic` and `PrepareAnimatedFrontpic`. It calls
+legacy `GetBaseData` as a side effect before obtaining size and pixels.
+The size itself comes from `GetPicSize`, which resolves
+`wCurSpecies`/`wCurForm` into `PokemonPicSizes`; the image pointer is
+resolved independently through `GetCosmeticSpeciesAndFormIndex` and
+`PokemonPicPointers`. Neither lookup directly uses `wCurBaseData`.
+
+The renderer cannot simply be changed to read `wEnemyMonNativeSpecies`
+unconditionally. General picture placement (`PrepMonFrontpic`), the trade
+front picture (`GetTrademonFrontpic`), and hatch egg/hatchling pictures
+(`GetEggFrontpic`/`GetHatchlingFrontpic`) also invoke these shared
+routines and have their own source identities. Their legacy base-data
+side effects may matter to the surrounding flow.
+
+In battle, `DropEnemySub` already calls
+`PrepareEnemyBattlePictureIdentity` and
+`GetBaseDataFromEnemyBattleNativeSpecies` before
+`PrepareAnimatedFrontpic`. The shared renderer's subsequent
+`GetBaseData` replaces that exact native base-data buffer through a
+legacy representation round-trip. During front-picture animation,
+`GetFrontpicDims` in `engine/gfx/pic_animation.asm` repeats a legacy
+`GetBaseData` before `GetPicSize`.
+
+A future implementation should expose an **explicit battle-only** front
+picture/dimension contract: preserve the active enemy's native identity for
+base-data side effects while retaining the existing shared renderer
+behavior for menu, trade and hatch calls. Do not infer battle context
+from `wCurPartySpecies`, `hBattleTurn` or the global `wBattleMode`
+alone, since shared picture calls may run in other contexts. Both
+rendering and animation-size paths need coverage. The existing bank14
+section is at its size limit, so avoid adding uncompensated code there.
+This checkpoint is documentation-only; no live renderer behavior changed.
