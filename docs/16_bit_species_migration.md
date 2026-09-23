@@ -874,3 +874,14 @@ is separate. `tests/test_native_enemy_sendout_tempmon.py` checks byte-exact
 temporary records and native base data and stubs the legacy loader to
 enforce the new helper's normal-path boundary. Real send-out animations
 and pixel output are not exercised by that CPU test.
+
+The initial implementation placed the send-out helper in the already-full
+bank14 and exceeded its $4000-byte section limit by 11 bytes. The validated
+implementation lives in `engine/16/native_species.asm` in the existing
+`16-bit ID stuff` ROM section and far-calls the legacy
+`GetPkmnSpecies` / `GetPkmnForm` readers and
+`_CopyPkmnToTempMon.copy_data` copy entry. This relocation does not alter
+the shared temporary-record layout. GitHub Actions run #35895629364
+compiled all eight ROM configurations and passed 72 focused enemy send-out
+CPU cases on each normal/debug ROM. The existing focused cry, Transform
+picture and ghost-reveal regressions also passed in that run.
