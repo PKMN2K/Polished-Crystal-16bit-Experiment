@@ -8040,21 +8040,14 @@ BattleIntro:
 	jr nc, .skip_ghost_reveal
 	ld hl, SilphScopeRevealText
 	call StdBattleTextbox
-	ld de, vTiles0
-	farcall GetFrontpic
+	call RevealGhostEnemyFrontpic
 	ld de, ANIM_GHOST_TRANSFORM
 	call PlayBattleAnimDE
 	ld hl, WildPokemonAppearedText
 	call StdBattleTextbox
 	ld a, BATTLETYPE_NORMAL
 	ld [wBattleType], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wEnemyMonForm]
-	ld b, a
-	push bc
-	call SetSeenMon
-	pop bc
+	call RecordRevealedGhostEnemySeen
 .skip_ghost_reveal
 	ld hl, rLCDC
 	set B_LCDC_WIN_MAP, [hl]
@@ -8074,6 +8067,29 @@ BattleIntro:
 	call z, UpdateEnemyHUD
 	ld a, TRANSFER_TILEMAP
 	ldh [hBGMapMode], a
+	ret
+
+RevealGhostEnemyFrontpic:
+; Silph Scope exposes the active enemy, not the legacy pre-battle species.
+; Keep the established vTiles0 ghost-to-Pokemon animation destination.
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld de, vTiles0
+	farcall GetFrontpic
+	ret
+
+RecordRevealedGhostEnemySeen:
+; The animation may alter renderer globals. Resolve the native shadow again
+; so the Dex sees the same mechanical/cosmetic form that was revealed.
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld a, [wCurPartySpecies]
+	ld c, a
+	ld a, [wCurForm]
+	ld b, a
+	push bc
+	call SetSeenMon
+	pop bc
 	ret
 
 LoadTrainerOrWildMonPic:
