@@ -973,3 +973,33 @@ The linker reports two nonfatal unnecessary-farcall warnings in the native
 species helper section; these are not test failures. The real sprite pixels
 and full battle-animation sequence have not yet been validated, and
 `GetFrontpicDims` still has its distinct legacy base-data lookup.
+
+
+## Native enemy battle front-picture animation dimensions
+
+`BattleAnimateFrontpic` now invokes the explicit
+`AnimateNativeEnemyBattleFrontpic` entry. That entry saves the ambient
+legacy presentation globals, resolves the active enemy from
+`wEnemyMonNativeSpecies` through `PrepareEnemyBattlePictureIdentity`,
+and restores the globals after the animation. It retains the existing
+`ANIM_MON_BATTLE_SLOW` command sequence, including the native enemy cry.
+
+The animation setup shares the existing `LoadMonAnimation` record writer
+but passes a **call-entry mode**, not an inferred global battle flag, to
+select `GetNativeEnemyFrontpicDims`. This battle-only dimensions helper
+switches to WRAM bank 1, reloads exact base data through
+`GetBaseDataFromEnemyBattleNativeSpecies`, and then uses the ordinary
+`GetPicSize` result. Reloading matters because send-out effects may run
+between the earlier native picture preparation and the animation. The
+generic `AnimateFrontpic`, `LoadFrontpicAnim`, and `GetFrontpicDims`
+entries still perform their historical legacy `GetBaseData` side effect
+for menu, trade, hatch and other non-battle animations. Empty or reserved
+native enemy IDs skip the dedicated animation entry without changing the
+saved presentation globals.
+
+`tests/test_native_enemy_frontpic_dimensions.py` uses PyBoy CPU
+execution to check native identity and byte-exact base data at animation
+sizing, animation-structure dimensions, legacy-call isolation, two battle
+turn values, and generic animation behavior. Its sprite-tick and pic-size
+entry points are stubbed; it does **not** validate displayed frames,
+timing or visual playback. No saved Pokémon structure was changed.
