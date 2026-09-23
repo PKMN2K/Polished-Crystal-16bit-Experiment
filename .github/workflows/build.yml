@@ -92,6 +92,10 @@ jobs:
         name: "Test native enemy frontpic renderer (normal)"
         run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-frontpic-dimensions
+        name: "Test native enemy frontpic animation dimensions (normal)"
+        run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: build-polishedcrystal-faithful
         name: "Build polishedcrystal-faithful"
         run: |
@@ -147,6 +151,10 @@ jobs:
       - id: test-native-enemy-frontpic-renderer-debug
         name: "Test native enemy frontpic renderer (debug)"
         run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-dimensions-debug
+        name: "Test native enemy frontpic animation dimensions (debug)"
+        run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polisheddebug-faithful
         name: "Build polisheddebug-faithful"
