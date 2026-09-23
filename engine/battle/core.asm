@@ -3088,11 +3088,7 @@ BattleAnimateFrontpic:
 .cry_no_anim
 	ld a, $f
 	ld [wCryTracks], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wCurForm]
-	ld b, a
-	jmp PlayStereoCry
+	farjp PlayEnemyBattleStereoCry
 
 CheckPlayerActiveSubPic:
 	ld a, [wPlayerSubStatus4]
@@ -3279,11 +3275,7 @@ SendOutPlayerMon:
 	jr c, .statused
 	ld a, $f0
 	ld [wCryTracks], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wCurForm]
-	ld b, a
-	call PlayStereoCry
+	farcall PlayPlayerBattleStereoCry
 
 .statused
 	call UpdatePlayerHUD

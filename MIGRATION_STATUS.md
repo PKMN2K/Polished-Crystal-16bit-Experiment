@@ -1,6 +1,29 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native fainting cry lookup (2026-09-22)
+## Latest checkpoint: native explicit battle-entry stereo cries (2026-09-23)
+
+- The explicit player send-out cry now calls `PlayPlayerBattleStereoCry`;
+  `BattleAnimateFrontpic.cry_no_anim` calls `PlayEnemyBattleStereoCry`.
+- Each helper selects its side's current native identity independently of
+  `hBattleTurn`, uses the native cry loader and retains normal cry duration.
+  Both enable stereo while preserving the caller's channel mask and BC/DE/HL
+  around identity loading and playback. Existing status/animation gates remain.
+- Empty identities, eggs and reserved root $0100 skip playback; regional and
+  mechanical variants retain their root species' cry.
+- Validation: normal and clean debug builds with RGBDS 1.0.3; 1,352 focused
+  CPU cases passed on each ROM with PyBoy 2.7.0. Coverage includes every
+  current native identity, both speakers with both turn values, conflicting
+  legacy fields, cry/pitch/normal duration, stereo/channel settings and
+  register/stack/bank/global preservation.
+- Playback and WaitSFX are stubbed in these focused helper tests; audible
+  output, full send-out sequences, the full regression suite and other build
+  configurations were not tested at this checkpoint.
+- Persistent formats and automatic activation remain unchanged. The separate
+  `PokeAnim_StereoCry` path still uses animation species/form fields.
+- Next recommended step: inspect and migrate the stereo cry inside front-sprite
+  animation, preserving the animation system's non-battle callers.
+
+## Previous checkpoint: native fainting cry lookup (2026-09-22)
 
 - The fainting path now calls `PlayFaintCryFromActiveNativeSpecies`, selecting
   the current player/enemy native shadow with `hBattleTurn` instead of reading
