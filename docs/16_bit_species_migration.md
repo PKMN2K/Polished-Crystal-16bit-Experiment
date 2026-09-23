@@ -776,3 +776,16 @@ while unrelated roots do not.
 `tests/test_native_species_battle_items.py` covers both active sides, a real
 mechanical-variant/root match, legacy/native disagreement, unrelated roots,
 empty native shadows and wrong-item guards.
+
+
+## Native move-animation cry checkpoint
+
+The move-animation `BattleAnimCmd_Cry` now reads the current native identity of
+its acting battler from the appropriate active-battle shadow. This removes the
+legacy species/form lookup for that command without changing the existing
+four script parameters, cry-track masks, pitch/length adjustments, asynchronous
+playback, or WRAM restoration. Mechanical variants use their root species'
+cry, and empty/egg/reserved identities remain silent. The focused PyBoy test
+is `tests/test_native_move_animation_cry.py`; it is committed but was not
+executed in the chat that introduced this checkpoint. This is still an
+incremental battle bridge, not a persistent-format activation.
