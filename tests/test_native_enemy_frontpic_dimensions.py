@@ -123,7 +123,8 @@ def main():
             mem[bank, address] = 0xC9
             pyboy.hook_register(bank, address, callback, None)
         bank, address = symbols["TickPokeAnim"]
-        mem[bank, address:address + 2] = [0x37, 0xC9]  # SCF; RET: one animation tick.
+        mem[bank, address] = 0x37  # SCF
+        mem[bank, address + 1] = 0xC9  # RET: one animation tick.
 
         for turn in (0, 1):
             for native, raw, species, form in cases:
