@@ -17,11 +17,21 @@
   legacy temporary/species fields, invalid native IDs and the renderer boundary.
   Front/back renderers are stubbed; pixel output and full Transform gameplay
   are not verified by this focused test.
-- GitHub Actions now runs the focused test on normal and debug ROMs alongside
-  the previously migrated move-animation cry tests. The new CI result remains
-  to be confirmed for this checkpoint. No persistent save-format switch was made.
-- Next recommended step: verify both focused tests and all eight build variants
-  in CI; resolve any failure before migrating another picture consumer.
+- Validation: GitHub Actions run #35886997786 succeeded on code commit
+  `8308699662ee1831c524a1638689f0d1006f3bb4` with RGBDS 1.0.3.
+  All eight build variants passed. PyBoy 2.7.0 passed 106 native
+  Transform-animation picture CPU cases and 2,704 move-animation cry CPU cases
+  on **each** of the normal and debug ROMs. All four focused test steps passed.
+  The first CI attempt exposed a test-fixture mistake (the acting turn did
+  not always match the initialized identity); that test setup was corrected
+  before this successful run. The subsequent status-only commit does not
+  change compiled source or tests.
+- These focused tests stub front/back renderers and audio. They do not verify
+  pixel output, audible playback, full Transform gameplay, or the entire
+  legacy CPU regression suite. No persistent save-format switch was made.
+- Next recommended step: audit remaining battle-animation picture consumers,
+  especially `BattleAnimCmd_BeatUp`, whose pictured party member may differ
+  from the active battler; preserve that identity distinction before migrating.
 
 ## Previous checkpoint: native move-animation cry (2026-09-23)
 
