@@ -21,11 +21,29 @@
   and byte-exact native base data. It stubs the legacy `GetBaseData` entry to
   verify that valid shadows do not use it and that empty shadows take the
   fallback. No full send-out visuals or gameplay are tested.
-- CI now runs this focused test for normal and debug builds along with the
-  previously added animation and ghost-reveal tests. Results for this code
-  checkpoint are pending; no save-format activation occurred.
-- Next recommended step: verify CI's eight builds and both focused send-out
-  tests, correcting any assembler or CPU regressions before continuing.
+- The first CI attempts (#35894269579 and #35894329386) exposed an
+  RGBDS section-capacity error: bank14 reached $400B bytes (11 bytes over
+  its $4000-byte limit). The send-out-only bridge was moved out of the full
+  bank14, from `engine/pokemon/tempmon.asm` into the existing `16-bit ID
+  stuff` ROM section in `engine/16/native_species.asm`. It now calls the
+  legacy party-species/form readers and shared temp-record copy body through
+  far calls; the generic temp-record copier retains its old code and layout.
+- Validation: GitHub Actions run #35895629364 succeeded on code commit
+  `b19f0cc2ddbbc2bee08a1888a3acf868905c9b94` with RGBDS 1.0.3.
+  All eight build variants passed. PyBoy 2.7.0 passed 72 native enemy
+  send-out temporary-record CPU cases on **each** normal and debug ROM;
+  the existing cry (2,704), Transform picture (106) and ghost-reveal
+  picture/Dex (106) focused cases passed on each ROM too. All eight
+  focused test steps succeeded, with no CI error lines.
+- The regression stubs legacy `GetBaseData`; it validates the native lookup
+  and byte-exact copied record, not full send-out visuals, rendered pixels or
+  the entire legacy CPU suite. No persistent format activation or
+  party/daycare record change was made. This status-only commit follows the
+  successfully tested code commit.
+- Next recommended step: inspect the remaining internal `GetBaseData`
+  call in `engine/gfx/load_pics.asm` (front-pic preparation), and identify
+  which callers can supply an explicit native identity before changing the
+  shared renderer used by non-battle screens.
 
 ## Previous checkpoint: native Silph Scope ghost reveal (2026-09-23)
 
