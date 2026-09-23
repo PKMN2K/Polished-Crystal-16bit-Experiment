@@ -20,23 +20,30 @@
   renderer still calls legacy `GetBaseData`. The existing battle-picture
   boundary test is updated for the new dispatch and CI runs the new test
   for normal and debug ROMs.
-- Initial CI attempts exposed a two-byte bank14 overflow. Sharing the
-  DE destination save after the legacy `GetBaseData` call removed three
-  bytes and allowed the corrected source to build. Run #35899195206 then
-  exposed a test-fixture mistake: the animated-tile hook read identity and
-  base data from WRAM bank 6 (decompression scratch), not bank 1. The test
-  now reads bank 1 and restores the original bank before execution resumes.
-  The latest code/test commit is
-  `9b4a89ad40e0581eff13caef75d8fdc18528942c`; its CI run
-  #35899496080 is in progress. Full validation remains pending.
+- The first builds revealed a two-byte bank14 overflow. Sharing the
+  destination-register save removed three bytes and fixed the section limit.
+  The next test run revealed a fixture mistake: its animated-tile hook read
+  WRAM bank 6 (decompression scratch) rather than bank 1. The corrected test
+  selects bank 1 for inspection and restores the executing bank afterward.
+- Validation: GitHub Actions run #35899496080 **passed** on code/test commit
+  `9b4a89ad40e0581eff13caef75d8fdc18528942c`. All eight build
+  configurations and all ten focused test steps succeeded. Normal **and**
+  debug ROMs each passed 107 native-enemy/generic frontpic cases, 72 enemy
+  send-out temp-record cases, 106 ghost-reveal cases, 106 Transform-picture
+  cases, and 2,704 move-animation cry cases (3,095 per ROM). There were no
+  CI errors. The linker still reports two nonfatal `unnecessary farcall`
+  warnings at `engine/16/native_species.asm` for `GetBaseData` and
+  `PrepareEnemyBattlePictureIdentity`; these can be shortened in a
+  later cleanup.
 - The separate legacy `GetBaseData` call in picture-animation
-  `GetFrontpicDims` is **not** migrated by this step. Pixel output,
-  complete battle animations and the full legacy CPU suite remain untested.
-  No save-format activation or party/opponent layout change was made.
-- Next recommended step: inspect and finish the current CI build and
-  front-picture regression checks, fixing any failures. After they pass,
-  migrate battle-only front-picture animation sizing without changing
-  non-battle animation setup.
+  `GetFrontpicDims` is **not** migrated. Low-level sprite decompression
+  and tile copying are stubbed in the new test; displayed pixels, complete
+  battle animations and the full legacy CPU suite remain untested.
+  No save-format activation or party/opponent layout change occurred.
+  This status-only commit follows the successfully tested code commit.
+- Next recommended step: migrate the **battle-only** front-picture
+  animation-sizing path so `GetFrontpicDims` cannot overwrite native
+  enemy base data; leave generic menu, trade and hatch animations untouched.
 
 ## Previous checkpoint: shared front-picture base-data boundary audit (2026-09-23)
 
