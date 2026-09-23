@@ -849,3 +849,28 @@ a transient rendering/Dex boundary change, not a persistent party save
 format change. `tests/test_native_ghost_reveal_picture.py` stubs renderer
 and Dex calls to test inputs, routing and state; full ghost-battle visuals
 still require in-game validation.
+
+
+## Native enemy send-out temporary-record base data
+
+The selected trainer opponent's canonical native word is published to
+`wEnemyMonNativeSpecies` by `SendInUserPkmn` before the send-out picture
+path runs. `Function_SetEnemyPkmnAndSendOutAnimation` now calls the
+send-out-specific `CopyEnemyBattlePkmnToTempMon` helper instead of redundantly
+calling legacy `GetBaseData` before the general temporary-record copier.
+
+The new helper retains the opponent's legacy species/form and copies the
+complete original opponent party record into `wTempMon` through the shared
+temporary-record body. For a populated native shadow, it obtains base data
+directly through `GetBaseDataFromEnemyBattleNativeSpecies` rather than
+reconstructing a native ID from the legacy byte/form pair. With an empty
+shadow, it takes the existing legacy `GetBaseData` fallback. Neither the
+general temporary-record copier nor any persistent format is changed.
+
+The subsequent `GetMonFrontpic` already resolves the active enemy's
+native battle identity for rendering. Its lower-level sprite preparation
+still has an internal legacy base-data lookup; that broader renderer change
+is separate. `tests/test_native_enemy_sendout_tempmon.py` checks byte-exact
+temporary records and native base data and stubs the legacy loader to
+enforce the new helper's normal-path boundary. Real send-out animations
+and pixel output are not exercised by that CPU test.
