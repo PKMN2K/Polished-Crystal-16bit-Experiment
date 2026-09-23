@@ -956,3 +956,20 @@ the native buffer when an enemy front picture is subsequently animated;
 the next scoped migration must address the battle animation-dimension
 boundary without changing non-battle animations. No save-format or party
 layout change was made by this front-picture preparation step.
+
+
+### Validation of battle-only native enemy front-picture preparation
+
+GitHub Actions run #35899496080 passed for code/test commit
+`9b4a89ad40e0581eff13caef75d8fdc18528942c`: all eight ROM build
+variants and all ten focused regression steps succeeded. PyBoy 2.7.0
+reported 107 native/generic front-picture preparation CPU cases on each
+normal and debug ROM. The existing send-out, ghost-reveal, Transform-picture
+and move-animation-cry regressions also passed. The front-picture fixture
+switches to WRAM bank 1 when inspecting identity/base data at the
+animated-tile hook, then restores its execution bank.
+
+The linker reports two nonfatal unnecessary-farcall warnings in the native
+species helper section; these are not test failures. The real sprite pixels
+and full battle-animation sequence have not yet been validated, and
+`GetFrontpicDims` still has its distinct legacy base-data lookup.
