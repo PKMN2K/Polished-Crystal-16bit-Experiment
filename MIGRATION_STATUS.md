@@ -20,11 +20,15 @@
   renderer still calls legacy `GetBaseData`. The existing battle-picture
   boundary test is updated for the new dispatch and CI runs the new test
   for normal and debug ROMs.
-- Initial CI attempts exposed a two-byte bank14 overflow. The shared
-  graphics-bank destination-save refactor removes three bytes, preserving
-  `GetBaseData`'s documented DE preservation; the corrected code head is
-  `256589edb70fcfbd218d424c735ebc8acae010c6`. Its CI run
-  #35899195206 is in progress; no pass is claimed yet.
+- Initial CI attempts exposed a two-byte bank14 overflow. Sharing the
+  DE destination save after the legacy `GetBaseData` call removed three
+  bytes and allowed the corrected source to build. Run #35899195206 then
+  exposed a test-fixture mistake: the animated-tile hook read identity and
+  base data from WRAM bank 6 (decompression scratch), not bank 1. The test
+  now reads bank 1 and restores the original bank before execution resumes.
+  The latest code/test commit is
+  `9b4a89ad40e0581eff13caef75d8fdc18528942c`; its CI run
+  #35899496080 is in progress. Full validation remains pending.
 - The separate legacy `GetBaseData` call in picture-animation
   `GetFrontpicDims` is **not** migrated by this step. Pixel output,
   complete battle animations and the full legacy CPU suite remain untested.
