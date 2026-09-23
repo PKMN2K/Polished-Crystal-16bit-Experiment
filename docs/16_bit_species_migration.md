@@ -827,3 +827,25 @@ form, and a renderer-compatible bridge for that selected member. It must
 preserve the enemy-front/player-back tile destinations and restore the
 temporary renderer globals. No runtime or persistent-record change was
 made as part of this audit.
+
+
+## Native Silph Scope ghost reveal
+
+The initial unrevealed ghost remains the special `GhostFrontpic` while
+`BATTLETYPE_GHOST` is active. When the player has the Silph Scope,
+`BattleIntro` invokes `RevealGhostEnemyFrontpic` to publish the active
+enemy's renderer-compatible species/form from `wEnemyMonNativeSpecies`
+through `PrepareEnemyBattlePictureIdentity`; it then draws the revealed
+front picture to the original `vTiles0` transition tiles. The ghost-to-Pokémon
+animation still runs at its original point.
+
+After the animation, `RecordRevealedGhostEnemySeen` resolves the native
+shadow again before calling `SetSeenMon`. The second resolution avoids
+using renderer globals modified during the animation and ensures the Dex
+is given the revealed appearance's compatible species/form rather than a
+stale pre-battle species with a separate legacy enemy-form byte. Empty and
+reserved native IDs skip picture rendering and seen registration. This is
+a transient rendering/Dex boundary change, not a persistent party save
+format change. `tests/test_native_ghost_reveal_picture.py` stubs renderer
+and Dex calls to test inputs, routing and state; full ghost-battle visuals
+still require in-game validation.
