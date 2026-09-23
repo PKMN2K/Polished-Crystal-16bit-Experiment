@@ -53,7 +53,16 @@ def main():
     mem, regs = pyboy.memory, pyboy.register_file
     base_start, base_end = addr("wCurBaseData"), addr("wCurBaseDataEnd")
     base_size = base_end - base_start
+    anim_bank = symbols["wPokeAnimStruct"][0] & 7
     legacy_calls, dims, ticks = [], [], []
+
+    def read_anim(name):
+        old_bank = mem[0xFF70]
+        mem[0xFF70] = anim_bank
+        try:
+            return mem[addr(name)]
+        finally:
+            mem[0xFF70] = old_bank
 
     def capture_size(_):
         assert mem[0xFF70] & 7 == 1, "GetPicSize must read bank 1"
@@ -92,7 +101,9 @@ def main():
         ):
             mem[addr(name)] = value
         mem[base_start:base_end] = [0xA5] * base_size
+        mem[0xFF70] = anim_bank
         mem[addr("wPokeAnimFrontpicHeight")] = 0xA5
+        mem[0xFF70] = 1
         legacy_calls.clear()
         dims.clear()
         ticks.clear()
@@ -128,7 +139,7 @@ def main():
                 assert mem[addr("wEnemyMonForm")] == raw, context
                 if native in (0, 256):
                     assert not dims and not ticks, context
-                    assert mem[addr("wPokeAnimFrontpicHeight")] == 0xA5, context
+                    assert read_anim("wPokeAnimFrontpicHeight") == 0xA5, context
                     assert list(mem[base_start:base_end]) == [0xA5] * base_size, context
                 else:
                     expected_base = list(data[
@@ -139,10 +150,10 @@ def main():
                         context, dims
                     )
                     assert ticks == [True], context
-                    assert mem[addr("wPokeAnimFrontpicHeight")] == 6, context
+                    assert read_anim("wPokeAnimFrontpicHeight") == 6, context
                     assert list(mem[base_start:base_end]) == expected_base, context
-                    assert mem[addr("wPokeAnimSpecies")] == species, context
-                    assert mem[addr("wPokeAnimVariant")] == form, context
+                    assert read_anim("wPokeAnimSpecies") == species, context
+                    assert read_anim("wPokeAnimVariant") == form, context
                 count += 1
 
         # The old entry is not battle-scoped, even with the enemy turn and
@@ -155,7 +166,7 @@ def main():
             assert legacy_calls == [True], (turn, legacy_calls)
             assert dims == [((25, 25, 1), [0xA5] * base_size)], (turn, dims)
             assert ticks == [True], turn
-            assert mem[addr("wPokeAnimFrontpicHeight")] == 6, turn
+            assert read_anim("wPokeAnimFrontpicHeight") == 6, turn
             assert list(mem[base_start:base_end]) == [0xA5] * base_size, turn
             count += 1
 
