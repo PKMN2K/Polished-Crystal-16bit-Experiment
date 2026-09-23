@@ -807,3 +807,23 @@ and retains `wCurForm` for the transformed picture on successful rendering.
 Empty or reserved native identities do not invoke a renderer. Focused PyBoy
 coverage resides in `tests/test_transform_animation_native_picture.py`; it
 stubs the front/back renderer and cannot prove on-screen pixel correctness.
+
+
+## Retired Beat Up animation identity boundary
+
+`BattleAnimCmd_BeatUp` and its `anim_beatup` macro are retained in the
+animation command dispatch, but the move is absent from the current move
+constants and animation pointer table. The former `BattleAnim_BeatUp` script
+is commented out as removed. There is therefore no live move-animation
+caller to migrate at this checkpoint.
+
+If Beat Up is reintroduced, its former animation command cannot safely use
+the active battler's native shadow: the pictured participant may be a
+different member of the attacker's party. The retained command currently
+treats the one-byte `wBattleAnimParam` as a legacy species number and reads
+the active battle mon's form. A future implementation must define a producer
+for the actual contributing party member's full native 16-bit identity and
+form, and a renderer-compatible bridge for that selected member. It must
+preserve the enemy-front/player-back tile destinations and restore the
+temporary renderer globals. No runtime or persistent-record change was
+made as part of this audit.
