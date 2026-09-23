@@ -3034,13 +3034,13 @@ OfferSwitch:
 	ret
 
 Function_SetEnemyPkmnAndSendOutAnimation:
-	; wCurPartySpecies and wCurForm should already be set
-	ld a, [wCurPartySpecies]
-	ld [wCurSpecies], a
-	call GetBaseData
+	; Decode the selected opponent party member for legacy temporary-record
+	; users, but load base data from its already-published native battle ID.
+	; The previous preliminary GetBaseData was redundant: the old copy
+	; routine immediately repeated that one-byte species/form lookup.
 	ld a, OTPARTYMON
 	ld [wMonType], a
-	farcall CopyPkmnToTempMon
+	farcall CopyEnemyBattlePkmnToTempMon
 	call GetMonFrontpic
 
 	xor a
