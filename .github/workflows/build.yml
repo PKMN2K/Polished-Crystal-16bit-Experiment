@@ -100,6 +100,10 @@ jobs:
         name: "Test LCD-on native enemy frontpic VBlank transfer (normal)"
         run: python tests/test_native_enemy_frontpic_vblank.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-sendout-integration
+        name: "Test native enemy send-out picture/animation integration (normal)"
+        run: python tests/test_native_enemy_sendout_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -167,6 +171,10 @@ jobs:
       - id: test-native-enemy-frontpic-vblank-debug
         name: "Test LCD-on native enemy frontpic VBlank transfer (debug)"
         run: python tests/test_native_enemy_frontpic_vblank.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-integration-debug
+        name: "Test native enemy send-out picture/animation integration (debug)"
+        run: python tests/test_native_enemy_sendout_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
