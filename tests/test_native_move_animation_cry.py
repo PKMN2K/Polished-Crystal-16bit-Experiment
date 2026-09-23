@@ -72,9 +72,9 @@ def main():
         bank, address = symbols["WaitSFX"]
         pyboy.hook_register(bank, address, lambda _: waits.append(True), None)
 
-        # Use the actual GetBattleAnimByte reader with a temporary ROM script
-        # byte at an unused-by-this-test entry point after the cry data table.
-        script_bank, script_addr = symbols["PlayHitSound"]
+        # Use the real script reader, but keep its one-byte parameter in WRAM0.
+        # This avoids relying on repeated emulator ROM-byte patching.
+        script_addr = 0xC200
         for turn in (0, 1):
             for native, species in cases:
                 for prefix, identity in (
@@ -88,7 +88,7 @@ def main():
                 mem[addr("hBattleTurn")] = turn
                 for parameter, (pitch_delta, length_delta) in enumerate(deltas):
                     mem[0xFF70] = 1
-                    mem[script_bank, script_addr] = 0xFC | parameter
+                    mem[script_addr] = 0xFC | parameter
                     mem[addr("wBattleAnimAddress"):addr("wBattleAnimAddress") + 2] = [
                         script_addr & 255, script_addr >> 8
                     ]
@@ -102,6 +102,9 @@ def main():
                     waits.clear()
                     run()
                     assert word("wBattleAnimAddress") == script_addr + 1
+                    assert mem[addr("wBattleAnimByte")] == (0xFC | parameter), (
+                        turn, native, parameter, mem[addr("wBattleAnimByte")]
+                    )
                     assert mem[addr("wCryTracks")] == (0xF0 if turn == 0 else 0x0F)
                     assert not waits
                     if species in (0, 255, 256):
