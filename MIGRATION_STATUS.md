@@ -1,6 +1,40 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: shared front-picture base-data boundary audit (2026-09-23)
+## Latest checkpoint: battle-only native enemy front-picture preparation (2026-09-23)
+
+- `GetFrontpicOrGhostpic` now routes non-ghost enemy battle pictures to
+  `PrepareNativeEnemyBattleAnimatedFrontpic` in the native species ROM
+  section. It resolves the current 16-bit enemy shadow and its presentation
+  form and loads exact native base data before sprite preparation. The
+  existing ghost-special picture branch is unchanged.
+- `_GetNativeFrontpic` in the shared graphics bank enters the existing
+  size/picture-pointer/decompression body after the legacy `GetBaseData`
+  side effect. Generic `GetFrontpic`, `PrepareFrontpic` and
+  `PrepareAnimatedFrontpic` retain that side effect for menu, trade,
+  hatch and other callers. The native entry shares the DE destination save
+  to fit the nearly full bank14 section.
+- Added `tests/test_native_enemy_frontpic_renderer.py`, which uses the real
+  native identity, base-data and picture preparation code with low-level
+  decompression/tile-transfer stubs. It checks the native base-data buffer
+  at both picture and animated-tile entry points and that the generic
+  renderer still calls legacy `GetBaseData`. The existing battle-picture
+  boundary test is updated for the new dispatch and CI runs the new test
+  for normal and debug ROMs.
+- Initial CI attempts exposed a two-byte bank14 overflow. The shared
+  graphics-bank destination-save refactor removes three bytes, preserving
+  `GetBaseData`'s documented DE preservation; the corrected code head is
+  `256589edb70fcfbd218d424c735ebc8acae010c6`. Its CI run
+  #35899195206 is in progress; no pass is claimed yet.
+- The separate legacy `GetBaseData` call in picture-animation
+  `GetFrontpicDims` is **not** migrated by this step. Pixel output,
+  complete battle animations and the full legacy CPU suite remain untested.
+  No save-format activation or party/opponent layout change was made.
+- Next recommended step: inspect and finish the current CI build and
+  front-picture regression checks, fixing any failures. After they pass,
+  migrate battle-only front-picture animation sizing without changing
+  non-battle animation setup.
+
+## Previous checkpoint: shared front-picture base-data boundary audit (2026-09-23)
 
 - Inspected `engine/gfx/load_pics.asm` and `home/pokemon.asm`.
   `_PrepareFrontpic` calls legacy `GetBaseData` before `GetPicSize`, but
