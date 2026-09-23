@@ -56,8 +56,12 @@ def main():
     base_len = base_end - base_start
     v0_start = address("vTiles2")
     v0_end = v0_start + 7 * 7 * 16
-    v1_start = address("vTiles3")
-    v1_end = address("vTiles5")  # vTiles3 and vTiles4, including extra animation frames
+    # The renderer copies the animated base frame to the same VRAM address
+    # as vTiles2, but with VBK=1: vTiles5 ($9000). On overflow it also
+    # writes extra frames to vTiles4 ($8800). Capture both regions.
+    v1_start = address("vTiles4")
+    v1_end = address("vBGMap2")
+    v1_base_offset = address("vTiles5") - v1_start
     lookups, decompressions, transfers = [], [], []
 
     def setup(turn, native, raw, presentation=None):
@@ -160,8 +164,8 @@ def main():
                 assert actual[0] != bytes([0x5A] * len(actual[0])), (
                     "no frontpic bytes copied", context
                 )
-                assert actual[1][:len(actual[0])] != bytes([0x5A] * len(actual[0])), (
-                    "no animated base tiles copied", context,
+                assert actual[1][v1_base_offset:v1_base_offset + len(actual[0])] != bytes([0x5A] * len(actual[0])), (
+                    "no animated base tiles copied at VBK1:vTiles5", context,
                     "transfers (dest,src,count,vbk,wbk)", transfers,
                     "base frame sha", hashlib.sha256(actual[0]).hexdigest()[:16],
                     "vbk1 first bytes", list(actual[1][:32]),
