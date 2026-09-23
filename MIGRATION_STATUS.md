@@ -1,6 +1,33 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native Silph Scope ghost reveal (2026-09-23)
+## Latest checkpoint: native enemy send-out temporary-record base data (2026-09-23)
+
+- `Function_SetEnemyPkmnAndSendOutAnimation` now calls
+  `CopyEnemyBattlePkmnToTempMon`. The new send-out-only helper decodes the
+  selected opponent party record into the existing legacy temporary format,
+  loads base data through `GetBaseDataFromEnemyBattleNativeSpecies`, and
+  reuses the ordinary `CopyPkmnToTempMon` copy body. It no longer performs the
+  redundant preliminary `GetBaseData` lookup or the old copy routine's second
+  legacy base-data lookup for a valid native enemy shadow.
+- An empty native shadow takes a conservative legacy `GetBaseData` fallback
+  while still copying the opponent party record. The general player/opponent
+  temporary-copy API is unchanged, as are opponent party layout and all save
+  formats. `GetMonFrontpic` already uses the native enemy picture identity
+  bridge; its lower-level renderer still has an internal legacy `GetBaseData`
+  call, which is outside this send-out temporary-record change.
+- Added `tests/test_native_enemy_sendout_tempmon.py`: opponent party slots,
+  both battle turns and format markers, roots/extended/current variants,
+  intentionally conflicting legacy/global IDs, byte-exact temp record copying,
+  and byte-exact native base data. It stubs the legacy `GetBaseData` entry to
+  verify that valid shadows do not use it and that empty shadows take the
+  fallback. No full send-out visuals or gameplay are tested.
+- CI now runs this focused test for normal and debug builds along with the
+  previously added animation and ghost-reveal tests. Results for this code
+  checkpoint are pending; no save-format activation occurred.
+- Next recommended step: verify CI's eight builds and both focused send-out
+  tests, correcting any assembler or CPU regressions before continuing.
+
+## Previous checkpoint: native Silph Scope ghost reveal (2026-09-23)
 
 - In `engine/battle/core.asm`, the live Silph Scope reveal now calls
   `RevealGhostEnemyFrontpic` instead of invoking `GetFrontpic` directly
