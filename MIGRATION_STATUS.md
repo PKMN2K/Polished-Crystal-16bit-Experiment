@@ -1,6 +1,39 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native enemy send-out temporary-record base data (2026-09-23)
+## Latest checkpoint: shared front-picture base-data boundary audit (2026-09-23)
+
+- Inspected `engine/gfx/load_pics.asm` and `home/pokemon.asm`.
+  `_PrepareFrontpic` calls legacy `GetBaseData` before `GetPicSize`, but
+  `GetPicSize` derives the size directly from
+  `wCurSpecies`/`wCurForm` and `PokemonPicSizes`. The same presentation
+  fields select `PokemonPicPointers`; the image decoder does not consume
+  `wCurBaseData` to determine sprite size or pointer. The legacy lookup is
+  retained as a base-data-buffer side effect for later consumers.
+- `engine/gfx/pic_animation.asm:GetFrontpicDims` independently calls
+  legacy `GetBaseData` before `GetPicSize`; battle front-picture animation
+  therefore has a second legacy base-data side effect.
+- The front-picture functions are shared by non-battle callers. Confirmed
+  examples: `home/pokemon.asm:PrepMonFrontpic` (general picture placement),
+  `engine/gfx/trademon_frontpic.asm:GetTrademonFrontpic` (trades), and
+  `engine/pokemon/breeding.asm:GetEggFrontpic` /
+  `GetHatchlingFrontpic` (hatching). These callers supply their own
+  presentation identity and cannot safely be redirected to the active enemy
+  battle shadow.
+- Battle `DropEnemySub` already publishes native enemy presentation
+  identity and loads exact native base data before calling
+  `GetFrontpicOrGhostpic`; `PrepareAnimatedFrontpic` then runs the
+  shared legacy lookup, replacing that exact base data. A broad removal or
+  unconditional native substitution could alter non-battle consumers and
+  the later `GetFrontpicDims` side effect.
+- This is a code-path audit only: no runtime, tests, save formats, or build
+  settings were changed; the last passing compiled-code CI checkpoint remains
+  run #35895629364.
+- Next recommended step: add a **battle-scoped** front-picture preparation
+  boundary that preserves native enemy base data through decompression and
+  animation sizing without changing the generic menu/trade/hatch renderer.
+  Budget changes outside the already-full bank14 and test both call paths.
+
+## Previous checkpoint: native enemy send-out temporary-record base data (2026-09-23)
 
 - `Function_SetEnemyPkmnAndSendOutAnimation` now calls
   `CopyEnemyBattlePkmnToTempMon`. The new send-out-only helper decodes the
