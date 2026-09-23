@@ -61,16 +61,12 @@ _GetNativeFrontpic::
 	ret
 
 _PrepareFrontpic:
-	push de
-
-	; Generic callers still expect the legacy base-data side effect.
+	; GetBaseData preserves DE, so the shared destination save can follow it.
+	; Generic picture callers retain their original legacy side effect.
 	call GetBaseData ; [wCurSpecies] and [wCurForm] are already set
-	jr .get_pic_size
-
 .no_base_data
+	; Explicit native enemy entry skips only GetBaseData, not the DE save.
 	push de
-.get_pic_size
-	; Native enemy battle callers enter above, preserving their exact base data.
 	call GetPicSize
 	ld b, a
 	ld [wMonPicSize], a
