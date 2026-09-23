@@ -44,6 +44,13 @@ PrepareAnimatedFrontpic:
 
 _GetFrontpic:
 	call _PrepareFrontpic
+	jr .load_tiles
+
+_GetNativeFrontpic::
+; The caller has already loaded exact native base data. Keep the generic
+; frontpic entry's legacy base-data side effect for menu/trade/hatch callers.
+	call _PrepareFrontpic.no_base_data
+.load_tiles
 	call GetPaddedFrontpicAddress
 	ld c, 7 * 7
 	ldh a, [hROMBank]
@@ -56,10 +63,14 @@ _GetFrontpic:
 _PrepareFrontpic:
 	push de
 
-	; This is no longer needed for the pic size, but do it just
-	; in case subsequent code expects base data available
+	; Generic callers still expect the legacy base-data side effect.
 	call GetBaseData ; [wCurSpecies] and [wCurForm] are already set
+	jr .get_pic_size
 
+.no_base_data
+	push de
+.get_pic_size
+	; Native enemy battle callers enter above, preserving their exact base data.
 	call GetPicSize
 	ld b, a
 	ld [wMonPicSize], a
