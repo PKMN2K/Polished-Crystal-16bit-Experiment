@@ -1029,3 +1029,21 @@ GetBaseDataFromTrueUserParty::
 	call GetBaseDataFromPokemonDataStruct
 .done
 	jp PopBCDEHL
+
+
+CopyEnemyBattlePkmnToTempMon::
+; Send-out-only bridge lives outside the full bank14. Decode the selected
+; opponent party member into the existing temporary legacy representation,
+; but load its base data from the current native enemy battle identity.
+; Caller sets wMonType = OTPARTYMON and wCurPartyMon to the selected slot.
+	farcall GetPkmnSpecies
+	farcall GetPkmnForm
+	call GetBaseDataFromEnemyBattleNativeSpecies
+	jr nc, .copy
+	; Preserve the legacy fallback when the native shadow is not populated.
+	farcall GetBaseData
+.copy
+	; Reuse the existing byte-exact temporary-record copy without doing its
+	; redundant legacy base-data lookup.
+	farcall _CopyPkmnToTempMon.copy_data
+	ret
