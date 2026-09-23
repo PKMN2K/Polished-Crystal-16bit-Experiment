@@ -1,6 +1,29 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native move-animation cry (2026-09-23)
+## Latest checkpoint: native Transform animation picture (2026-09-23)
+
+- `BattleAnimCmd_Transform` now publishes renderer-compatible presentation
+  species/form using `PreparePlayerBattlePictureIdentity` or
+  `PrepareEnemyBattlePictureIdentity` from the acting battler's current
+  16-bit native identity shadow. It no longer selects pictures using the
+  legacy `wTempEnemyMonSpecies` / `wTempBattleMonSpecies` fields.
+- The Transform battle command already synchronizes the current native shadow
+  before its animation. Existing back/front renderer selection, tile destination
+  and WRAM-bank handling remain unchanged. The original command's side effect
+  of restoring `wCurPartySpecies` but retaining the rendered `wCurForm`
+  on success is preserved. Empty and reserved IDs skip rendering.
+- `tests/test_transform_animation_native_picture.py` exercises both acting
+  sides, root and extended species, all current mechanical variants, conflicting
+  legacy temporary/species fields, invalid native IDs and the renderer boundary.
+  Front/back renderers are stubbed; pixel output and full Transform gameplay
+  are not verified by this focused test.
+- GitHub Actions now runs the focused test on normal and debug ROMs alongside
+  the previously migrated move-animation cry tests. The new CI result remains
+  to be confirmed for this checkpoint. No persistent save-format switch was made.
+- Next recommended step: verify both focused tests and all eight build variants
+  in CI; resolve any failure before migrating another picture consumer.
+
+## Previous checkpoint: native move-animation cry (2026-09-23)
 
 - `BattleAnimCmd_Cry` now selects the acting battler's current 16-bit
   `wBattleMonNativeSpecies` or `wEnemyMonNativeSpecies` using `hBattleTurn`.
