@@ -1130,29 +1130,27 @@ endr
 	ld a, 1
 	ldh [rWBK], a
 
+	; Read the acting battler's current native identity, including Transform.
+	push hl
+	ld hl, wBattleMonNativeSpecies
 	ldh a, [hBattleTurn]
 	and a
 	jr nz, .enemy
 
 	ld a, $f0
 	ld [wCryTracks], a
-	ld a, [wBattleMonSpecies]
-	ld c, a
-	ld a, [wBattleMonForm]
-	ld b, a
-	jr .done_cry_tracks
+	jr .got_shadow
 
 .enemy
 	ld a, $f
 	ld [wCryTracks], a
-	ld a, [wEnemyMonSpecies]
-	ld c, a
-	ld a, [wEnemyMonForm]
-	ld b, a
+	ld hl, wEnemyMonNativeSpecies
 
-.done_cry_tracks
-	push hl
-	call LoadCry
+.got_shadow
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	call LoadCryFromNativeIDBC
 	pop hl
 	jr c, .done
 
