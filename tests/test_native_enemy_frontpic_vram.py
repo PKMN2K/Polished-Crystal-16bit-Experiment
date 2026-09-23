@@ -125,7 +125,17 @@ def main():
             ("Get2bpp", transfers),
         ):
             bank, addr = symbols[name]
-            pyboy.hook_register(bank, addr, lambda _, dest=target: dest.append(True), None)
+            if name == "Get2bpp":
+                pyboy.hook_register(
+                    bank, addr,
+                    lambda _: transfers.append((
+                        regs.HL, (regs.D << 8) | regs.E, regs.C,
+                        mem[0xFF4F] & 1, mem[0xFF70] & 7,
+                    )),
+                    None,
+                )
+            else:
+                pyboy.hook_register(bank, addr, lambda _, dest=target: dest.append(True), None)
 
         executed = 0
         digests = []
@@ -154,7 +164,10 @@ def main():
                     "no frontpic bytes copied", context
                 )
                 assert actual[1][:len(actual[0])] != bytes([0x5A] * len(actual[0])), (
-                    "no animated base tiles copied", context
+                    "no animated base tiles copied", context,
+                    "transfers (dest,src,count,vbk,wbk)", transfers,
+                    "base frame sha", hashlib.sha256(actual[0]).hexdigest()[:16],
+                    "vbk1 first bytes", list(actual[1][:32]),
                 )
 
                 # The generic renderer must produce identical REAL tile bytes
