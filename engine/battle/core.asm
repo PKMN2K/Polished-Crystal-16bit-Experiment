@@ -2211,14 +2211,7 @@ FaintUserPokemon:
 .got_cry_tracks
 	ld [wCryTracks], a
 
-	ld hl, wBattleMonSpecies
-	call GetUserMonAttr
-	ld c, [hl]
-	assert wBattleMonForm - wBattleMonSpecies == wEnemyMonForm - wEnemyMonSpecies
-	ld de, wBattleMonForm - wBattleMonSpecies
-	add hl, de
-	ld b, [hl]
-	farcall PlaySlowCryBC
+	farcall PlayFaintCryFromActiveNativeSpecies
 	ld de, SFX_KINESIS
 	call PlaySFX
 

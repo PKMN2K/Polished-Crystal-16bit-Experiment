@@ -1,3 +1,19 @@
+PlayFaintCryFromActiveNativeSpecies::
+; hBattleTurn selects the fainting battler's current native identity.
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_identity
+	ld hl, wEnemyMonNativeSpecies
+.got_identity
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+PlaySlowCryNativeBC::
+	call LoadCryFromNativeIDBC
+	ret c
+	jr SlowCryLoaded
+
 PlaySlowCry:
 ; used in scripts
 	xor a
@@ -10,6 +26,7 @@ PlaySlowCryBC:
 ; can be used in stereo (e.g. battle engine)
 	call LoadCry
 	ret c
+SlowCryLoaded:
 	; cry length *= 1.5
 	ld hl, wCryLength
 	ld a, [hli]

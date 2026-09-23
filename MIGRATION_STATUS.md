@@ -1,6 +1,29 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native Transform armor restriction (2026-09-22)
+## Latest checkpoint: native fainting cry lookup (2026-09-22)
+
+- The fainting path now calls `PlayFaintCryFromActiveNativeSpecies`, selecting
+  the current player/enemy native shadow with `hBattleTurn` instead of reading
+  legacy battle species/form bytes.
+- `LoadCryFromNativeIDBC` resolves mechanical variants to their root cry and
+  reuses the existing cry data loader. Empty identities, eggs and the reserved
+  root $0100 remain silent without changing cry parameters.
+- `PlaySlowCryNativeBC` shares the existing 1.5x length adjustment and playback
+  tail with `PlaySlowCryBC`. Existing script calls retain their legacy interface;
+  the battle caller's stereo mask and channel selection are preserved.
+- Validation: normal and clean debug builds with RGBDS 1.0.3; 680 focused CPU
+  cases passed on each ROM with PyBoy 2.7.0. Tests cover every current native
+  identity on both sides, exact cry/pitch/length from compiled ROM records,
+  conflicting legacy bytes, silent identities, bank/stack/global preservation,
+  stereo settings and the existing legacy slow-cry interface.
+- Audio playback and waiting are stubbed in the CPU tests. Audible output,
+  complete fainting sequences, the full regression suite and the remaining
+  build configurations were not tested in this checkpoint.
+- Persistent record formats and automatic activation remain unchanged.
+- Next recommended step: migrate the remaining explicit stereo cry calls in
+  battle send-in/front-animation paths to native identity.
+
+## Previous checkpoint: native Transform armor restriction (2026-09-22)
 
 - Transform's early Mewtwo/Armor Suit restriction now selects the opponent's
   current native species word with `hBattleTurn`, resolves its root through
