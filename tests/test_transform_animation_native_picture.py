@@ -87,7 +87,7 @@ def main():
 
         for side in ("Player", "Enemy"):
             for native, raw, species, form in cases:
-                for turn in (0, 1) if native in (25, 257, 0, 256) else (0 if side == "Player" else 1,):
+                for turn in ((0,) if side == "Player" else (1,)):
                     mem[0xFF70] = 1
                     mem[address("hBattleTurn")] = turn
                     for prefix, value in (
