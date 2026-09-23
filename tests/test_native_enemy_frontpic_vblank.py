@@ -129,7 +129,7 @@ def main():
 
         # EI; NOP; CALL target; DI; JR -2. Interrupts are needed for the
         # real DelayFrame/VBlank service; they are disabled again on return.
-        mem[0xC100:0xC10E] = [
+        mem[0xC100:0xC108] = [
             0xFB, 0x00, 0xCD, target & 0xFF, target >> 8,
             0xF3, 0x18, 0xFE,
         ]
