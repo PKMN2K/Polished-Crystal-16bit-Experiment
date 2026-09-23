@@ -76,6 +76,10 @@ jobs:
         name: "Test native move-animation cries (normal)"
         run: python tests/test_native_move_animation_cry.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-transform-picture
+        name: "Test native Transform animation picture (normal)"
+        run: python tests/test_transform_animation_native_picture.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: build-polishedcrystal-faithful
         name: "Build polishedcrystal-faithful"
         run: |
@@ -115,6 +119,10 @@ jobs:
       - id: test-native-move-animation-cry-debug
         name: "Test native move-animation cries (debug)"
         run: python tests/test_native_move_animation_cry.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-transform-picture-debug
+        name: "Test native Transform animation picture (debug)"
+        run: python tests/test_transform_animation_native_picture.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polisheddebug-faithful
         name: "Build polisheddebug-faithful"
