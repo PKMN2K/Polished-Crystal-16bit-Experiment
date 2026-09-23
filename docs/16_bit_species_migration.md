@@ -1093,3 +1093,31 @@ sprite animation timing, the screen's final pixels or full battle
 playback. All real decode/transfer checks run in the normal and debug
 CI ROMs. No runtime source, persistent identity layout or save-format
 activation is changed by this regression checkpoint.
+
+
+### Validation of unstubbed front-picture decode and VRAM transfer
+
+GitHub Actions run #35929654099 **passed** for corrected test commit
+`629dac56590a65465fcff06ee8e61749aea9d6fb`. RGBDS built all eight
+ROM configurations and both normal/debug real-VRAM regressions passed.
+Each ROM executed 16 native/generic cases with the real LZ decoder,
+front-picture padding and LCD-off `Get2bpp` copies. The existing six
+focused suites also passed, giving 3,219 focused CPU cases per ROM and
+fourteen successful regression steps overall.
+
+The failed exploratory runs were fixture problems. Transfer-register
+capture showed that the animated base frame targets address `$9000`
+while VBK=1—the `vTiles5` address in VRAM bank 1—not the earlier
+`vTiles3`/`vTiles4` capture window. After correcting that window,
+a fixed four-frame timeout sampled execution inside the real
+`_Serve2bppRequest` routine, where that optimized copier intentionally
+uses `SP` as a source pointer. The final fixture switches `rVBK`
+like the hardware path and waits for the trampoline return before
+asserting CPU/stack state.
+
+This confirms byte-for-byte agreement between the native battle renderer
+and the generic renderer for the same presentation identity, including
+regional-form cases, while the battle route retains exact native base
+data and avoids legacy `GetBaseData`. It still does not test the
+LCD-enabled `Request2bpp`/VBlank scheduling path, palettes, final
+screen pixels, animation timing or complete interactive battles.
