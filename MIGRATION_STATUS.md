@@ -1,6 +1,26 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native battle front-animation cry (2026-09-23)
+## Latest checkpoint: native move-animation cry (2026-09-23)
+
+- `BattleAnimCmd_Cry` now selects the acting battler's current 16-bit
+  `wBattleMonNativeSpecies` or `wEnemyMonNativeSpecies` using `hBattleTurn`.
+  It calls `LoadCryFromNativeIDBC` instead of reconstructing identity from
+  the legacy battle species/form bytes. Transform and native mechanical variants
+  therefore follow their current root-species cry.
+- Existing player/enemy stereo tracks, four script parameters, pitch and length
+  adjustments, asynchronous playback, and WRAM-bank restoration are unchanged.
+  Empty native identities, eggs, and reserved root $0100 still skip playback.
+- Added `tests/test_native_move_animation_cry.py` to exercise both battle
+  turns, all current native identities, all four script parameters, conflicting
+  legacy bytes, stereo selection, silent identities, and state restoration.
+- The new focused test has been committed but has NOT been run locally on this
+  head. CI was in progress when this checkpoint was recorded. The test stubs
+  audio output and cannot prove audible playback or full gameplay.
+- No persistent formats or automatic party/daycare activation changed.
+- Next recommended step: verify CI and execute the focused test on normal and
+  debug builds before migrating another battle consumer.
+
+## Previous checkpoint: native battle front-animation cry (2026-09-23)
 
 - Battle front-sprite animation now uses the appended `ANIM_MON_BATTLE_SLOW`
   scene, with `NativeEnemyStereoCry` followed by the existing Setup2/Play
