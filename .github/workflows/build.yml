@@ -92,6 +92,10 @@ jobs:
         name: "Test native enemy frontpic renderer (normal)"
         run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-frontpic-vram
+        name: "Test real native enemy frontpic VRAM transfer (normal)"
+        run: python tests/test_native_enemy_frontpic_vram.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -151,6 +155,10 @@ jobs:
       - id: test-native-enemy-frontpic-renderer-debug
         name: "Test native enemy frontpic renderer (debug)"
         run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-vram-debug
+        name: "Test real native enemy frontpic VRAM transfer (debug)"
+        run: python tests/test_native_enemy_frontpic_vram.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
