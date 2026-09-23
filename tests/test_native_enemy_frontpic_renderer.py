@@ -94,7 +94,8 @@ def main():
         stub("FarDecompressInB")
         stub("PadFrontpic")
         stub("Get2bpp")
-        stub("_GetNativeFrontpic", capture_native)  # Real routine, just observe.
+        bank, address = symbols["_GetNativeFrontpic"]
+        pyboy.hook_register(bank, address, capture_native, None)  # Observe real routine.
         stub("GetAnimatedFrontpic", capture_animated)
 
         for turn in (0, 1):
