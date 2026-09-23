@@ -42,7 +42,7 @@ def main():
 
     pyboy = PyBoy(str(rom), window="null", sound_emulated=False, cgb=True, log_level="ERROR")
     mem, regs = pyboy.memory, pyboy.register_file
-    stride = addr("wOTPartyMon2Species") - addr("wOTPartyMon1Species")
+    stride = addr("wPartyMon2Species") - addr("wPartyMon1Species")
     form_offset = addr("wOTPartyMon1Form") - addr("wOTPartyMon1Species")
     base_start, base_end = addr("wCurBaseData"), addr("wCurBaseDataEnd")
     base_size = base_end - base_start
