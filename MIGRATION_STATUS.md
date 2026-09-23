@@ -1,6 +1,36 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: battle-only native enemy front-picture preparation (2026-09-23)
+## Latest checkpoint: native enemy battle front-picture animation dimensions (2026-09-23)
+
+- `BattleAnimateFrontpic` now routes its normal, non-substituted enemy
+  animation to `AnimateNativeEnemyBattleFrontpic`. That entry preserves
+  the ambient species/form presentation globals, resolves the current
+  16-bit enemy battle shadow, and retains the original slow-battle
+  animation and native enemy cry.
+- Animation setup shares the existing `LoadMonAnimation` record writer
+  but explicitly selects a native enemy dimension helper through the
+  new call entry `LoadNativeEnemyBattleMonAnimation`. Its
+  `GetNativeEnemyFrontpicDims` switches to WRAM bank 1, reloads exact
+  native enemy base data after send-out effects, and obtains the
+  picture size from the ordinary `GetPicSize` table. The generic
+  `AnimateFrontpic` / `GetFrontpicDims` retain their historical
+  legacy `GetBaseData` side effect for menu, trade and hatching.
+- Added `tests/test_native_enemy_frontpic_dimensions.py`, a focused
+  PyBoy CPU regression for both battle turns, ordinary/extended/current
+  variant identities, empty/reserved shadows, dimension storage,
+  byte-exact base data, saved-global restoration and generic animation
+  isolation. Sprite ticks and `GetPicSize` are stubbed; the test
+  does not verify rendered frames or full animation timing.
+- The normal/debug tests are wired into GitHub Actions. Validation
+  for code/CI commit `5715c2d204eb9bc3c291932ea148b1422a2799a2`
+  is in progress in run #35902048443; no build or test pass is yet
+  claimed. No persistent Pokémon layout or save-format activation
+  changed.
+- Next recommended step: inspect CI's eight build configurations
+  and both new animation-dimension regressions, fix any failures
+  before migrating another live consumer.
+
+## Previous checkpoint: battle-only native enemy front-picture preparation (2026-09-23)
 
 - `GetFrontpicOrGhostpic` now routes non-ghost enemy battle pictures to
   `PrepareNativeEnemyBattleAnimatedFrontpic` in the native species ROM
