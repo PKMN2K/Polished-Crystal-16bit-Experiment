@@ -84,6 +84,10 @@ jobs:
         name: "Test native ghost-reveal picture and Dex (normal)"
         run: python tests/test_native_ghost_reveal_picture.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-sendout-tempmon
+        name: "Test native enemy send-out temporary record (normal)"
+        run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: build-polishedcrystal-faithful
         name: "Build polishedcrystal-faithful"
         run: |
@@ -131,6 +135,10 @@ jobs:
       - id: test-native-ghost-reveal-picture-debug
         name: "Test native ghost-reveal picture and Dex (debug)"
         run: python tests/test_native_ghost_reveal_picture.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-tempmon-debug
+        name: "Test native enemy send-out temporary record (debug)"
+        run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polisheddebug-faithful
         name: "Build polisheddebug-faithful"
