@@ -1,5 +1,50 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native critical-hit regression (2026-09-24)
+
+- Added `tests/test_native_critical_boundary.py`. It extends the validated
+  first-turn wild battle path through Tackle's real `checkobedience`,
+  `usedmovetext`, `doturn` / `BattleConsumePP`, `hastarget`,
+  `checkhit`, `checkpriority`, and then the real
+  `BattleCommand_critical` path.
+- Tackle's first seven original NormalHit commands remain real. The test
+  terminates on the following script-byte read before
+  `BattleCommand_damagestats`, damage calculation, or HP application.
+- Only the two nondeterministic critical inputs are pinned for the fixture:
+  affection remains below its critical threshold and the final
+  `BattleRandomRange(24)` result is forced to a non-critical value. The real
+  critical eligibility logic, `ResetCrit`, anti-critical opponent ability
+  check, Unnerve-aware held-item reads, Future Sight user resolution, Super
+  Luck lookup, affection check, and final 0-23 critical roll all execute.
+- Player native ID 25 and the expected full 16-bit enemy native identity remain
+  intact at `BattleCommand_critical`, through all opponent/user ability and
+  held-item checks, and after the non-critical calculation returns to the
+  move-script reader. Tackle remains move 33, `wAttackMissed` remains zero,
+  and party/active PP remain synchronized at 34/34.
+- The deterministic path leaves the critical bit clear. Player and enemy HP
+  remain 100, `BattleCommand_damagestats`, `BattleCommand_damagecalc` and
+  `BattleCommand_applydamage` are not reached, and legacy `GetBaseData`
+  is not used.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+- The first critical test attempt exposed only a fixture expectation: the real
+  critical path performs four Future Sight user checks (directly, inside both
+  held-item reads, and during the Super Luck lookup). Commit
+  `7c9a3972c2fd484463dbcdbde4819e1e9f13c687` corrected that assertion
+  without changing gameplay/migration source.
+- Validation: GitHub Actions run #36042171429 **passed** on commit
+  `7c9a3972c2fd484463dbcdbde4819e1e9f13c687`. The new regression passed
+  all 6 cases on both normal and debug ROMs, and all eight ROM build
+  configurations passed. The four artifact-upload steps were skipped only by
+  the repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **`damagestats` regression** that
+  lets Tackle execute the real `BattleCommand_damagestats` path, verifies
+  both native identities survive its attack/defense-stat setup, then stops on
+  the following script read before later damage processing.
+
+
 ## Latest checkpoint: native checkpriority regression (2026-09-24)
 
 - Added `tests/test_native_checkpriority_boundary.py`. It extends the validated
