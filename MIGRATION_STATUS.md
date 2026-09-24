@@ -1,5 +1,45 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native doturn / PP-consumption regression (2026-09-24)
+
+- Added `tests/test_native_doturn_pp_boundary.py`. It extends the validated
+  first-turn wild battle path through Tackle's real `checkobedience`,
+  `usedmovetext` / `DisplayUsedMoveText`, and then the real
+  `BattleCommand_doturn` / `BattleConsumePP` path.
+- Tackle's first three original NormalHit command bytes remain real. The test
+  changes only the following `hastarget` command byte to
+  `endturn_command` in emulator memory, so the fourth real
+  `ReadMoveScriptByte` becomes the terminal boundary before target checks,
+  hit checks or damage.
+- The regression verifies native player ID 25 and the expected full 16-bit
+  enemy native identity at `BattleCommand_doturn`, at `BattleConsumePP`,
+  and after PP consumption returns to the move-script reader.
+- Tackle begins with 35 PP. The real PP path decrements both
+  `wPartyMon1PP` and `wBattleMonPP` to 34, proving the active battle PP
+  state and the party record stay synchronized across the real third command.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+  `BattleCommand_hastarget`, damage calculation and HP application are not
+  reached; player and enemy HP remain 100 and legacy `GetBaseData` is not
+  used.
+- The first CI attempt exposed only a test-fixture assumption: battle-command
+  IDs are not globally sequential, and `hastarget` is command `$3f` in the
+  current table. Commit `7205cdfdb618aabbddeb172efd463ed737ff5555` fixes
+  that assertion without changing migration/gameplay code.
+- Validation: GitHub Actions run #36017423576 **passed** on commit
+  `7205cdfdb618aabbddeb172efd463ed737ff5555`. The new regression passed all
+  6 cases on both normal and debug ROMs, and all eight ROM build
+  configurations passed. The four artifact-upload steps were skipped only by
+  the repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **`hastarget` target-validation
+  regression** that lets Tackle's real `BattleCommand_hastarget` execute
+  against a living enemy, verifies both native identities survive target and
+  ability checks, then stops on the following script read before
+  `checkhit`, accuracy/evasion logic or damage.
+
+
 ## Latest checkpoint: native second move-script command dispatch regression (2026-09-24)
 
 - Added `tests/test_native_second_effect_command_boundary.py`. It extends the
