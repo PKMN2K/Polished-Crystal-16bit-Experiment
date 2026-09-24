@@ -1,5 +1,58 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native checkhit accuracy-resolution regression (2026-09-24)
+
+- Added `tests/test_native_checkhit_boundary.py`. It extends the validated
+  first-turn wild battle path through Tackle's real `checkobedience`,
+  `usedmovetext` / `DisplayUsedMoveText`, `doturn` /
+  `BattleConsumePP`, `hastarget`, and then the real
+  `BattleCommand_checkhit` accuracy/evasion path.
+- Tackle's first five original NormalHit commands remain real. The test changes
+  only the following `checkpriority` command byte to `endturn_command` in
+  emulator memory, so the sixth real `ReadMoveScriptByte` becomes the
+  terminal boundary before priority blocking, critical-hit handling or damage.
+- At `checkhit` entry the fixture pins only external shortcut inputs:
+  neutral accuracy/evasion stages (7/7), no active ability/item/weather
+  shortcut, no substitute/flying/minimized state, normal non-immune type
+  modifier, and affection below its evasion threshold. The real
+  `DoStatChangeMod`, `MultiplyAndDivide`, user/opponent ability lookups and
+  `ApplyAccuracyAbilities` logic still execute.
+- Tackle's real 100%-accuracy result resolves to `hMultiplicand = 100`.
+  Polished Crystal still performs `BattleRandomRange(100)`; its possible
+  result is 0-99, so the comparison is guaranteed to hit. The regression
+  verifies that exact range call and that `wAttackMissed` remains zero.
+- Player native ID 25 and the expected full 16-bit enemy native identity remain
+  intact at `BattleCommand_checkhit`, throughout user/opponent ability
+  checks, during the temporary opponent-turn perspective used by
+  `ApplyAccuracyAbilities`, and after the handler returns to the script
+  reader. The turn perspective is restored to the player afterward.
+- The preceding PP behavior remains intact at 34/34. `BattleCommand_checkpriority`,
+  `BattleCommand_critical`, damage calculation and HP application are never
+  reached; player and enemy HP remain 100 and legacy `GetBaseData` is not
+  used.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+- Two initial CI attempts exposed only fixture assumptions, not migration
+  failures: run #181 showed that `ApplyAccuracyAbilities` temporarily flips
+  `hBattleTurn` while checking the opponent, and run #182 showed that exact
+  100% accuracy still calls `BattleRandomRange(100)`. Commits
+  `ca9420b0420635760ae8e7309f60c0ea081da3f1` and
+  `7d2a1aefbe8889fcc9d3e95b23931b938ee091a9` corrected those assertions
+  without changing gameplay/migration code.
+- Validation: GitHub Actions run #36038044216 **passed** on commit
+  `7d2a1aefbe8889fcc9d3e95b23931b938ee091a9`. The new regression passed all
+  6 cases on both normal and debug ROMs, and all eight ROM build configurations
+  passed. The four artifact-upload steps were skipped only by the
+  repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **`checkpriority` regression** that
+  lets Tackle's real `BattleCommand_checkpriority` execute at normal priority,
+  verifies the living-target / move-priority / ability checks preserve both
+  native identities, then stops on the following script read before
+  `critical`, critical-hit calculation or damage.
+
+
 ## Latest checkpoint: native hastarget target-validation regression (2026-09-24)
 
 - Added `tests/test_native_hastarget_boundary.py`. It extends the validated
