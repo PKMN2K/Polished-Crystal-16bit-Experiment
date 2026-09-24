@@ -1,3 +1,23 @@
+## Latest checkpoint: native STAB regression (2026-09-24)
+
+- Added `tests/test_native_stab_boundary.py` and wired it into normal/debug CI.
+- The first ten original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab`.
+- The test replaces only the following `damagevariation` script byte with `endturn_command`, so real `BattleCommand_stab` completes while random damage variation, animation and HP application remain outside this checkpoint.
+- The validated damagecalc fixture supplies base Tackle damage 14. Immediately before STAB, the test deterministically supplies NORMAL/NORMAL attacker and defender types with neutral weather/items/abilities so the real type-matchup path remains neutral and the real 1.5x same-type attack bonus is exercised.
+- The real STAB path preserves neutral `wTypeModifier = $10`, raises `wTypeMatchup` to `$18`, and publishes `wCurDamage = 21`.
+- The regression confirms real `BattleCheckTypeMatchup` and `DoWeatherModifiers` execution while player native ID 25 and all six enemy native-identity cases remain intact.
+- Both battlers remain at 100 HP because `damagevariation`, animation and `applydamage` are not reached.
+- One intermediate failure was a test-lifetime issue only: `wMoveGrammar` was being inspected after later STAB/type code had legitimately reused scratch state. The test now snapshots move grammar at the actual `usedmovetext` boundary.
+- Final validation: GitHub Actions CI run **#209** (`36062839117`) passed on commit `5212923f31344832ff20da9d55bf97ab17da5adb`.
+  - native STAB boundary: 6/6 cases passed on normal ROM
+  - native STAB boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_damagevariation` regression that executes the real random damage-variation command from the validated 21-damage STAB result, then stops before `moveanim`.
+
 ## Latest checkpoint: native damagecalc regression (2026-09-24)
 
 - Added `tests/test_native_damagecalc_boundary.py` and wired it into normal/debug CI.
