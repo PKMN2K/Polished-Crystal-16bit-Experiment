@@ -140,6 +140,10 @@ jobs:
         name: "Test native first effect-command boundary (normal)"
         run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-second-effect-command-boundary
+        name: "Test native second effect-command boundary (normal)"
+        run: python tests/test_native_second_effect_command_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -247,6 +251,10 @@ jobs:
       - id: test-native-first-effect-command-boundary-debug
         name: "Test native first effect-command boundary (debug)"
         run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-second-effect-command-boundary-debug
+        name: "Test native second effect-command boundary (debug)"
+        run: python tests/test_native_second_effect_command_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
