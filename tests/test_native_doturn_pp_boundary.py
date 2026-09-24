@@ -523,7 +523,9 @@ def main():
             "NormalHit third command is no longer doturn",
             mem[normal_bank, normal_addr + 2],
         )
-        assert mem[normal_bank, normal_addr + 3] == 5, (
+        # Battle-command IDs are not globally sequential; hastarget is
+        # command $3f in the current command table.
+        assert mem[normal_bank, normal_addr + 3] == 0x3F, (
             "NormalHit fourth command is no longer hastarget",
             mem[normal_bank, normal_addr + 3],
         )
