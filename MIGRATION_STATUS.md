@@ -1,5 +1,40 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native first move-script command dispatch regression (2026-09-24)
+
+- Added `tests/test_native_first_effect_command_boundary.py`. It continues the
+  validated wild `BattleIntro` -> `DoBattle` -> first-`BattleTurn` path
+  through deterministic Fight selection, real move ordering, `PerformMove`,
+  `DoTurn`, `CheckTurn`, `UpdateMoveData` and `InitializeMove`.
+- Tackle's real `NormalHit` script now performs its first genuine script-byte
+  read and dispatches the real `BattleCommand_checkobedience` handler. The
+  regression verifies both active native 16-bit identity words at that command
+  entry and again after the command returns.
+- The test changes only the second `NormalHit` script byte in emulator memory
+  to `endturn_command` for the test fixture. This makes the second
+  `ReadMoveScriptByte` call the terminal boundary: `usedmovetext`,
+  `damagecalc`, `applydamage` and all later Tackle commands remain
+  unexecuted.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+  Player native ID 25 and the expected full 16-bit enemy native identity remain
+  unchanged through the first real battle-command dispatch.
+- The regression also verifies the real command returns to the move-script
+  reader, the move-script pointer advances correctly, neither player nor enemy
+  HP changes from 100, and the legacy `GetBaseData` fallback is not used.
+- Validation: GitHub Actions run #36012707661 **passed** on CI commit
+  `42ef82ec7d76a5e35c0103186ce1140e53c2b031`. The new regression passed
+  all 6 cases on both normal and debug ROMs, and all eight ROM build
+  configurations passed. The four artifact-upload steps were skipped only by
+  the repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **second move-script command dispatch
+  regression** that lets Tackle's real `usedmovetext` command execute after
+  `checkobedience`, verifies native identities still survive the return to the
+  script reader, and stops before `doturn`, targeting, hit checks or damage.
+
+
 ## Latest checkpoint: native DoTurn initialization boundary regression (2026-09-24)
 
 - Added `tests/test_native_do_turn_initialize_boundary.py`. It continues the
