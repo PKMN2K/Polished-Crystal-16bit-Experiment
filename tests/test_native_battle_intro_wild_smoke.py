@@ -245,14 +245,18 @@ def main():
             "ClearSprites",
             "LoadTileMapToTempTileMap",
             "SetSeenMon",
-            "BattleCheckEnemyShininess",
-            "CheckSleepingTreeMon",
             "ResetVariableBattleMusicCondition",
             "BattleStart_TrainerHuds",
             "StdBattleTextbox",
-            "CheckBattleEffects",
+            "PlayBattleAnimDE",
         ):
             install_stub(label, [0xC9])
+
+        # These guards must explicitly return carry clear; a bare RET would
+        # inherit whatever flags the caller happened to leave behind.
+        install_stub("BattleCheckEnemyShininess", [0xA7, 0xC9])
+        install_stub("CheckSleepingTreeMon", [0xA7, 0xC9])
+        install_stub("CheckBattleEffects", [0xA7, 0xC9])
 
         install_stub("LoadEnemyWildmon", [0xC9], inject_wild)
         install_stub("InitBattleDisplay", [0xC9], lambda _: display_calls.append(True))
