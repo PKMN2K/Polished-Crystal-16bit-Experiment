@@ -260,7 +260,14 @@ def main():
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
-            label, hex(regs.PC), hex(regs.SP)
+            label, hex(regs.PC), hex(regs.SP),
+            "reads", len(read_script_calls),
+            "apply", len(applydamage_calls),
+            "take", len(applydamage_take_damage_calls),
+            "deal", len(applydamage_deal_damage_calls),
+            "subtract", len(applydamage_subtract_hp_calls),
+            "hp_hud", len(applydamage_hud_calls),
+            "refresh", len(applydamage_refresh_huds_calls),
         )
         assert mem[addr("hROMBank")] == bank, label
         assert mem[0xFF70] & 7 == 1, label
@@ -1386,12 +1393,16 @@ def main():
             observe_accuracy_random,
         )
 
-        # HP arithmetic and item/ability logic remain real. Only the visual
-        # HP-bar/HUD redraw boundary is skipped after the real subtraction.
+        # HP arithmetic and the applydamage survival checks remain real.
+        # Stop only at post-subtraction HUD and held-item recovery boundaries;
+        # those are downstream presentation/recovery behavior, not this HP
+        # application checkpoint.
         install_stub("UpdateHPBarBattleHuds", [0xC9], observe_applydamage_hud)
         install_stub(
             "RefreshBattleHuds", [0xC9], observe_applydamage_refresh_huds
         )
+        install_stub("HandleUserHealingItems", [0xC9])
+        install_stub("CheckEnigmaBerry", [0xC9])
 
         # Keep real moveanim battle-state control flow but stop at the visual
         # renderer/timing boundary. The callback still verifies the requested
@@ -1491,7 +1502,7 @@ def main():
             enemy_base_before = len(enemy_base_calls)
             active_base_before = len(active_base_calls)
 
-            invoke("DoBattle")
+            invoke("DoBattle", max_frames=256)
 
             assert do_battle_calls == [True], ("DoBattle count", context, do_battle_calls)
             assert battle_turn_calls == [True], (
