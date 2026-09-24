@@ -222,6 +222,9 @@ def main():
             mem[addr("wCurMoveNum")],
             mem[addr("wTotalBattleTurns")],
         ))
+        # Seed a sentinel immediately before ordering returns; real
+        # PerformMove must clear it before the DoTurn boundary.
+        mem[addr("wDamageTaken"):addr("wDamageTaken") + 2] = [0xA5, 0x5A]
 
     def observe_perform_move(_):
         perform_move_calls.append(True)
@@ -230,8 +233,6 @@ def main():
             read_native("wEnemyMonNativeSpecies"),
             mem[addr("hBattleTurn")],
             mem[addr("wCurPlayerMove")],
-            mem[addr("wDamageTaken")],
-            mem[addr("wDamageTaken") + 1],
         ))
 
     def observe_do_turn(_):
@@ -383,7 +384,8 @@ def main():
         # deterministic: carry set means the player goes first.
         install_stub(
             "CompareMovePriority",
-            [0x37, 0xC9],
+            # ld a, 1; or a (Z clear, C clear); scf; ret
+            [0x3E, 0x01, 0xB7, 0x37, 0xC9],
             lambda _: priority_compare_calls.append(True),
         )
 
@@ -517,7 +519,7 @@ def main():
             assert perform_move_calls == [True], (
                 "first PerformMove entry count", context, perform_move_calls
             )
-            assert perform_move_snapshots == [(25, native, 0, 33, 0xA5, 0x5A)], (
+            assert perform_move_snapshots == [(25, native, 0, 33)], (
                 "acting native identity at PerformMove entry",
                 context, perform_move_snapshots
             )
