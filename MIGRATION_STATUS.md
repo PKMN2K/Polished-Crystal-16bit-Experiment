@@ -1,5 +1,43 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native hastarget target-validation regression (2026-09-24)
+
+- Added `tests/test_native_hastarget_boundary.py`. It extends the validated
+  first-turn wild battle path through Tackle's real `checkobedience`,
+  `usedmovetext` / `DisplayUsedMoveText`, `doturn` /
+  `BattleConsumePP`, and then the real `BattleCommand_hastarget`.
+- Tackle's first four original NormalHit commands remain real. The test changes
+  only the following `checkhit` command byte to `endturn_command` in
+  emulator memory, so the fifth real `ReadMoveScriptByte` becomes the
+  terminal boundary before accuracy/evasion processing or damage.
+- The enemy is alive at 100 HP. The regression verifies the real
+  `HasOpponentFainted` living-target check and the real
+  `GetOpponentIgnorableAbility` lookup both execute during `hastarget`.
+- Player native ID 25 and the expected full 16-bit enemy native identity remain
+  intact at `BattleCommand_hastarget`, during the target-faint check, during
+  the opponent-ability lookup, and after the command returns to the script
+  reader.
+- The preceding PP behavior remains intact: Tackle starts at 35 PP and both
+  `wPartyMon1PP` and `wBattleMonPP` are 34 when `hastarget` runs.
+  `BattleCommand_checkhit`, damage calculation and HP application are never
+  reached; player and enemy HP remain 100 and legacy `GetBaseData` is not
+  used.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+- Validation: GitHub Actions run #36022911810 **passed** on CI commit
+  `a092bbbc215adbca2496c288099d346b8944df5a`. The new regression passed
+  all 6 cases on both normal and debug ROMs, and all eight ROM build
+  configurations passed. The four artifact-upload steps were skipped only by
+  the repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **`checkhit` accuracy boundary
+  regression** that lets Tackle enter the real `BattleCommand_checkhit`
+  path with deterministic accuracy/evasion conditions, verifies both native
+  identities survive the hit-resolution logic, then stops before
+  `checkpriority`, critical-hit handling or damage calculation.
+
+
 ## Latest checkpoint: native doturn / PP-consumption regression (2026-09-24)
 
 - Added `tests/test_native_doturn_pp_boundary.py`. It extends the validated
