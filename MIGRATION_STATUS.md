@@ -1,3 +1,23 @@
+## Latest checkpoint: native criticaltext regression (2026-09-24)
+
+- Added `tests/test_native_criticaltext_boundary.py` and wired it into normal/debug CI.
+- The first fifteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext`.
+- The test replaces only the following `supereffectivetext` script byte with `endturn_command`, so real `BattleCommand_criticaltext` completes while effectiveness text and later post-hit commands remain outside this checkpoint.
+- The validated damage chain remains 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation -> enemy HP 100 -> 83 after real applydamage, with `wDamageTaken = 17`.
+- Because the deterministic Tackle path is non-critical, the real criticaltext command executes `CheckCrit`, observes a clear critical bit, and takes its normal no-text wait path.
+- The regression confirms the command requests the standard `DelayFrames(20)` wait on this non-critical path.
+- Native player identity 25 and all six enemy native-identity cases remain intact through criticaltext; enemy HP remains 83 and `wDamageTaken` remains 17.
+- `BattleCommand_supereffectivetext` is not reached.
+- Final validation: GitHub Actions CI run **#226** (`36071498317`) passed on commit `a3be25889a8e150a54377aeb7268a5423bf677f6`.
+  - native criticaltext boundary: 6/6 cases passed on normal ROM
+  - native criticaltext boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no additional gameplay/migration source fix was required beyond the prior dedicated-WRAM correction.
+
+**Next recommended step:** add a focused `BattleCommand_supereffectivetext` regression that executes the real neutral-effectiveness text path after the validated 17-damage hit, then stops before `postfainteffects`.
+
 ## Latest checkpoint: native applydamage regression + HP scratch collision fix (2026-09-24)
 
 - Added `tests/test_native_applydamage_boundary.py` and wired it into normal/debug CI.
