@@ -737,10 +737,6 @@ wLinkBattleRNs:: ds 10
 
 NEXTU
 ; battle data
-; Direct native identities for the active battlers. These are native words,
-; not transient conversion-table IDs, so battle state does not create table roots.
-wBattleMonNativeSpecies:: dw
-wEnemyMonNativeSpecies:: dw
 	ds 3
 wCurEnemyItem:: db
 	ds 15
@@ -874,6 +870,14 @@ wTimeOfDay:: db
 wOtherTrainerType:: db
 
 wTrainerGroupBank:: db
+
+; Direct native identities for the active battlers. These must not live in the
+; scratch UNION above: real HP subtraction uses wHPBuffer1/2/3 and would
+; otherwise overwrite these words during BattleCommand_applydamage.
+; These are native words, not transient conversion-table IDs, so battle state
+; does not create table roots.
+wBattleMonNativeSpecies:: dw
+wEnemyMonNativeSpecies:: dw
 
 
 SECTION "Enemy Party", WRAMX
