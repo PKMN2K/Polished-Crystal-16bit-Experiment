@@ -136,6 +136,10 @@ jobs:
         name: "Test native DoTurn initialization boundary (normal)"
         run: python tests/test_native_do_turn_initialize_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-first-effect-command-boundary
+        name: "Test native first effect-command boundary (normal)"
+        run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -239,6 +243,10 @@ jobs:
       - id: test-native-do-turn-initialize-boundary-debug
         name: "Test native DoTurn initialization boundary (debug)"
         run: python tests/test_native_do_turn_initialize_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-effect-command-boundary-debug
+        name: "Test native first effect-command boundary (debug)"
+        run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
