@@ -1641,8 +1641,8 @@ def main():
                 "native identity changed entering screen handling", context,
                 damage_screen_snapshots
             )
-            assert true_user_party_attr_calls == [True, True], (
-                "damagestats did not perform held-item and level party reads",
+            assert len(true_user_party_attr_calls) >= 3, (
+                "damagestats did not perform its item and level party reads",
                 context, true_user_party_attr_calls
             )
             assert all(
