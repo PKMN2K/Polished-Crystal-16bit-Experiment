@@ -211,9 +211,6 @@ def main():
         value &= 0xffff
         return value & 0xff, value >> 8
 
-    random_bank, random_addr = symbols["BattleRandomRange"]
-    random_prefix = bytes(mem[random_bank, random_addr:random_addr + 3])
-
     def inject_wild(_):
         native, species, form = current_case[0]
         wild_fixture_calls.append(True)
@@ -571,10 +568,6 @@ def main():
         mem[addr("wPlayerSubStatus4")] = 0
         mem[addr("wPlayerFutureSightCount")] = 0
 
-        # Checkhit already used the real RNG. From here onward pin only the
-        # critical 0-23 roll to 23, which cannot crit at Tackle's base 1/24.
-        mem[random_bank, random_addr:random_addr + 3] = [0x3E, 23, 0xC9]
-
         critical_calls.append(True)
         critical_snapshots.append((
             read_native("wBattleMonNativeSpecies"),
@@ -679,7 +672,6 @@ def main():
         checkhit_active[0] = False
         priority_active[0] = False
         critical_active[0] = False
-        mem[random_bank, random_addr:random_addr + 3] = random_prefix
 
         mem[addr("wOtherTrainerClass")] = 0
         mem[addr("wBattleType")] = 0
@@ -886,6 +878,16 @@ def main():
             "CheckAffection", [0xAF, 0xC9], observe_critical_affection
         )
 
+        # Deterministic randomness boundary for this deeper checkpoint.
+        # Input 100 (checkhit) returns 0, preserving the guaranteed hit.
+        # Input 24 (critical) returns 23, guaranteeing non-critical at 1/24.
+        # cp 24; jr nz,+3; ld a,23; ret; xor a; ret
+        install_stub(
+            "BattleRandomRange",
+            [0xFE, 24, 0x20, 0x03, 0x3E, 23, 0xC9, 0xAF, 0xC9],
+            observe_accuracy_random,
+        )
+
         # When DoTurn returns, immediately return from PerformMove instead of
         # running post-move/faint resolution. wBattleEnded set at the script
         # boundary then makes BattleTurn exit after this first move setup.
@@ -915,7 +917,6 @@ def main():
         hook("BattleCommand_checkhit", observe_checkhit)
         hook("DoStatChangeMod", observe_stat_change_mod)
         hook("ApplyAccuracyAbilities", observe_accuracy_abilities)
-        hook("BattleRandomRange", observe_accuracy_random)
         hook("BattleCommand_checkpriority", observe_checkpriority)
         hook("GetMovePriority", observe_move_priority)
         hook("BattleCommand_critical", observe_critical)
