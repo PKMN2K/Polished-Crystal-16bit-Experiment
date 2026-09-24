@@ -666,6 +666,12 @@ def main():
 
     def observe_damagestats(_):
         damagestats_active[0] = True
+        # Earlier boundary fixtures only need HP/level, so their synthetic
+        # party records leave combat stats at zero. Seed meaningful active
+        # stats here, immediately before the real damagestats command, without
+        # changing any gameplay/migration code or earlier battle behavior.
+        mem[addr("wBattleMonAttack"):addr("wBattleMonAttack") + 2] = [0, 90]
+        mem[addr("wEnemyMonDefense"):addr("wEnemyMonDefense") + 2] = [0, 80]
         damagestats_calls.append(True)
         damagestats_snapshots.append((
             read_native("wBattleMonNativeSpecies"),
