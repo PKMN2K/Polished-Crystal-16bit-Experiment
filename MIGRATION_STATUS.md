@@ -1,3 +1,23 @@
+## Latest checkpoint: native failuretext regression (2026-09-24)
+
+- Added `tests/test_native_failuretext_boundary.py` and wired it into normal/debug CI.
+- The first thirteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext`.
+- The test replaces only the following `applydamage` script byte with `endturn_command`, so real `BattleCommand_failuretext` completes while HP application remains outside this checkpoint.
+- The validated damage chain remains 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation.
+- Because Tackle is a successful hit in this fixture, the real failuretext command observes `wAttackMissed = 0` and takes its normal early return.
+- The regression confirms `GetFailureResultText` is not entered on this successful-hit path.
+- Native player identity 25 and all six enemy native-identity cases remain intact before and after failuretext, and `wCurDamage` remains 17.
+- `BattleCommand_applydamage` is not reached; both battlers remain at 100 HP.
+- Final validation: GitHub Actions CI run **#216** (`36066888672`) passed on commit `8bd7b01f8d60d15f19e5a6d3cee38a22fc8daa3d`.
+  - native failuretext boundary: 6/6 cases passed on normal ROM
+  - native failuretext boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_applydamage` regression that executes real HP application from the validated 17-damage Tackle result, then stops before `criticaltext`.
+
 ## Latest checkpoint: native moveanim regression (2026-09-24)
 
 - Added `tests/test_native_moveanim_boundary.py` and wired it into normal/debug CI.
