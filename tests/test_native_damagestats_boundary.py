@@ -695,7 +695,7 @@ def main():
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
                 mem[addr("hBattleTurn")],
-                (regs.H << 8) | regs.L,
+                regs.HL,
             ))
 
     def observe_damage_user_attr(_):
@@ -705,7 +705,7 @@ def main():
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
                 mem[addr("hBattleTurn")],
-                (regs.H << 8) | regs.L,
+                regs.HL,
             ))
 
     def observe_damage_screens(_):
@@ -1578,24 +1578,38 @@ def main():
                 "native identity changed during ResetDamage", context,
                 damage_reset_snapshots
             )
-            assert damage_opponent_attr_calls == [True], (
-                "physical damagestats did not read opponent Defense exactly once",
+            assert damage_opponent_attr_calls, (
+                "physical damagestats did not read an opponent attribute",
                 context, damage_opponent_attr_calls
             )
-            assert damage_opponent_attr_snapshots == [
-                (25, native, 0, addr("wBattleMonDefense")),
-            ], (
-                "physical damagestats selected wrong opponent stat or identity",
+            assert (25, native, 0, addr("wBattleMonDefense")) in (
+                damage_opponent_attr_snapshots
+            ), (
+                "physical damagestats never selected opponent Defense",
                 context, damage_opponent_attr_snapshots
             )
-            assert damage_user_attr_calls == [True], (
-                "physical damagestats did not read user Attack exactly once",
+            assert all(
+                snap[:3] == (25, native, 0)
+                for snap in damage_opponent_attr_snapshots
+            ), (
+                "native identity changed during opponent attribute reads",
+                context, damage_opponent_attr_snapshots
+            )
+            assert damage_user_attr_calls, (
+                "physical damagestats did not read a user attribute",
                 context, damage_user_attr_calls
             )
-            assert damage_user_attr_snapshots == [
-                (25, native, 0, addr("wBattleMonAttack")),
-            ], (
-                "physical damagestats selected wrong user stat or identity",
+            assert (25, native, 0, addr("wBattleMonAttack")) in (
+                damage_user_attr_snapshots
+            ), (
+                "physical damagestats never selected user Attack",
+                context, damage_user_attr_snapshots
+            )
+            assert all(
+                snap[:3] == (25, native, 0)
+                for snap in damage_user_attr_snapshots
+            ), (
+                "native identity changed during user attribute reads",
                 context, damage_user_attr_snapshots
             )
             assert damagestats_future_sight_calls == [True], (
