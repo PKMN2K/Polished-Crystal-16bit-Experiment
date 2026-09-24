@@ -1,3 +1,25 @@
+## Latest checkpoint: native applydamage regression + HP scratch collision fix (2026-09-24)
+
+- Added `tests/test_native_applydamage_boundary.py` and wired it into normal/debug CI.
+- The first fourteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage`.
+- The test replaces only the following `criticaltext` script byte with `endturn_command`, so real `BattleCommand_applydamage` completes while later result text/post-hit commands remain outside this checkpoint.
+- The validated damage chain entering applydamage is 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation.
+- The neutral applydamage path executes the real substitute reset/check, affection survival check, held-item check, ability check, `TakeDamage`, `DealDamageToOpponent`, and real HP subtraction. Post-subtraction HUD redraw and held-item recovery behavior are bounded in the fixture.
+- Real HP application reduces the enemy from 100 HP to 83 HP and records `wDamageTaken = 17`; player HP remains 100.
+- This deeper checkpoint exposed a real migration bug: `wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies` were allocated inside the same WRAM `UNION` as `wHPBuffer1/2/3`. Real HP subtraction therefore overwrote the active native identity words with HP scratch data.
+- Fixed `ram/wramx.asm` by removing the active native identity words from that scratch union and giving them dedicated WRAM1 storage after the union. HP-buffer arithmetic can no longer alias native battle identity.
+- After the storage fix, the regression preserves player native ID 25 and all six enemy native-identity cases through actual HP subtraction, including the extended/native-variant cases.
+- Final validation: GitHub Actions CI run **#223** (`36068961769`) passed on commit `6e4089ffc840dfaee2bd062cfff68a72865ab7ff`.
+  - native applydamage boundary: 6/6 cases passed on normal ROM
+  - native applydamage boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- Gameplay/migration source fix commit: `856c19a1f8599b497e58cddafc4a99e773c2243b`.
+- Final regression-boundary adjustment commit: `6e4089ffc840dfaee2bd062cfff68a72865ab7ff`.
+
+**Next recommended step:** add a focused `BattleCommand_criticaltext` regression that executes the real non-critical text path after the validated 17-damage HP application, then stops before `supereffectivetext`.
+
 ## Latest checkpoint: native applydamage regression (2026-09-24)
 
 - Added `tests/test_native_applydamage_boundary.py` and wired it into normal/debug CI.
