@@ -1,5 +1,45 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native second move-script command dispatch regression (2026-09-24)
+
+- Added `tests/test_native_second_effect_command_boundary.py`. It extends the
+  validated first-turn wild battle path through Tackle's real
+  `BattleCommand_checkobedience` and then its second real NormalHit command,
+  `BattleCommand_usedmovetext`, including the live `DisplayUsedMoveText`
+  state logic.
+- The first two original NormalHit command bytes remain real. The test changes
+  only the third byte (`doturn`) to `endturn_command` in emulator memory, so
+  the third real `ReadMoveScriptByte` is the terminal boundary before PP
+  consumption, target checks, hit checks or damage.
+- Presentation-only work remains bounded: `StdBattleTextbox` is stubbed by
+  the existing battle fixture and `ApplyTilemapInVBlank` is stubbed, while
+  `UpdateUsedMoves`, move grammar and last-move state handling execute
+  normally.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+  Player native ID 25 and the expected full 16-bit enemy native identity remain
+  unchanged at `usedmovetext`, inside `DisplayUsedMoveText`, and after the
+  command returns to the script reader.
+- The regression verifies Tackle (move ID 33) is recorded in
+  `wPlayerUsedMoves`, `wMoveGrammar` becomes 33, and the script pointer
+  advances across both real commands. `BattleCommand_doturn`,
+  `BattleCommand_hastarget`, damage calculation and HP application are never
+  reached; player and enemy HP remain 100 and legacy `GetBaseData` is not
+  used.
+- Validation: GitHub Actions run #36015091132 **passed** on CI commit
+  `a0a85d7016b90c2aa79d1a2154efb7af18c9dc23`. The new regression passed
+  all 6 cases on both normal and debug ROMs, and all eight ROM build
+  configurations passed. The four artifact-upload steps were skipped only by
+  the repository-owner guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **third move-script command /
+  `doturn` regression** that lets real `BattleCommand_doturn` perform its
+  normal PP-consumption path, verifies native identities and the expected
+  Tackle PP decrement, then stops on the following script read before
+  `hastarget`, targeting, hit checks or damage.
+
+
 ## Latest checkpoint: native first move-script command dispatch regression (2026-09-24)
 
 - Added `tests/test_native_first_effect_command_boundary.py`. It continues the
