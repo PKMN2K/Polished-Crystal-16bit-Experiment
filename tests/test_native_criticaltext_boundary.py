@@ -1,18 +1,13 @@
 """Fifteenth real move-script command / criticaltext native-identity regression.
 
-Drive the validated wild BattleIntro -> DoBattle -> first BattleTurn path
-through deterministic move ordering, PerformMove, DoTurn, CheckTurn,
-UpdateMoveData, InitializeMove, Tackle's real checkobedience, usedmovetext,
-doturn/PP-consumption, hastarget, checkhit, checkpriority, critical,
-damagestats, damagecalc, STAB, damagevariation, moveanim, failuretext and
-applydamage commands, then execute real BattleCommand_criticaltext.
-
-The validated Tackle path is non-critical, so the real command must observe a
-clear critical bit and take its standard no-text wait path, requesting
-DelayFrames(20). Enemy HP must remain 83 and wDamageTaken must remain 17.
+Drive the validated first-turn wild Tackle path through real applydamage, then
+execute real BattleCommand_criticaltext. The path is deliberately non-critical,
+so criticaltext must take its no-message branch and request DelayFrames(20)
+without changing native identities, applied damage, enemy HP 83, or
+wDamageTaken 17.
 
 The following supereffectivetext script byte is replaced with endturn_command,
-so this checkpoint stops immediately after the real non-critical text path.
+so this checkpoint stops immediately after criticaltext.
 """
 import argparse
 from pathlib import Path
@@ -1350,10 +1345,10 @@ def main():
         # ReadMoveScriptByte, checkobedience, usedmovetext, DisplayUsedMoveText,
         # doturn/BattleConsumePP, hastarget, checkhit, checkpriority, critical,
         # damagestats, damagecalc, STAB, damagevariation, moveanim,
-        # failuretext and applydamage real. Replace only the following
-        # criticaltext command with endturn_command ($fe), so real HP
-        # application completes and the fifteenth real script read terminates
-        # before critical-text handling.
+        # failuretext, applydamage and criticaltext real. Replace only the
+        # following supereffectivetext command with endturn_command ($fe), so
+        # the real non-critical criticaltext path completes and the sixteenth
+        # real script read terminates before effectiveness-result text.
         normal_bank, normal_addr = symbols["NormalHit"]
         assert mem[normal_bank, normal_addr] == 2, (
             "NormalHit no longer begins with checkobedience",
@@ -2447,8 +2442,8 @@ def main():
                 context, read_script_snapshots
             )
             assert criticaltext_calls == [True], (
-                "fifteenth real battle-command dispatch count", context,
-                criticaltext_calls
+                "fifteenth real battle-command dispatch count",
+                context, criticaltext_calls
             )
             assert criticaltext_snapshots == [
                 (
@@ -2456,29 +2451,30 @@ def main():
                     *advance_script_pointer(read_script_snapshots[0], 15),
                 ),
             ], (
-                "native identity/non-critical state/HP changed entering criticaltext",
+                "native identity/non-critical state/HP changed entering "
+                "criticaltext",
                 context, criticaltext_snapshots
             )
             assert criticaltext_checkcrit_calls == [True], (
-                "criticaltext skipped its real CheckCrit branch",
+                "criticaltext skipped CheckCrit",
                 context, criticaltext_checkcrit_calls
             )
             assert criticaltext_checkcrit_snapshots == [(25, native, 0, 0)], (
-                "criticaltext CheckCrit saw changed native identity or hit state",
+                "CheckCrit saw changed identity or hit state",
                 context, criticaltext_checkcrit_snapshots
             )
             assert criticaltext_delay_calls == [True], (
-                "non-critical criticaltext path skipped standard wait",
+                "non-critical criticaltext skipped its wait",
                 context, criticaltext_delay_calls
             )
             assert criticaltext_delay_snapshots == [(25, native, 0, 20)], (
-                "criticaltext did not request the standard 20-frame wait",
+                "criticaltext did not request DelayFrames(20)",
                 context, criticaltext_delay_snapshots
             )
             assert criticaltext_result_snapshots == [
                 (25, native, 0, 33, 0, 0, 83, 0, 17),
             ], (
-                "criticaltext changed native identity, hit state, HP, or damage bookkeeping",
+                "criticaltext changed identity/hit state/HP/damage bookkeeping",
                 context, criticaltext_result_snapshots
             )
             assert read_script_snapshots[15][:5] == (25, native, 0, 33, 0), (

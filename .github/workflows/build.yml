@@ -196,6 +196,10 @@ jobs:
         name: "Test native criticaltext boundary (normal)"
         run: python tests/test_native_criticaltext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-criticaltext-boundary
+        name: "Test native criticaltext boundary (normal)"
+        run: python tests/test_native_criticaltext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -355,6 +359,10 @@ jobs:
       - id: test-native-applydamage-boundary-debug
         name: "Test native applydamage boundary (debug)"
         run: python tests/test_native_applydamage_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-criticaltext-boundary-debug
+        name: "Test native criticaltext boundary (debug)"
+        run: python tests/test_native_criticaltext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-criticaltext-boundary-debug
         name: "Test native criticaltext boundary (debug)"
