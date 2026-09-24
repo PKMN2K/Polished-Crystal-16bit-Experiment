@@ -9,6 +9,44 @@
 - Tackle's first six original NormalHit commands remain real. The test changes
   only the following `critical` command byte to `endturn_command` in
   emulator memory, so the seventh real `ReadMoveScriptByte` becomes the
+  terminal boundary before critical-hit handling or damage.
+- The real `checkpriority` path verifies the enemy is still alive,
+  calls the real `GetMovePriority`, performs its user-ability check inside
+  priority calculation, then performs the real Prankster and Soundproof
+  ability checks for Tackle's normal-priority move.
+- Player native ID 25 and the expected full 16-bit enemy native identity remain
+  intact at `BattleCommand_checkpriority`, during the living-target check,
+  entering `GetMovePriority`, and through all user/opponent ability checks.
+  The move remains Tackle (33), `hBattleTurn` returns to the player side,
+  `wAttackMissed` remains zero, and the preceding PP state remains 34/34.
+- `BattleCommand_critical`, damage calculation and HP application are never
+  reached; player and enemy HP remain 100 and legacy `GetBaseData` is not
+  used.
+- Coverage remains six cases: ordinary native roots, an extended root above
+  `$00ff`, cosmetic presentations and two regional/mechanical variants.
+- Validation: GitHub Actions run #36039494899 **passed** on CI commit
+  `ef427fac8fbcee8fbc7ee6621ed87b90d216d4f5`. The new regression passed all
+  6 cases on both normal and debug ROMs, and all eight ROM build configurations
+  passed. Artifact-upload steps were skipped only by the repository-owner
+  guard, as intended.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed.
+- Next recommended step: add a focused **`critical` regression** that lets
+  Tackle execute the real `BattleCommand_critical` path with deterministic
+  non-critical conditions, verifies both native identities survive critical-
+  hit eligibility/calculation, then stops on the following script read before
+  `damagestats` or damage calculation.
+
+
+## Latest checkpoint: native checkpriority regression (2026-09-24)
+
+- Added `tests/test_native_checkpriority_boundary.py`. It extends the validated
+  first-turn wild battle path through Tackle's real `checkobedience`,
+  `usedmovetext`, `doturn` / `BattleConsumePP`, `hastarget`,
+  `checkhit`, and then the real `BattleCommand_checkpriority`.
+- Tackle's first six original NormalHit commands remain real. The test changes
+  only the following `critical` command byte to `endturn_command` in
+  emulator memory, so the seventh real `ReadMoveScriptByte` becomes the
   terminal boundary before critical-hit or damage processing.
 - The priority handler runs its real living-target check and real
   `GetMovePriority`. Tackle follows the ordinary priority-0 encoding path,
