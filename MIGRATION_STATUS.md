@@ -3,6 +3,27 @@
 - Added `tests/test_native_criticaltext_boundary.py` and wired it into normal/debug CI.
 - The first fifteen original Tackle `NormalHit` commands now execute for real through:
   `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext`.
+- The test replaces only the following `supereffectivetext` script byte with `endturn_command`, so real `BattleCommand_criticaltext` completes while later effectiveness/post-hit commands remain outside this checkpoint.
+- The validated damage chain remains 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation -> enemy HP 100 -> 83 after real `applydamage`, with `wDamageTaken = 17`.
+- The path is deliberately non-critical. Real `BattleCommand_criticaltext` executes `CheckCrit`, observes the critical bit clear, and takes the no-message branch that requests `DelayFrames(20)`.
+- Native player identity 25 and all six enemy native-identity cases remain intact through the real criticaltext path. Enemy HP remains 83 and `wDamageTaken` remains 17.
+- `BattleCommand_supereffectivetext` is not reached.
+- One intermediate workflow failure was CI-YAML-only: the new criticaltext step was accidentally duplicated once for both normal and debug, creating duplicate step IDs. The duplicate pair was removed; no gameplay source change was involved.
+- Final validation: GitHub Actions CI run **#229** (`36072324223`) passed on commit `c92b05693f83cb2370570c5340b4f903bc13ecb3`.
+  - native criticaltext boundary: 6/6 cases passed on normal ROM
+  - native criticaltext boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- Criticaltext regression commit: `a19280fc723a180df09e7801ff2837a906dec4fc`.
+- Workflow duplicate cleanup commit: `c92b05693f83cb2370570c5340b4f903bc13ecb3`.
+
+**Next recommended step:** add a focused `BattleCommand_supereffectivetext` regression that executes the real neutral-effectiveness text path after the validated non-critical hit, then stops before `postfainteffects`.
+
+## Latest checkpoint: native criticaltext regression (2026-09-24)
+
+- Added `tests/test_native_criticaltext_boundary.py` and wired it into normal/debug CI.
+- The first fifteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext`.
 - The test replaces only the following `supereffectivetext` script byte with `endturn_command`, so real `BattleCommand_criticaltext` completes while effectiveness text and later post-hit commands remain outside this checkpoint.
 - The validated damage chain remains 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation -> enemy HP 100 -> 83 after real applydamage, with `wDamageTaken = 17`.
 - Because the deterministic Tackle path is non-critical, the real criticaltext command executes `CheckCrit`, observes a clear critical bit, and takes its normal no-text wait path.
