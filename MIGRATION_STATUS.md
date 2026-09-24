@@ -1,5 +1,37 @@
 # Polished Crystal to pokecrystal16 migration status
 
+## Latest checkpoint: native DoTurn initialization boundary regression (2026-09-24)
+
+- Added `tests/test_native_do_turn_initialize_boundary.py`. It continues the
+  validated wild `BattleIntro` -> `DoBattle` -> first-`BattleTurn` path
+  through deterministic Fight selection, real move ordering and the first real
+  `PerformMove`.
+- Unlike the preceding `PerformMove` entry checkpoint, `DoTurn` now remains
+  real through its pre-move state reset, `CheckTurn`, the in-turn
+  `UpdateMoveData` refresh and `InitializeMove`.
+- The terminal boundary is the first `ReadMoveScriptByte` call. The regression
+  returns `endturn_command` there, so no Tackle battle command, move effect or
+  damage routine executes.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. All six cases
+  reach the first move-script read with player native ID 25 and the expected
+  full 16-bit enemy identity unchanged.
+- The test also verifies `PerformMove` clears the seeded damage sentinel,
+  `CheckTurn` and `InitializeMove` each execute once, the real DoTurn
+  move-data refresh runs, and `InitializeMove` publishes a non-null move-script
+  pointer before the terminal boundary.
+- Validation: GitHub Actions run #36010955185 **passed** on CI commit
+  `11ab67857ddf55083c8daae303f54f98439807f4`. All eight ROM build
+  configurations passed. The new regression passed 6 cases on both normal and
+  debug ROMs.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It deliberately stops
+  before executing the first move-effect command.
+- Next recommended step: add a focused **first move-script command execution
+  regression** that permits Tackle's initial deterministic command path to run
+  far enough to verify native user/target identity through the first real
+  effect-command dispatch, while still stopping before HP is modified.
+
 ## Latest checkpoint: native selected-move -> move-order boundary regression (2026-09-23)
 
 - Added `tests/test_native_selected_move_order_boundary.py`. It continues the
