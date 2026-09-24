@@ -1,6 +1,44 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native wild-battle introduction integration regression (2026-09-23)
+## Latest checkpoint: single-entry native wild BattleIntro smoke regression (2026-09-23)
+
+- Added `tests/test_native_battle_intro_wild_smoke.py`. It enters the real
+  `BattleIntro` once and keeps the outer wild sequencing live through
+  `LoadTrainerOrWildMonPic`, `ClearBattleRAM`, `InitEnemy`,
+  `SendInUserPkmn`, native enemy picture preparation/LZ decode/direct VRAM
+  copies, `BattleStartMessage`, `BattleAnimateFrontpic` and native animation
+  record setup.
+- Wild-mon generation remains a deterministic fixture boundary, and
+  transition/text/palette/HUD/audio/timing helpers are stubbed. The test still
+  proves that the real outer battle-intro entry publishes the correct full
+  16-bit enemy shadow, retains exact native base data, writes the expected
+  front-picture and animated tiles to VBK0/VBK1, and records the expected
+  presentation species/form and picture height.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. Each case also
+  verifies the live `ClearBattleRAM` -> wild initialization handoff rather
+  than calling `InitEnemy` and `BattleStartMessage` separately.
+- The first CI run (#35938725099) exposed a test-fixture error: three guard
+  stubs used a bare `RET`, so they inherited an arbitrary carry flag and could
+  incorrectly enter the shiny/skip-animation branches. The corrected fixture
+  explicitly returns carry clear for shininess, sleeping-tree and battle-effect
+  guards and stubs the unrelated send-out animation playback.
+- Validation: GitHub Actions run #35939051550 **passed** on corrected test
+  commit `b6850f543b403aeef99be54a780f4db58cf95d01`. All eight ROM build
+  configurations and all twenty-two focused regression steps succeeded with no
+  CI errors. Normal **and** debug ROMs each passed 6 new single-entry
+  `BattleIntro` smoke cases in addition to the previous 3,253 focused CPU
+  cases, for **3,259 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It still does not validate
+  real wild generation, the full transition/UI/palette/audio path, user input,
+  turn selection, or an interactive battle loop.
+- Next recommended step: add a focused **`DoBattle` entry smoke regression**
+  that keeps the real `BattleIntro` handoff and verifies the native enemy
+  identity survives into the first battle-loop boundary, while stubbing user
+  input/turn execution before attempting full interactive battle automation.
+
+## Previous checkpoint: native wild-battle introduction integration regression (2026-09-23)
 
 - Added `tests/test_native_wild_battle_intro_integration.py`. It drives the
   live wild branches of `InitEnemy` and `BattleStartMessage` in sequence.
