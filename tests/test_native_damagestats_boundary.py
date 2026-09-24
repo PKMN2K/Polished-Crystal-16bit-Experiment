@@ -1612,9 +1612,9 @@ def main():
                 "native identity changed entering screen handling", context,
                 damage_screen_snapshots
             )
-            assert true_user_party_attr_calls == [True], (
-                "damagestats skipped true-user level lookup", context,
-                true_user_party_attr_calls
+            assert true_user_party_attr_calls == [True, True], (
+                "damagestats did not perform held-item and level party reads",
+                context, true_user_party_attr_calls
             )
             assert all(
                 snap[:3] == (25, native, 0)
