@@ -1,3 +1,26 @@
+## Latest checkpoint: native applydamage regression (2026-09-24)
+
+- Added `tests/test_native_applydamage_boundary.py` and wired it into normal/debug CI.
+- The first fourteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage`.
+- The test replaces only the following `criticaltext` script byte with `endturn_command`, so real `BattleCommand_applydamage` completes while critical-text and later post-hit commands remain outside this checkpoint.
+- The validated damage chain entering applydamage is 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation.
+- The fixture has no Substitute, Endure, affection save, Focus Band/Sash, Sturdy, or relevant healing item. The real applydamage path executes its substitute reset/check, affection/item/ability checks, `TakeDamage`, `DealDamageToOpponent`, and real HP subtraction.
+- Enemy HP falls from 100 to 83 and `wDamageTaken` becomes 17. Player HP remains 100.
+- Only presentation/HUD redraw boundaries are stubbed after the real HP arithmetic: `UpdateHPBarBattleHuds` and the final `RefreshBattleHuds` tail boundary. Gameplay/migration source behavior is unchanged.
+- Native player identity 25 and all six enemy native-identity cases remain intact across the complete HP-application path.
+- `BattleCommand_criticaltext` is not reached in this checkpoint.
+- One intermediate CI failure was workflow-only: duplicate applydamage CI step IDs caused GitHub to reject the workflow before creating a job. The duplicate normal/debug entries were removed.
+- A second intermediate harness stall occurred after successful HP subtraction because `TakeDamage` tail-jumps into the full HUD refresh path; bounding that presentation-only refresh allowed the focused battle-state regression to return normally.
+- Final validation: GitHub Actions CI run **#222** (`36068520119`) passed on commit `439912fc2d90817d5cf7fae6a7a08e1c84b294c7`.
+  - native applydamage boundary: 6/6 cases passed on normal ROM
+  - native applydamage boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_criticaltext` regression that executes the real non-critical no-text path after the validated 17-damage HP application, then stops before `supereffectivetext`.
+
 ## Latest checkpoint: native failuretext regression (2026-09-24)
 
 - Added `tests/test_native_failuretext_boundary.py` and wired it into normal/debug CI.
