@@ -1,3 +1,24 @@
+## Latest checkpoint: native moveanim regression (2026-09-24)
+
+- Added `tests/test_native_moveanim_boundary.py` and wired it into normal/debug CI.
+- The first twelve original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim`.
+- The test replaces only the following `failuretext` script byte with `endturn_command`, so real `BattleCommand_moveanim` control flow completes while failure-text handling and HP application remain outside this checkpoint.
+- The validated damage chain entering moveanim is 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation.
+- `BattleCommand_moveanim` executes its real `lowersub -> moveanimnosub -> raisesub` control flow. With no substitute active, the normal move path reaches the visual animation boundary and requests animation ID 33 for Tackle.
+- `PlayFXAnimID` is stubbed to an immediate return at the presentation boundary so this remains a battle-state/native-identity regression rather than a full animation/timing test. No gameplay/migration source behavior is changed.
+- Native player identity 25 and all six enemy native-identity cases remain intact across moveanim, and `wCurDamage` remains 17.
+- `BattleCommand_failuretext` and `BattleCommand_applydamage` are not reached; both battlers remain at 100 HP.
+- One intermediate failure was a PyBoy test-harness detail only: this register-file build exposes D and E separately rather than combined DE. The snapshot now combines `(D << 8) | E`.
+- Final validation: GitHub Actions CI run **#214** (`36065706941`) passed on commit `b0bd8bc9445aa1acb62a7d6d352964c73abee4bb`.
+  - native moveanim boundary: 6/6 cases passed on normal ROM
+  - native moveanim boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_failuretext` regression that executes the real no-failure path for the successful Tackle, then stops before `applydamage`.
+
 ## Latest checkpoint: native damagevariation regression (2026-09-24)
 
 - Added `tests/test_native_damagevariation_boundary.py` and wired it into normal/debug CI.
