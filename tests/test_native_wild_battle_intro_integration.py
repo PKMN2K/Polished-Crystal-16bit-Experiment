@@ -153,7 +153,7 @@ def main():
         mem[addr("wInBattleTowerBattle")] = 0
         mem[addr("wDeferredSwitch")] = 0
         mem[addr("wEnemySubStatus4")] = 0
-        mem[addr("wEnemyMonNativeSpecies"):addr("wEnemyMonNativeSpecies") + 2] = [0xA5, 0xA5]
+        # Use a different but valid pre-switch shadow: NewEnemyMonStatus resets\n        # ability before the incoming record republishes its native identity.\n        mem[addr("wEnemyMonNativeSpecies"):addr("wEnemyMonNativeSpecies") + 2] = [143, 0]
         mem[addr("wBattleMonNativeSpecies"):addr("wBattleMonNativeSpecies") + 2] = [143, 0]
 
         # Prebuild the wild opponent record at the boundary normally produced
