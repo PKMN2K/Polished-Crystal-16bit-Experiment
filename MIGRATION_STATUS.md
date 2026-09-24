@@ -1,6 +1,42 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native player-action / move-selection boundary regression (2026-09-23)
+## Latest checkpoint: native selected-move -> move-order boundary regression (2026-09-23)
+
+- Added `tests/test_native_selected_move_order_boundary.py`. It continues the
+  validated wild `BattleIntro` -> `DoBattle` -> first-`BattleTurn` ->
+  player-action path with a deterministic valid Fight selection instead of
+  canceling at `MoveSelectionScreen`.
+- `MoveSelectionScreen` injects Tackle (move ID 33) in slot 0 and returns a
+  successful selection. The remaining real player `ParsePlayerAction` path
+  runs through its move-data update and housekeeping before reaching the real
+  `DetermineMoveOrder` call site.
+- `DetermineMoveOrder` is the terminal boundary for this checkpoint. The
+  test snapshots player/enemy native identity, selected move, move slot and
+  turn count there, then returns immediately from the caller so
+  `PerformMove` cannot execute.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. Every case
+  reaches move ordering with player native ID 25 and the expected full 16-bit
+  enemy identity unchanged.
+- The regression also verifies the selected move reaches the live
+  `UpdateMoveData` call path, the enemy-action boundary is reached, no legacy
+  `GetBaseData` fallback occurs, and `PerformMove` is never entered.
+- Validation: GitHub Actions run #35946521799 **passed** on test/CI commit
+  `450c4ab17fb9187b91d49002d451dbd7bfb949bc`. All eight ROM build
+  configurations and all thirty focused regression steps succeeded with no CI
+  errors. Normal **and** debug ROMs each passed 6 new selected-move /
+  move-order boundary cases in addition to the previous 3,277 focused CPU
+  cases, for **3,283 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not yet exercise
+  real move-order calculation internals or execute either battler's move.
+- Next recommended step: add a focused **move-order -> first `PerformMove`
+  entry regression** that lets deterministic move ordering complete, enters
+  the first real `PerformMove` setup far enough to prove the acting side's
+  native identity is still correct, and stops before move effects/damage are
+  applied.
+
+## Previous checkpoint: native player-action / move-selection boundary regression (2026-09-23)
 
 - Added `tests/test_native_player_action_move_selection_smoke.py`. It continues
   the validated wild `BattleIntro` -> `DoBattle` -> first-`BattleTurn`
