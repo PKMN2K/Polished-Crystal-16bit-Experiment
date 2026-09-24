@@ -128,6 +128,10 @@ jobs:
         name: "Test native selected-move to move-order boundary (normal)"
         run: python tests/test_native_selected_move_order_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-perform-move-entry-boundary
+        name: "Test native move-order to PerformMove entry boundary (normal)"
+        run: python tests/test_native_perform_move_entry_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -223,6 +227,10 @@ jobs:
       - id: test-native-selected-move-order-boundary-debug
         name: "Test native selected-move to move-order boundary (debug)"
         run: python tests/test_native_selected_move_order_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-perform-move-entry-boundary-debug
+        name: "Test native move-order to PerformMove entry boundary (debug)"
+        run: python tests/test_native_perform_move_entry_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
