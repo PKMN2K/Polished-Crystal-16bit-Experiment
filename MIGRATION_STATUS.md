@@ -1,3 +1,22 @@
+## Latest checkpoint: native damagevariation regression (2026-09-24)
+
+- Added `tests/test_native_damagevariation_boundary.py` and wired it into normal/debug CI.
+- The first eleven original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation`.
+- The test replaces only the following `moveanim` script byte with `endturn_command`, so real `BattleCommand_damagevariation` completes while move animation and HP application remain outside this checkpoint.
+- The validated STAB fixture supplies `wCurDamage = 21`. The regression deterministically forces `BattleRandomRange(16)` to return 0, selecting the real 85% floor.
+- The real damage-variation path multiplies 21 by 85, divides by 100, integer-truncates the result, and publishes `wCurDamage = 17`.
+- Native player identity 25 and all six enemy native-identity cases remain intact across the random damage-variation command.
+- `BattleCommand_moveanim` and `BattleCommand_applydamage` are not reached; both battlers remain at 100 HP.
+- Final validation: GitHub Actions CI run **#211** (`36064139789`) passed on commit `57b8b271c3183de47936c99a0fe86a547ac01907`.
+  - native damagevariation boundary: 6/6 cases passed on normal ROM
+  - native damagevariation boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_moveanim` regression that allows the real move-animation command boundary to execute while preserving native battle identity, then stops before `failuretext`.
+
 ## Latest checkpoint: native STAB regression (2026-09-24)
 
 - Added `tests/test_native_stab_boundary.py` and wired it into normal/debug CI.
