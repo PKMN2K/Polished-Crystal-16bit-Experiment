@@ -957,7 +957,9 @@ def main():
             "NormalHit eighth command is no longer damagestats",
             mem[normal_bank, normal_addr + 7],
         )
-        assert mem[normal_bank, normal_addr + 8] == 7, (
+        # Battle-command IDs are not globally sequential; damagecalc is
+        # command $50 in the current command table.
+        assert mem[normal_bank, normal_addr + 8] == 0x50, (
             "NormalHit ninth command is no longer damagecalc",
             mem[normal_bank, normal_addr + 8],
         )
