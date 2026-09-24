@@ -127,6 +127,7 @@ def main():
     checkhit_active = [False]
     checkhit_calls = []
     checkhit_snapshots = []
+    checkhit_result_snapshots = []
     affection_checks = []
     stat_change_mod_calls = []
     stat_change_mod_snapshots = []
@@ -366,6 +367,9 @@ def main():
         if len(read_script_calls) == 5:
             hastarget_active[0] = False
         if len(read_script_calls) == 6:
+            checkhit_result_snapshots.append(tuple(
+                mem[addr("hMultiplicand"):addr("hMultiplicand") + 3]
+            ))
             checkhit_active[0] = False
         if len(read_script_calls) == 7:
             priority_active[0] = False
@@ -837,7 +841,8 @@ def main():
             hastarget_calls, hastarget_snapshots,
             target_fainted_checks, target_fainted_snapshots,
             target_ability_checks, target_ability_snapshots,
-            checkhit_calls, checkhit_snapshots, affection_checks,
+            checkhit_calls, checkhit_snapshots, checkhit_result_snapshots,
+            affection_checks,
             stat_change_mod_calls, stat_change_mod_snapshots,
             accuracy_ability_calls, accuracy_ability_snapshots,
             accuracy_user_ability_checks, accuracy_user_ability_snapshots,
@@ -1418,12 +1423,10 @@ def main():
                 "deterministic Tackle accuracy path marked a miss",
                 context, mem[addr("wAttackMissed")]
             )
-            assert bytes(
-                mem[addr("hMultiplicand"):addr("hMultiplicand") + 3]
-            ) == bytes([0, 0, 100]), (
-                "real accuracy math did not resolve Tackle to 100%",
-                context,
-                bytes(mem[addr("hMultiplicand"):addr("hMultiplicand") + 3]),
+            assert checkhit_result_snapshots == [(0, 0, 100)], (
+                "real accuracy math did not resolve Tackle to 100% at the "
+                "checkhit boundary",
+                context, checkhit_result_snapshots
             )
             assert checkpriority_calls == [True], (
                 "sixth real battle-command dispatch count", context,
