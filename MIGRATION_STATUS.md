@@ -1,6 +1,41 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native DoBattle entry smoke regression (2026-09-23)
+## Latest checkpoint: native first-BattleTurn setup smoke regression (2026-09-23)
+
+- Added `tests/test_native_first_battle_turn_smoke.py`. It keeps the real
+  `BattleTurn` entry and core first-turn setup live after the validated
+  `BattleIntro` -> `DoBattle` handoff, and runs until the first player
+  `BattleMenu` boundary.
+- The regression keeps real turn-counter increments, battle-action/reset state,
+  `UpdateBattleMonInParty`, enemy/player turn selection,
+  `IncrementTurnsTaken` and locked-in checks. Deep AI decision implementations
+  and unrelated per-turn item/effect helpers are deterministic boundaries, but
+  their real call sites are exercised and counted.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. Each case
+  reaches `BattleMenu` with player native ID 25 and the expected full 16-bit
+  enemy native identity unchanged, `hBattleTurn` on the player, total battle
+  turns at 1, and both player/enemy turns-taken counters at 1.
+- The test also verifies the enemy AI-choose, AI-switch and enemy-flee call
+  boundaries are each reached once, no fallback through legacy `GetBaseData`
+  occurs, and no player action/move execution happens beyond the menu boundary.
+- Validation: GitHub Actions run #35943380328 **passed** on test/CI commit
+  `a28b9439fa2fdfcdfb16dda054734f91de8d7c3b`. All eight ROM build
+  configurations and all twenty-six focused regression steps succeeded with no
+  CI errors. Normal **and** debug ROMs each passed 6 new first-`BattleTurn`
+  setup smoke cases in addition to the previous 3,265 focused CPU cases, for
+  **3,271 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not yet execute
+  real AI decision internals, accept player menu input, choose a move, determine
+  move order or execute a complete turn.
+- Next recommended step: add a focused **player action / move-selection boundary
+  regression** that continues past the first `BattleMenu` return with a
+  deterministic selected action and reaches `ParsePlayerAction` /
+  move-selection setup while verifying both active native identities remain
+  intact before move-order and move-execution testing.
+
+## Previous checkpoint: native DoBattle entry smoke regression (2026-09-23)
 
 - Added `tests/test_native_do_battle_entry_smoke.py`. It runs the real wild
   `BattleIntro` first, then enters the real `DoBattle` setup and stops only
