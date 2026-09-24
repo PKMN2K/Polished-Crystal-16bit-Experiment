@@ -1,6 +1,41 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native first-BattleTurn setup smoke regression (2026-09-23)
+## Latest checkpoint: native player-action / move-selection boundary regression (2026-09-23)
+
+- Added `tests/test_native_player_action_move_selection_smoke.py`. It continues
+  the validated wild `BattleIntro` -> `DoBattle` -> first-`BattleTurn`
+  path past the first `BattleMenu` return with a deterministic Fight action.
+- `ParsePlayerAction` remains real through its normal using-move branch. The
+  regression reaches the real `MoveSelectionScreen` call site after
+  `wMoveSelectionMenuType` and the move-selection animation ID are prepared,
+  snapshots both active native identity words, then returns a deterministic
+  canceled selection. A second `BattleMenu` pass terminates the smoke before
+  move ordering.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. Every case
+  reaches `ParsePlayerAction` and `MoveSelectionScreen` with player native ID
+  25 and the expected full 16-bit enemy identity unchanged.
+- The regression also verifies the first-turn AI/setup call boundaries still
+  occur once, move-selection state is initialized as expected, legacy
+  `GetBaseData` is not used, and neither `DetermineMoveOrder` nor
+  `PerformMove` is reached.
+- Validation: GitHub Actions run #35944687427 **passed** on test/CI commit
+  `6816b2f9d6d808615e21cc4a1c25d84d4745249f`. All eight ROM build
+  configurations and all twenty-eight focused regression steps succeeded with
+  no CI errors. Normal **and** debug ROMs each passed 6 new player-action /
+  move-selection boundary cases in addition to the previous 3,271 focused CPU
+  cases, for **3,277 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not yet commit a
+  selected move, run the full move-data update path, determine move order or
+  execute either battler's move.
+- Next recommended step: add a focused **selected-move -> move-order boundary
+  regression** that makes `MoveSelectionScreen` return a deterministic valid
+  move, lets the remaining real `ParsePlayerAction` setup complete, and
+  reaches `DetermineMoveOrder` while stopping before `PerformMove`. Verify
+  both active native identities remain stable through that transition.
+
+## Previous checkpoint: native first-BattleTurn setup smoke regression (2026-09-23)
 
 - Added `tests/test_native_first_battle_turn_smoke.py`. It keeps the real
   `BattleTurn` entry and core first-turn setup live after the validated
