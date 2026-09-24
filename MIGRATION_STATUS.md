@@ -1,3 +1,22 @@
+## Latest checkpoint: native damagecalc regression (2026-09-24)
+
+- Added `tests/test_native_damagecalc_boundary.py` and wired it into normal/debug CI.
+- The first nine original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc`.
+- The test replaces only the following `stab` script byte with `endturn_command`, so real `BattleCommand_damagecalc` completes while STAB, damage variation, animation, later modifiers and HP application remain outside this checkpoint.
+- The validated `damagestats` fixture supplies player Attack 90, enemy Defense 80, Tackle power 40 and player level 30. The real neutral base-damage calculation publishes `wCurDamage = 14`.
+- Native player identity 25 and all six enemy native-identity cases remain intact across the full base-damage formula, including extended/native-variant cases.
+- The test confirms `damagecalc` receives the real Attack/Defense/power/level outputs from `damagestats`, produces the expected neutral base damage, and leaves both battlers at 100 HP because `applydamage` is not reached.
+- One intermediate failure was a test-lifetime issue only: the older checkhit assertion inspected `hMultiplicand` after `damagecalc` had legitimately reused that scratch buffer. The test now snapshots the 100%-accuracy result at the actual checkhit boundary.
+- Final validation: GitHub Actions CI run **#206** (`36060731353`) passed on commit `529897cf36099f1c5d5f67f60a7f5054b6384908`.
+  - native damagecalc boundary: 6/6 cases passed on normal ROM
+  - native damagecalc boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_stab` regression that lets Tackle execute real STAB/type-modifier handling from the validated base damage, then stops before `damagevariation`.
+
 ## Latest checkpoint: native damagestats regression (2026-09-24)
 
 - Added `tests/test_native_damagestats_boundary.py` and wired it into normal/debug CI.
