@@ -883,7 +883,7 @@ def main():
                 read_native("wEnemyMonNativeSpecies"),
                 mem[addr("hBattleTurn")],
                 mem[addr("wCurPlayerMove")],
-                regs.DE,
+                (regs.D << 8) | regs.E,
             ))
 
     def observe_damage_reset(_):
