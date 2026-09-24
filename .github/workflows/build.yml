@@ -152,6 +152,10 @@ jobs:
         name: "Test native hastarget boundary (normal)"
         run: python tests/test_native_hastarget_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-checkhit-boundary
+        name: "Test native checkhit boundary (normal)"
+        run: python tests/test_native_checkhit_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -271,6 +275,10 @@ jobs:
       - id: test-native-hastarget-boundary-debug
         name: "Test native hastarget boundary (debug)"
         run: python tests/test_native_hastarget_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-checkhit-boundary-debug
+        name: "Test native checkhit boundary (debug)"
+        run: python tests/test_native_checkhit_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
