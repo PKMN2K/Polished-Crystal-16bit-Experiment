@@ -180,6 +180,10 @@ jobs:
         name: "Test native damagevariation boundary (normal)"
         run: python tests/test_native_damagevariation_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-moveanim-boundary
+        name: "Test native moveanim boundary (normal)"
+        run: python tests/test_native_moveanim_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -327,6 +331,10 @@ jobs:
       - id: test-native-damagevariation-boundary-debug
         name: "Test native damagevariation boundary (debug)"
         run: python tests/test_native_damagevariation_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-moveanim-boundary-debug
+        name: "Test native moveanim boundary (debug)"
+        run: python tests/test_native_moveanim_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
