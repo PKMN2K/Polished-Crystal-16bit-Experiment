@@ -1605,8 +1605,12 @@ def main():
                 "physical damagestats never selected user Attack",
                 context, damage_user_attr_snapshots
             )
+            # GetOpponentMonAttr temporarily flips hBattleTurn while
+            # resolving the opponent's stat through the shared user-attribute
+            # helper. The important invariant here is that neither native
+            # identity changes across either perspective.
             assert all(
-                snap[:3] == (25, native, 0)
+                snap[:2] == (25, native)
                 for snap in damage_user_attr_snapshots
             ), (
                 "native identity changed during user attribute reads",
