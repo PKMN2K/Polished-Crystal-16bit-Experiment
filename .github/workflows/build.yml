@@ -168,6 +168,10 @@ jobs:
         name: "Test native damagestats boundary (normal)"
         run: python tests/test_native_damagestats_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-damagecalc-boundary
+        name: "Test native damagecalc boundary (normal)"
+        run: python tests/test_native_damagecalc_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -303,6 +307,10 @@ jobs:
       - id: test-native-damagestats-boundary-debug
         name: "Test native damagestats boundary (debug)"
         run: python tests/test_native_damagestats_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagecalc-boundary-debug
+        name: "Test native damagecalc boundary (debug)"
+        run: python tests/test_native_damagecalc_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
