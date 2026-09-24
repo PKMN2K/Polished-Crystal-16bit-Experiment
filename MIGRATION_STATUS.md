@@ -1,6 +1,49 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: native enemy trainer send-out picture/animation integration regression (2026-09-23)
+## Latest checkpoint: native wild-battle introduction integration regression (2026-09-23)
+
+- Added `tests/test_native_wild_battle_intro_integration.py`. It drives the
+  live wild branches of `InitEnemy` and `BattleStartMessage` in sequence.
+  Wild-mon generation is a deterministic fixture boundary, but the real
+  `SendInUserPkmn` native-shadow publication, active-native base-data lookup,
+  native enemy picture preparation, LZ decode, direct VBK0/VBK1 VRAM copies,
+  `BattleAnimateFrontpic` dispatch and native animation-record setup execute.
+- Coverage includes ordinary roots, an extended root above `$00ff`, cosmetic
+  presentations and two regional/mechanical variants. The opponent begins with
+  a different valid native shadow; the test proves the live wild send-in
+  overwrites it from the legacy opponent record, then keeps that full 16-bit
+  identity stable through picture and animation setup. It also verifies exact
+  native base data, real front-picture/animated VRAM bytes, and the expected
+  animation species/form, height and start tile.
+- UI/text/audio helpers, wild generation and the final `TickPokeAnim` loop are
+  stubbed intentionally. LCD remains off because the dedicated preceding
+  regression already validates the real LCD-on Request2bpp/VBlank transfer
+  scheduler.
+- The first CI attempts exposed test-fixture assumptions rather than migration
+  failures. A pre-switch shadow was changed from an arbitrary value to a
+  different valid native ID because enemy ability reset occurs before the
+  incoming shadow is republished. The failing assertion also incorrectly
+  counted send-in, picture and animation base-data reads through one helper;
+  the corrected test observes `GetBaseDataFromActiveBattleNativeSpecies` for
+  send-in and `GetBaseDataFromEnemyBattleNativeSpecies` for picture/animation
+  separately.
+- Validation: GitHub Actions run #35937694123 **passed** on corrected test/CI
+  commit `2099c7084747e2de5820e1a0b4a6cb47e398e7da`. All eight ROM build
+  configurations and all twenty focused regression steps succeeded with no CI
+  errors. Normal **and** debug ROMs each passed 6 new wild-introduction
+  integration cases in addition to the previous 3,247 focused CPU cases, for
+  **3,253 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not validate real
+  wild-mon generation, palette/audio/text playback, full frontpic animation
+  timing, user input or an interactive battle loop.
+- Next recommended step: move one level outward with a focused **single-entry
+  `BattleIntro` wild smoke regression**. Run the real outer battle-intro
+  sequencing through initialization, wild picture preparation and start-message
+  animation while keeping generation/UI transitions deterministic, before
+  attempting `DoBattle` or full interactive battle automation.
+
+## Previous checkpoint: native enemy trainer send-out picture/animation integration regression (2026-09-23)
 
 - Added `tests/test_native_enemy_sendout_integration.py`. It enters the real
   `Function_SetEnemyPkmnAndSendOutAnimation` trainer send-out helper and keeps
