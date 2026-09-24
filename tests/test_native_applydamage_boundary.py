@@ -7,13 +7,14 @@ doturn/PP-consumption, hastarget, checkhit, checkpriority, critical,
 damagestats, damagecalc, STAB, damagevariation, moveanim and failuretext
 commands, then execute real BattleCommand_applydamage.
 
-The fixture keeps substitute/Endure/affection/item/ability survival mechanics
-neutral. The validated varied damage is 17, so real HP application must reduce
-the enemy from 100 HP to 83 HP and record 17 in wDamageTaken.
+The validated damage entering applydamage is 17. This fixture has no
+Substitute, Endure, affection save, Focus item, Sturdy, or relevant healing
+item, so the real damage path must reduce enemy HP from 100 to 83 and publish
+17 in wDamageTaken. Only the HP-bar redraw boundary is stubbed.
 
-Post-subtraction HUD animation and held-item healing presentation are stubbed
-at their boundaries. The following criticaltext script byte is replaced with
-endturn_command so this checkpoint stops immediately after real HP application.
+The following criticaltext script byte is replaced with endturn_command, so
+critical-text handling and later post-hit commands remain outside this
+checkpoint.
 """
 import argparse
 from pathlib import Path
@@ -219,14 +220,15 @@ def main():
     applydamage_active = [False]
     applydamage_calls = []
     applydamage_snapshots = []
-    take_damage_calls = []
-    take_damage_snapshots = []
-    deal_damage_calls = []
-    deal_damage_snapshots = []
-    subtract_hp_calls = []
-    subtract_hp_snapshots = []
-    hp_hud_calls = []
-    refresh_hud_calls = []
+    applydamage_affection_calls = []
+    applydamage_item_calls = []
+    applydamage_ability_calls = []
+    applydamage_reset_subhit_calls = []
+    applydamage_check_sub_calls = []
+    applydamage_take_damage_calls = []
+    applydamage_deal_damage_calls = []
+    applydamage_subtract_hp_calls = []
+    applydamage_hud_calls = []
     applydamage_result_snapshots = []
     criticaltext_calls = []
     active_base_calls = []
@@ -405,10 +407,10 @@ def main():
         # the eighth is the real damagestats boundary; the ninth is the real
         # damagecalc boundary; the tenth is the real STAB boundary; and the
         # eleventh is the real damagevariation boundary; and the twelfth is
-        # the real moveanim boundary; and the thirteenth is the real
-        # failuretext boundary; and the fourteenth is the real applydamage
-        # boundary. The fifteenth real script-byte read sees the test-only
-        # endturn byte in place of criticaltext and ends the outer battle loop.
+        # the real moveanim boundary; the thirteenth is the real failuretext
+        # boundary; and the fourteenth is the real applydamage boundary. The
+        # fifteenth real script-byte read sees the test-only endturn byte in
+        # place of criticaltext and ends the outer battle loop.
         if len(read_script_calls) == 3:
             usedmovetext_result_snapshots.append(mem[addr("wMoveGrammar")])
         if len(read_script_calls) == 5:
@@ -489,6 +491,7 @@ def main():
                 read_native("wEnemyMonNativeSpecies"),
                 mem[addr("hBattleTurn")],
                 mem[addr("wCurPlayerMove")],
+                mem[addr("wAttackMissed")],
                 mem[addr("wCurDamage")],
                 mem[addr("wCurDamage") + 1],
                 mem[addr("wEnemyMonHP")],
@@ -586,6 +589,8 @@ def main():
             priority_fainted_snapshots.append(snapshot)
 
     def observe_target_ability(_):
+        if applydamage_active[0]:
+            applydamage_ability_calls.append(True)
         snapshot = (
             read_native("wBattleMonNativeSpecies"),
             read_native("wEnemyMonNativeSpecies"),
@@ -777,6 +782,12 @@ def main():
         if critical_active[0]:
             critical_affection_calls.append(True)
 
+    def observe_opponent_affection(_):
+        if checkhit_active[0]:
+            affection_checks.append(True)
+        if applydamage_active[0]:
+            applydamage_affection_calls.append(True)
+
     def observe_user_valid_item(_):
         if critical_active[0]:
             user_valid_item_calls.append(True)
@@ -959,53 +970,43 @@ def main():
             mem[addr("wCurDamage") + 1],
             mem[addr("wEnemyMonHP")],
             mem[addr("wEnemyMonHP") + 1],
+            mem[addr("wDamageTaken")],
+            mem[addr("wDamageTaken") + 1],
             mem[addr("wBattleScriptBufferLoc")],
             mem[addr("wBattleScriptBufferLoc") + 1],
         ))
 
-    def observe_take_damage(_):
+    def observe_applydamage_item(_):
         if applydamage_active[0]:
-            take_damage_calls.append(True)
-            take_damage_snapshots.append((
-                read_native("wBattleMonNativeSpecies"),
-                read_native("wEnemyMonNativeSpecies"),
-                mem[addr("hBattleTurn")],
-                mem[addr("wCurDamage")],
-                mem[addr("wCurDamage") + 1],
-                mem[addr("wEnemyMonHP")],
-                mem[addr("wEnemyMonHP") + 1],
-            ))
+            applydamage_item_calls.append(True)
 
-    def observe_deal_damage(_):
+    def observe_applydamage_ability(_):
         if applydamage_active[0]:
-            deal_damage_calls.append(True)
-            deal_damage_snapshots.append((
-                read_native("wBattleMonNativeSpecies"),
-                read_native("wEnemyMonNativeSpecies"),
-                mem[addr("hBattleTurn")],
-                mem[addr("wCurDamage")],
-                mem[addr("wCurDamage") + 1],
-            ))
+            applydamage_ability_calls.append(True)
 
-    def observe_subtract_hp(_):
+    def observe_applydamage_reset_subhit(_):
         if applydamage_active[0]:
-            subtract_hp_calls.append(True)
-            subtract_hp_snapshots.append((
-                read_native("wBattleMonNativeSpecies"),
-                read_native("wEnemyMonNativeSpecies"),
-                mem[addr("hBattleTurn")],
-                regs.B, regs.C,
-                mem[addr("wEnemyMonHP")],
-                mem[addr("wEnemyMonHP") + 1],
-            ))
+            applydamage_reset_subhit_calls.append(True)
 
-    def observe_hp_hud(_):
+    def observe_applydamage_check_sub(_):
         if applydamage_active[0]:
-            hp_hud_calls.append(True)
+            applydamage_check_sub_calls.append(True)
 
-    def observe_refresh_hud(_):
+    def observe_applydamage_take_damage(_):
         if applydamage_active[0]:
-            refresh_hud_calls.append(True)
+            applydamage_take_damage_calls.append(True)
+
+    def observe_applydamage_deal_damage(_):
+        if applydamage_active[0]:
+            applydamage_deal_damage_calls.append(True)
+
+    def observe_applydamage_subtract_hp(_):
+        if applydamage_active[0]:
+            applydamage_subtract_hp_calls.append(True)
+
+    def observe_applydamage_hud(_):
+        if applydamage_active[0]:
+            applydamage_hud_calls.append(True)
 
     def observe_damage_reset(_):
         if damagestats_active[0]:
@@ -1178,11 +1179,12 @@ def main():
             failuretext_calls, failuretext_snapshots,
             failure_result_text_calls, failuretext_result_snapshots,
             applydamage_calls, applydamage_snapshots,
-            take_damage_calls, take_damage_snapshots,
-            deal_damage_calls, deal_damage_snapshots,
-            subtract_hp_calls, subtract_hp_snapshots,
-            hp_hud_calls, refresh_hud_calls,
-            applydamage_result_snapshots, criticaltext_calls,
+            applydamage_affection_calls, applydamage_item_calls,
+            applydamage_ability_calls, applydamage_reset_subhit_calls,
+            applydamage_check_sub_calls, applydamage_take_damage_calls,
+            applydamage_deal_damage_calls, applydamage_subtract_hp_calls,
+            applydamage_hud_calls, applydamage_result_snapshots,
+            criticaltext_calls,
             active_base_calls, enemy_base_calls, legacy_calls,
         ):
             calls.clear()
@@ -1278,7 +1280,7 @@ def main():
         # failuretext and applydamage real. Replace only the following
         # criticaltext command with endturn_command ($fe), so real HP
         # application completes and the fifteenth real script read terminates
-        # before critical-result text.
+        # before critical-text handling.
         normal_bank, normal_addr = symbols["NormalHit"]
         assert mem[normal_bank, normal_addr] == 2, (
             "NormalHit no longer begins with checkobedience",
@@ -1361,7 +1363,7 @@ def main():
         # while leaving the rest of BattleCommand_checkhit real.
         install_stub(
             "CheckOpponentAffection", [0xAF, 0xC9],
-            lambda _: affection_checks.append(True),
+            observe_opponent_affection,
         )
         install_stub(
             "CheckAffection", [0xAF, 0xC9], observe_critical_affection
@@ -1378,11 +1380,9 @@ def main():
             observe_accuracy_random,
         )
 
-        # Let the real HP subtraction happen, but skip the purely visual HUD
-        # redraw/animation and post-hit held-item healing pass.
-        install_stub("UpdateHPBarBattleHuds", [0xC9], observe_hp_hud)
-        install_stub("RefreshBattleHuds", [0xC9], observe_refresh_hud)
-        install_stub("HandleUserHealingItems", [0xC9])
+        # HP arithmetic and item/ability logic remain real. Only the visual
+        # HP-bar/HUD redraw boundary is skipped after the real subtraction.
+        install_stub("UpdateHPBarBattleHuds", [0xC9], observe_applydamage_hud)
 
         # Keep real moveanim battle-state control flow but stop at the visual
         # renderer/timing boundary. The callback still verifies the requested
@@ -1444,9 +1444,12 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("TakeDamage", observe_take_damage)
-        hook("DealDamageToOpponent", observe_deal_damage)
-        hook("SubtractHPFromUser", observe_subtract_hp)
+        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        hook("CheckSubstituteOpp", observe_applydamage_check_sub)
+        hook("GetOpponentItem", observe_applydamage_item)
+        hook("TakeDamage", observe_applydamage_take_damage)
+        hook("DealDamageToOpponent", observe_applydamage_deal_damage)
+        hook("SubtractHPFromUser", observe_applydamage_subtract_hp)
         hook("BattleCommand_criticaltext", lambda _: criticaltext_calls.append(True))
         hook("SendInUserPkmn", observe_sendin)
         hook(
@@ -1583,8 +1586,9 @@ def main():
                 context, update_move_data_calls
             )
             assert read_script_calls == [
-                True, True, True, True, True, True, True, True,
-                True, True, True, True, True, True, True
+                True, True, True, True, True,
+                True, True, True, True, True,
+                True, True, True, True, True
             ], (
                 "real move-script read count around first fourteen commands",
                 context, read_script_calls
@@ -2290,55 +2294,53 @@ def main():
             )
             assert applydamage_snapshots == [
                 (
-                    25, native, 0, 33, 0, 0, 17, 0, 100,
+                    25, native, 0, 33, 0, 0, 17, 0, 100, 0, 0,
                     *advance_script_pointer(read_script_snapshots[0], 14),
                 ),
             ], (
-                "native identity/damage/HP changed entering applydamage",
+                "native identity/damage/HP state changed entering applydamage",
                 context, applydamage_snapshots
             )
-            assert take_damage_calls == [True], (
-                "applydamage did not enter TakeDamage", context,
-                take_damage_calls
+            assert applydamage_reset_subhit_calls == [True], (
+                "applydamage skipped ResetSubHit", context,
+                applydamage_reset_subhit_calls
             )
-            assert take_damage_snapshots == [
-                (25, native, 0, 0, 17, 0, 100),
-            ], (
-                "native identity/damage/HP changed entering TakeDamage",
-                context, take_damage_snapshots
+            assert applydamage_check_sub_calls, (
+                "applydamage skipped substitute check", context
             )
-            assert deal_damage_calls == [True], (
-                "TakeDamage did not enter DealDamageToOpponent", context,
-                deal_damage_calls
+            assert applydamage_affection_calls == [True], (
+                "applydamage skipped affection endure check", context,
+                applydamage_affection_calls
             )
-            assert deal_damage_snapshots == [(25, native, 0, 0, 17)], (
-                "native identity/damage changed entering DealDamageToOpponent",
-                context, deal_damage_snapshots
+            assert applydamage_item_calls == [True], (
+                "applydamage skipped opponent held-item check", context,
+                applydamage_item_calls
             )
-            assert subtract_hp_calls == [True], (
-                "DealDamageToOpponent did not reach real HP subtraction",
-                context, subtract_hp_calls
+            assert applydamage_ability_calls, (
+                "applydamage skipped opponent ability checks", context,
+                applydamage_ability_calls
             )
-            assert subtract_hp_snapshots == [
-                (25, native, 1, 0, 17, 0, 100),
-            ], (
-                "temporary opponent-turn HP subtraction boundary changed native "
-                "identity/damage/HP",
-                context, subtract_hp_snapshots
+            assert applydamage_take_damage_calls == [True], (
+                "applydamage skipped TakeDamage", context,
+                applydamage_take_damage_calls
             )
-            assert hp_hud_calls == [True], (
-                "real HP subtraction did not reach HUD update boundary",
-                context, hp_hud_calls
+            assert applydamage_deal_damage_calls == [True], (
+                "applydamage skipped DealDamageToOpponent", context,
+                applydamage_deal_damage_calls
             )
-            assert refresh_hud_calls == [True], (
-                "TakeDamage did not reach final HUD refresh boundary",
-                context, refresh_hud_calls
+            assert applydamage_subtract_hp_calls == [True], (
+                "applydamage skipped SubtractHPFromUser", context,
+                applydamage_subtract_hp_calls
+            )
+            assert applydamage_hud_calls == [True], (
+                "real HP subtraction did not reach HUD-update boundary", context,
+                applydamage_hud_calls
             )
             assert applydamage_result_snapshots == [
-                (25, native, 0, 33, 0, 17, 0, 83, 0, 17),
+                (25, native, 0, 33, 0, 0, 17, 0, 83, 0, 17),
             ], (
-                "real applydamage did not reduce enemy HP 100 -> 83, record "
-                "17 damage, or preserve native identity",
+                "real applydamage did not subtract 17 HP or preserve native "
+                "identity/damage state",
                 context, applydamage_result_snapshots
             )
             assert read_script_snapshots[14][:5] == (25, native, 0, 33, 0), (
@@ -2359,7 +2361,7 @@ def main():
             ) == bytes([0, 100]), ("player HP changed", context)
             assert bytes(
                 mem[addr("wEnemyMonHP"):addr("wEnemyMonHP") + 2]
-            ) == bytes([0, 83]), ("enemy HP did not become 83", context)
+            ) == bytes([0, 83]), ("enemy HP did not fall to 83", context)
             assert bytes(
                 mem[addr("wDamageTaken"):addr("wDamageTaken") + 2]
             ) == bytes([0, 17]), ("wDamageTaken did not record 17", context)
