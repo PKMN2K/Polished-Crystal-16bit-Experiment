@@ -485,7 +485,8 @@ def main():
 
     def observe_accuracy_random(_):
         if checkhit_active[0]:
-            accuracy_random_calls.append(True)
+            # BattleRandomRange receives the exclusive upper bound in A.
+            accuracy_random_calls.append(regs.A)
 
     def setup_player_party():
         # Legacy persistent layout is deliberate here; the real player
@@ -1057,9 +1058,9 @@ def main():
                 "accuracy ability processing did not exercise opponent-turn "
                 "perspective", context, accuracy_opp_ability_snapshots
             )
-            assert not accuracy_random_calls, (
-                "100%-accuracy Tackle unexpectedly required a random hit roll",
-                context, accuracy_random_calls
+            assert accuracy_random_calls == [100], (
+                "100%-accuracy Tackle did not use the guaranteed 0-99 < 100 "
+                "hit roll", context, accuracy_random_calls
             )
             assert read_script_snapshots[5][:5] == (25, native, 0, 33, 0), (
                 "native/move state changed after checkhit",
