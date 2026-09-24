@@ -252,6 +252,7 @@ def main():
         install_stub("BattleCheckEnemyShininess", [0xA7, 0xC9])
         install_stub("CheckSleepingTreeMon", [0xA7, 0xC9])
         install_stub("CheckBattleEffects", [0xA7, 0xC9])
+        install_stub("TickPokeAnim", [0x37, 0xC9])
 
         # Stop at the first real battle-loop boundary.
         install_stub("BattleTurn", [0xC9], observe_battle_turn)
