@@ -1043,11 +1043,19 @@ def main():
                 "checkhit skipped opponent ability checks", context
             )
             assert all(
-                snap == (25, native, 0, 33)
+                snap[0:2] == (25, native)
+                and snap[2] in (0, 1)
+                and snap[3] == 33
                 for snap in accuracy_opp_ability_snapshots
             ), (
-                "native identity changed during opponent ability checks",
+                "native identity/move changed during opponent ability checks",
                 context, accuracy_opp_ability_snapshots
+            )
+            assert any(
+                snap[2] == 1 for snap in accuracy_opp_ability_snapshots
+            ), (
+                "accuracy ability processing did not exercise opponent-turn "
+                "perspective", context, accuracy_opp_ability_snapshots
             )
             assert not accuracy_random_calls, (
                 "100%-accuracy Tackle unexpectedly required a random hit roll",
