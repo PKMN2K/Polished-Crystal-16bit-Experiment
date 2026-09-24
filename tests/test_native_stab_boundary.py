@@ -112,6 +112,7 @@ def main():
     checkobedience_snapshots = []
     usedmovetext_calls = []
     usedmovetext_snapshots = []
+    usedmovetext_result_snapshots = []
     display_used_move_calls = []
     display_used_move_snapshots = []
     doturn_calls = []
@@ -374,6 +375,8 @@ def main():
         # damagecalc boundary; and the tenth is the real STAB boundary. The
         # eleventh real script-byte read sees the test-only endturn byte in
         # place of damagevariation and ends the outer battle loop.
+        if len(read_script_calls) == 3:
+            usedmovetext_result_snapshots.append(mem[addr("wMoveGrammar")])
         if len(read_script_calls) == 5:
             hastarget_active[0] = False
         if len(read_script_calls) == 6:
@@ -909,6 +912,7 @@ def main():
             read_script_calls, read_script_snapshots,
             checkobedience_calls, checkobedience_snapshots,
             usedmovetext_calls, usedmovetext_snapshots,
+            usedmovetext_result_snapshots,
             display_used_move_calls, display_used_move_snapshots,
             doturn_calls, doturn_snapshots,
             consume_pp_calls, consume_pp_snapshots,
@@ -1675,9 +1679,10 @@ def main():
                 "DisplayUsedMoveText did not record Tackle as used", context,
                 mem[addr("wPlayerUsedMoves")]
             )
-            assert mem[addr("wMoveGrammar")] == 33, (
-                "DisplayUsedMoveText did not publish Tackle move grammar",
-                context, mem[addr("wMoveGrammar")]
+            assert usedmovetext_result_snapshots == [33], (
+                "DisplayUsedMoveText did not publish Tackle move grammar at "
+                "the usedmovetext boundary",
+                context, usedmovetext_result_snapshots
             )
             assert mem[addr("wPartyMon1PP")] == 34, (
                 "doturn did not decrement persistent Tackle PP", context,
