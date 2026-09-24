@@ -116,6 +116,10 @@ jobs:
         name: "Test native DoBattle entry smoke (normal)"
         run: python tests/test_native_do_battle_entry_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-first-battle-turn-smoke
+        name: "Test native first BattleTurn setup smoke (normal)"
+        run: python tests/test_native_first_battle_turn_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -199,6 +203,10 @@ jobs:
       - id: test-native-do-battle-entry-smoke-debug
         name: "Test native DoBattle entry smoke (debug)"
         run: python tests/test_native_do_battle_entry_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-battle-turn-smoke-debug
+        name: "Test native first BattleTurn setup smoke (debug)"
+        run: python tests/test_native_first_battle_turn_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
