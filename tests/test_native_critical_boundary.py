@@ -1362,11 +1362,17 @@ def main():
                 "native identity changed during critical opponent ability checks",
                 context, critical_opp_ability_snapshots
             )
-            assert future_sight_calls == [True], (
-                "critical path skipped Future Sight user check",
+            # Four real checks occur: the handler's direct check, one
+            # inside each of the two GetUserItem calls, and one inside
+            # GetTrueUserAbility for the Super Luck lookup.
+            assert future_sight_calls == [True, True, True, True], (
+                "critical path Future Sight user-check count",
                 context, future_sight_calls
             )
-            assert future_sight_snapshots == [(25, native, 0, 0)], (
+            assert all(
+                snap == (25, native, 0, 0)
+                for snap in future_sight_snapshots
+            ), (
                 "native identity/Future Sight state changed unexpectedly",
                 context, future_sight_snapshots
             )
