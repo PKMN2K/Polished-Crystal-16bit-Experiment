@@ -86,6 +86,7 @@ def main():
     picture_calls = []
     animation_calls = []
     native_base_calls = []
+    active_base_calls = []
     legacy_calls = []
     ticks = []
     placed = []
@@ -204,6 +205,7 @@ def main():
         picture_calls.clear()
         animation_calls.clear()
         native_base_calls.clear()
+        active_base_calls.clear()
         legacy_calls.clear()
         ticks.clear()
         placed.clear()
@@ -239,6 +241,7 @@ def main():
             ("PrepareNativeEnemyBattleAnimatedFrontpic", picture_calls),
             ("AnimateNativeEnemyBattleFrontpic", animation_calls),
             ("GetBaseDataFromEnemyBattleNativeSpecies", native_base_calls),
+            ("GetBaseDataFromActiveBattleNativeSpecies", active_base_calls),
             ("GetBaseData", legacy_calls),
         ):
             bank, address = symbols[label]
@@ -301,8 +304,12 @@ def main():
             assert bytes(mem[base_start:base_end]) == expected_base, (
                 "animation-stage base data mismatch", context
             )
-            assert len(native_base_calls) >= 3, (
-                "native base-data path did not span send-in/picture/animation",
+            assert active_base_calls == [True], (
+                "wild send-in did not use active native base data",
+                context, active_base_calls
+            )
+            assert len(native_base_calls) >= 2, (
+                "native enemy base-data path did not span picture/animation",
                 context, len(native_base_calls)
             )
 
