@@ -229,6 +229,7 @@ def main():
     applydamage_deal_damage_calls = []
     applydamage_subtract_hp_calls = []
     applydamage_hud_calls = []
+    applydamage_refresh_huds_calls = []
     applydamage_result_snapshots = []
     criticaltext_calls = []
     active_base_calls = []
@@ -1008,6 +1009,10 @@ def main():
         if applydamage_active[0]:
             applydamage_hud_calls.append(True)
 
+    def observe_applydamage_refresh_huds(_):
+        if applydamage_active[0]:
+            applydamage_refresh_huds_calls.append(True)
+
     def observe_damage_reset(_):
         if damagestats_active[0]:
             damage_reset_calls.append(True)
@@ -1183,7 +1188,8 @@ def main():
             applydamage_ability_calls, applydamage_reset_subhit_calls,
             applydamage_check_sub_calls, applydamage_take_damage_calls,
             applydamage_deal_damage_calls, applydamage_subtract_hp_calls,
-            applydamage_hud_calls, applydamage_result_snapshots,
+            applydamage_hud_calls, applydamage_refresh_huds_calls,
+            applydamage_result_snapshots,
             criticaltext_calls,
             active_base_calls, enemy_base_calls, legacy_calls,
         ):
@@ -1383,6 +1389,9 @@ def main():
         # HP arithmetic and item/ability logic remain real. Only the visual
         # HP-bar/HUD redraw boundary is skipped after the real subtraction.
         install_stub("UpdateHPBarBattleHuds", [0xC9], observe_applydamage_hud)
+        install_stub(
+            "RefreshBattleHuds", [0xC9], observe_applydamage_refresh_huds
+        )
 
         # Keep real moveanim battle-state control flow but stop at the visual
         # renderer/timing boundary. The callback still verifies the requested
@@ -2333,8 +2342,12 @@ def main():
                 applydamage_subtract_hp_calls
             )
             assert applydamage_hud_calls == [True], (
-                "real HP subtraction did not reach HUD-update boundary", context,
-                applydamage_hud_calls
+                "real HP subtraction did not reach HP-bar update boundary",
+                context, applydamage_hud_calls
+            )
+            assert applydamage_refresh_huds_calls == [True], (
+                "TakeDamage did not reach final HUD refresh boundary",
+                context, applydamage_refresh_huds_calls
             )
             assert applydamage_result_snapshots == [
                 (25, native, 0, 33, 0, 0, 17, 0, 83, 0, 17),
