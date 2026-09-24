@@ -1,3 +1,23 @@
+## Latest checkpoint: native damagestats regression (2026-09-24)
+
+- Added `tests/test_native_damagestats_boundary.py` and wired it into normal/debug CI.
+- The first eight original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats`.
+- The test replaces only the following `damagecalc` script byte with `endturn_command`, so real `BattleCommand_damagestats` completes while later damage calculation and HP application remain outside this checkpoint.
+- The physical Tackle path executes real damage reset, opponent Defense selection, player Attack selection, Future Sight user resolution, screen/modifier handling, held-item checks, true-user level lookup, and stat truncation.
+- The synthetic boundary fixture seeds nonzero active Attack/Defense immediately before `damagestats`; no gameplay or migration source behavior is changed by the fixture.
+- Native player identity 25 and all six enemy native-identity cases remain intact through the complete damage-stat path, including the extended/native-variant cases. Tackle remains move 33, the deterministic non-critical path remains clear, and PP remains 34/34.
+- `damagecalc` and `applydamage` are not entered in this checkpoint; HP remains unchanged.
+- Several intermediate failures were test-harness assumptions only: the non-sequential `damagecalc` command ID is $50, PyBoy exposes HL as a combined register, shared attribute helpers can temporarily flip battle perspective, and helper call counts are implementation details rather than identity invariants.
+- Final validation: GitHub Actions CI run **#202** (`36059114401`) passed on commit `6eb5b5264282c747aa1119ec800ac66b66a7c4c4`.
+  - native damagestats boundary: 6/6 cases passed on normal ROM
+  - native damagestats boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_damagecalc` regression that lets Tackle execute real damage calculation from the validated Attack/Defense/power/level inputs, then stops before later damage modifiers/application.
+
 # Polished Crystal to pokecrystal16 migration status
 
 ## Latest checkpoint: native critical-hit regression (2026-09-24)
