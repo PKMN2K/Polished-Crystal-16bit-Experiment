@@ -108,6 +108,10 @@ jobs:
         name: "Test native wild-battle intro integration (normal)"
         run: python tests/test_native_wild_battle_intro_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-battle-intro-wild-smoke
+        name: "Test single-entry native BattleIntro wild smoke (normal)"
+        run: python tests/test_native_battle_intro_wild_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -183,6 +187,10 @@ jobs:
       - id: test-native-wild-battle-intro-integration-debug
         name: "Test native wild-battle intro integration (debug)"
         run: python tests/test_native_wild_battle_intro_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-battle-intro-wild-smoke-debug
+        name: "Test single-entry native BattleIntro wild smoke (debug)"
+        run: python tests/test_native_battle_intro_wild_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
