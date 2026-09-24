@@ -1,6 +1,43 @@
 # Polished Crystal to pokecrystal16 migration status
 
-## Latest checkpoint: single-entry native wild BattleIntro smoke regression (2026-09-23)
+## Latest checkpoint: native DoBattle entry smoke regression (2026-09-23)
+
+- Added `tests/test_native_do_battle_entry_smoke.py`. It runs the real wild
+  `BattleIntro` first, then enters the real `DoBattle` setup and stops only
+  at the first `BattleTurn` boundary.
+- The regression keeps the enemy's native wild identity publication,
+  picture/animation integration and the player-side `SendInUserPkmn` identity
+  publication real. It verifies that the full 16-bit enemy shadow survives
+  `DoBattle` initialization unchanged while the player's own native battle
+  shadow is published independently.
+- Coverage includes ordinary native roots, an extended root above `$00ff`,
+  cosmetic presentations and two regional/mechanical variants. Each case
+  reaches the real first-turn boundary with the expected enemy native word,
+  a real player native word (Pikachu / native ID 25), and no fallback through
+  legacy `GetBaseData`.
+- Wild generation, UI/audio/transition work, entry hazards/weather/entry
+  abilities and actual turn input/execution are deterministic fixture
+  boundaries. `BattleTurn` itself is replaced with a `RET`, so no move
+  selection or first-turn logic runs in this checkpoint.
+- The first CI run (#35942594123) exposed a fixture omission rather than a
+  migration failure: the new test forgot the preceding `BattleIntro` smoke
+  test's terminating `TickPokeAnim` stub, leaving the real front-picture
+  animation loop running. Restoring that boundary fixed the harness.
+- Validation: GitHub Actions run #35942774688 **passed** on corrected test
+  commit `6636cdfcf0d0c0c8890831c90a79399371d54e91`. All eight ROM build
+  configurations and all twenty-four focused regression steps succeeded with
+  no CI errors. Normal **and** debug ROMs each passed 6 new `DoBattle` entry
+  smoke cases in addition to the previous 3,259 focused CPU cases, for
+  **3,265 focused cases per ROM**.
+- This checkpoint changes tests/CI/documentation only; no gameplay source,
+  persistent Pokémon record or save format changed. It does not yet validate
+  AI move selection, player menu input, move execution or a completed turn.
+- Next recommended step: add a focused **first-`BattleTurn` setup smoke
+  regression** that allows the real beginning of `BattleTurn` to run through
+  enemy AI/setup and reaches the player `BattleMenu` boundary, verifying both
+  active native identities remain intact before accepting input.
+
+## Previous checkpoint: single-entry native wild BattleIntro smoke regression (2026-09-23)
 
 - Added `tests/test_native_battle_intro_wild_smoke.py`. It enters the real
   `BattleIntro` once and keeps the outer wild sequencing live through
