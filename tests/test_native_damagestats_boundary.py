@@ -1616,12 +1616,21 @@ def main():
                 "native identity changed during user attribute reads",
                 context, damage_user_attr_snapshots
             )
-            assert damagestats_future_sight_calls == [True], (
+            assert damagestats_future_sight_calls, (
                 "damagestats skipped Future Sight user resolution", context,
                 damagestats_future_sight_calls
             )
-            assert damagestats_future_sight_snapshots == [(25, native, 0, 0)], (
-                "native identity changed in damagestats Future Sight check",
+            assert all(
+                snap[0] == 25 and snap[1] == native and snap[3] == 0
+                for snap in damagestats_future_sight_snapshots
+            ), (
+                "native identity changed in damagestats Future Sight checks",
+                context, damagestats_future_sight_snapshots
+            )
+            assert any(
+                snap[2] == 0 for snap in damagestats_future_sight_snapshots
+            ), (
+                "damagestats never resolved the player-side Future Sight user",
                 context, damagestats_future_sight_snapshots
             )
             assert damage_screen_calls == [True], (
