@@ -2022,11 +2022,15 @@ def main():
                 "deterministic priority boundary count", context,
                 priority_compare_calls
             )
-            assert perform_move_calls == [True], (
-                "first PerformMove entry count", context, perform_move_calls
+            assert perform_move_calls == [True, True], (
+                "two PerformMove boundaries were not reached",
+                context, perform_move_calls
             )
-            assert perform_move_snapshots == [(25, native, 0, 33)], (
-                "acting native identity at PerformMove entry",
+            assert perform_move_snapshots == [
+                (25, native, 0, 33),
+                (25, native, 1, 33),
+            ], (
+                "native identity/turn state at PerformMove boundaries",
                 context, perform_move_snapshots
             )
             assert do_turn_calls == [True], (
