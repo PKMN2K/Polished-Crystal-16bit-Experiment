@@ -3160,12 +3160,12 @@ def main():
                 (
                     25, native, 1, 45, 33, 0,
                     34, 34, 33, 33, PRESSURE, 0, 33, 0x10,
-                    *advance_script_pointer(read_script_snapshots[19], 7),
+                    *advance_script_pointer(read_script_snapshots[19], 6),
                 ),
             ], (
                 "enemy checkpriority did not return normally with preserved "
                 "native IDs, Tackle/PP, Pressure, hit/matchup scratch state, and "
-                "seventh-byte script pointer",
+                "pre-critical-read script pointer",
                 context, enemy_priority_result_snapshots
             )
             assert read_script_snapshots[5][:5] == (25, native, 0, 33, 0), (
