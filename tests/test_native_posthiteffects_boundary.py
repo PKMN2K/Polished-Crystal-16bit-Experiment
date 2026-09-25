@@ -1801,9 +1801,9 @@ def main():
             )
             assert read_script_calls == [
                 True, True, True, True, True, True, True, True, True,
-                True, True, True, True, True, True, True, True, True
+                True, True, True, True, True, True, True, True, True, True
             ], (
-                "real move-script read count around first seventeen commands",
+                "real move-script read count through posthiteffects and terminal",
                 context, read_script_calls
             )
             assert read_script_snapshots[0][:5] == (25, native, 0, 33, 0), (
