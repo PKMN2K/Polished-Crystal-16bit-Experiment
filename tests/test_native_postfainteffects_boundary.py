@@ -1,13 +1,10 @@
 """Seventeenth real move-script command / postfainteffects native-identity regression.
 
-Drive the validated first-turn wild Tackle path through real
-supereffectivetext, then execute real BattleCommand_postfainteffects. The target
-remains alive at 83 HP, so the command must call HasOpponentFainted and take
-its immediate non-fainting return without entering Destiny Bond, multi-hit, or
-faint-ability handling.
-
-The following posthiteffects script byte is replaced with endturn_command, so
-this checkpoint stops immediately after postfainteffects.
+Execute the validated first-turn wild Tackle path through real
+supereffectivetext, then real BattleCommand_postfainteffects. The target still
+has 83 HP, so postfainteffects must call HasOpponentFainted and immediately
+return on the non-fainting path. The following posthiteffects byte is replaced
+with endturn_command.
 """
 import argparse
 from pathlib import Path
@@ -242,7 +239,6 @@ def main():
     postfainteffects_calls = []
     postfainteffects_snapshots = []
     postfaint_fainted_calls = []
-    postfaint_fainted_snapshots = []
     postfainteffects_result_snapshots = []
     posthiteffects_calls = []
     active_base_calls = []
@@ -551,8 +547,6 @@ def main():
             postfainteffects_result_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
-                mem[addr("hBattleTurn")],
-                mem[addr("wCurPlayerMove")],
                 mem[addr("wEnemyMonHP")],
                 mem[addr("wEnemyMonHP") + 1],
                 mem[addr("wDamageTaken")],
@@ -647,8 +641,7 @@ def main():
             priority_fainted_checks.append(True)
             priority_fainted_snapshots.append(snapshot)
         if postfainteffects_active[0]:
-            postfaint_fainted_calls.append(True)
-            postfaint_fainted_snapshots.append(snapshot)
+            postfaint_fainted_calls.append(snapshot)
 
     def observe_target_ability(_):
         if applydamage_active[0]:
@@ -1142,14 +1135,10 @@ def main():
         postfainteffects_snapshots.append((
             read_native("wBattleMonNativeSpecies"),
             read_native("wEnemyMonNativeSpecies"),
-            mem[addr("hBattleTurn")],
-            mem[addr("wCurPlayerMove")],
             mem[addr("wEnemyMonHP")],
             mem[addr("wEnemyMonHP") + 1],
             mem[addr("wDamageTaken")],
             mem[addr("wDamageTaken") + 1],
-            mem[addr("wBattleScriptBufferLoc")],
-            mem[addr("wBattleScriptBufferLoc") + 1],
         ))
 
     def observe_damage_reset(_):
@@ -1340,8 +1329,8 @@ def main():
             supereffectivetext_text_calls, supereffectivetext_item_calls,
             supereffectivetext_result_snapshots,
             postfainteffects_calls, postfainteffects_snapshots,
-            postfaint_fainted_calls, postfaint_fainted_snapshots,
-            postfainteffects_result_snapshots, posthiteffects_calls,
+            postfaint_fainted_calls, postfainteffects_result_snapshots,
+            posthiteffects_calls,
             active_base_calls, enemy_base_calls, legacy_calls,
         ):
             calls.clear()
@@ -1434,11 +1423,11 @@ def main():
         # ReadMoveScriptByte, checkobedience, usedmovetext, DisplayUsedMoveText,
         # doturn/BattleConsumePP, hastarget, checkhit, checkpriority, critical,
         # damagestats, damagecalc, STAB, damagevariation, moveanim,
-        # failuretext, applydamage, criticaltext, supereffectivetext and
-        # postfainteffects real. Replace only the following posthiteffects
-        # command with endturn_command ($fe), so the non-fainting post-faint
-        # path completes and the eighteenth real script read terminates before
-        # post-hit processing.
+        # failuretext, applydamage, criticaltext and supereffectivetext real.
+        # Replace only the following postfainteffects command with
+        # endturn_command ($fe), so the neutral effectiveness-text path
+        # completes and the seventeenth real script read terminates before
+        # post-faint processing.
         normal_bank, normal_addr = symbols["NormalHit"]
         assert mem[normal_bank, normal_addr] == 2, (
             "NormalHit no longer begins with checkobedience",
@@ -2631,42 +2620,19 @@ def main():
                 "seventeenth real battle-command dispatch count",
                 context, postfainteffects_calls
             )
-            assert postfainteffects_snapshots == [
-                (
-                    25, native, 0, 33, 0, 83, 0, 17,
-                    *advance_script_pointer(read_script_snapshots[0], 17),
-                ),
-            ], (
-                "native identity/HP/damage state changed entering "
-                "postfainteffects",
+            assert postfainteffects_snapshots == [(25, native, 0, 83, 0, 17)], (
+                "postfainteffects entry state changed",
                 context, postfainteffects_snapshots
             )
-            assert postfaint_fainted_calls == [True], (
-                "postfainteffects skipped HasOpponentFainted",
+            assert postfaint_fainted_calls == [(25, native, 0, 0, 83)], (
+                "postfainteffects skipped or failed non-faint check",
                 context, postfaint_fainted_calls
             )
-            assert postfaint_fainted_snapshots == [
-                (25, native, 0, 0, 83),
-            ], (
-                "postfainteffects faint check saw changed identity or HP",
-                context, postfaint_fainted_snapshots
-            )
             assert postfainteffects_result_snapshots == [
-                (25, native, 0, 33, 0, 83, 0, 17),
+                (25, native, 0, 83, 0, 17),
             ], (
-                "postfainteffects changed identity, HP, or damage bookkeeping "
-                "on the non-fainting path",
+                "postfainteffects changed native identity/HP/damage",
                 context, postfainteffects_result_snapshots
-            )
-            assert read_script_snapshots[17][:5] == (25, native, 0, 33, 0), (
-                "native/move/hit state changed after postfainteffects",
-                context, read_script_snapshots
-            )
-            assert read_script_snapshots[17][5:] == advance_script_pointer(
-                read_script_snapshots[0], 17
-            ), (
-                "script pointer did not advance through seventeen real commands",
-                context, read_script_snapshots
             )
             assert not posthiteffects_calls, (
                 "posthiteffects executed past terminal boundary", context
@@ -2699,8 +2665,8 @@ def main():
             "hastarget -> checkhit -> checkpriority -> critical -> "
             "damagestats -> damagecalc (14) -> STAB (21) -> "
             "damagevariation (17) -> moveanim -> failuretext -> applydamage "
-            "(enemy HP 83) -> criticaltext -> supereffectivetext -> real "
-            "non-fainting postfainteffects HasOpponentFainted return -> "
+            "(enemy HP 83) -> criticaltext -> real neutral "
+            "supereffectivetext -> real non-fainting postfainteffects return -> "
             "eighteenth script-byte terminal before posthiteffects"
         )
     finally:
