@@ -1,3 +1,29 @@
+## Latest checkpoint: native enemy checkpriority -> critical boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_checkpriority_critical_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous sixth-script-byte stop: the sixth enemy `ReadMoveScriptByte` returns `checkpriority` (`$0a`) and the real command dispatcher enters `BattleCommand_checkpriority`.
+- The regression exercises the real ordinary-priority Tackle path with the player target alive at 100 HP and the enemy still on its preserved Tackle state.
+- Real `HasOpponentFainted` takes the living-target path on the enemy turn while native player identity 25 and all six enemy native-identity cases remain intact.
+- Real `GetMovePriority` executes for enemy Tackle, followed by the normal user/opponent ability checks. The player target's previously validated Pressure state remains intact and the enemy ability remains neutral.
+- The prior accuracy result remains a hit (`wAttackMissed = 0`). Enemy active and OT-party Tackle PP remain 33 after the earlier `doturn` + Pressure consumption; player active and party PP remain 34.
+- The priority command returns normally without taking Armor Tail, Prankster immunity, Soundproof failure, or other attack-failure branches.
+- After real enemy `BattleCommand_checkpriority` returns, the move-script loop performs a seventh real enemy `ReadMoveScriptByte`. It returns `$05` (`critical`) and advances the enemy script pointer by exactly seven bytes from the script start.
+- The returned `$05` is captured by the post-read harness stop, so enemy `BattleCommand_critical` is not dispatched in this checkpoint.
+- Final validation: GitHub Actions CI run **#289** (`36190993999`) passed on commit `73e704caa7bb5c81b6c7df809588d81eff85170a`.
+  - native enemy `checkpriority -> critical` boundary: 6/6 cases passed on normal ROM
+  - native enemy `checkpriority -> critical` boundary: 6/6 cases passed on debug ROM
+  - prior enemy `checkhit -> checkpriority`, `hastarget -> checkhit`, `doturn -> hastarget`, `usedmovetext -> doturn`, and `checkobedience -> usedmovetext` regressions also passed
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `89fb7c71e66e41a8403a9ef11f5bdaaeb5a93864`.
+- CI wiring commit: `8179e92b13106e60bbf0f472ff3e36f4b9ff67c1`.
+- Read-count expectation correction: `f83285e0f2a498f9ecb120109dac3413b0f77250`.
+- Preserved matchup-scratch expectation correction: `57a5595ccde2390716d9eaf5ba84b428af24b7bf`.
+- Pre-critical-read pointer checkpoint correction: `73e704caa7bb5c81b6c7df809588d81eff85170a`.
+- These corrections were regression-harness expectations only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_critical` dispatch for real, exercise its ordinary non-critical Tackle path (ResetCrit, Future Sight/user-item/ability checks, and deterministic critical roll) with preserved native identities and enemy-side move state, then stop at the eighth enemy `ReadMoveScriptByte` / `damagestats` boundary before enemy damage-stat calculation executes.
+
 ## Latest checkpoint: native enemy checkhit -> checkpriority boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_checkhit_checkpriority_boundary.py` and wired it into normal/debug CI.
