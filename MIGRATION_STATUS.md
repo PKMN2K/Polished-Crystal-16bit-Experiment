@@ -1,3 +1,27 @@
+## Latest checkpoint: native post-ResolveFaints turn-flip regression (2026-09-24)
+
+- Added `tests/test_native_postresolve_turnflip_boundary.py` and wired it into normal/debug CI.
+- The validated player-first neutral Tackle path now continues through real non-fainting `ResolveFaints`, real no-op `DeferredSwitch`, and real `ResetAbilityIgnorance`.
+- `wDeferredSwitch` remains zero, so the real `DeferredSwitch` returns immediately and never enters `ForceDeferredSwitch`.
+- At the deferred-switch boundary the regression seeds `wMoveState = $55`. Bits 2 and 6 are the two ability-ignorance flags; real `ResetAbilityIgnorance` clears only those bits, producing `$11` and preserving the other sentinel bits.
+- After that tail returns, real `BattleTurn` flips `hBattleTurn` from player 0 to enemy 1 while `wEnemyGoesFirst` remains 0 from the deterministic player-first ordering.
+- Native player identity 25 and all six enemy native-identity cases remain intact through `DeferredSwitch`, `ResetAbilityIgnorance`, the turn flip, and the second move boundary.
+- The second `PerformMove` boundary is a harness-only six-byte stop installed before the enemy turn reaches it; it sets `wBattleEnded` and returns so no original opponent `PerformMove` instruction executes in this checkpoint.
+- The first CI attempt (#257) exposed a PyBoy hook-stop issue: rewriting the hooked `PerformMove` opcode from inside its own callback did not produce a clean return. The stop was moved to a preinstalled second-boundary stub.
+- The next CI attempt (#258) exposed only a cloned assertion that still expected one move boundary; the deeper path correctly reaches two. That expectation was corrected.
+- Final validation: GitHub Actions CI run **#259** (`36084782620`) passed on commit `539591ac916df04b2acf21abef6202c53253506c`.
+  - native post-ResolveFaints turn-flip boundary: 6/6 cases passed on normal ROM
+  - native post-ResolveFaints turn-flip boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - no CI step failed
+- Regression commit: `e1d99f9d1e5b92f9594a47d8c837f53ed0f4bb28`.
+- CI wiring commit: `030734d68f4cfbf473f4d0d5be7fc0a9f8c9cbe3`.
+- Boundary-stop harness correction commit: `9c1b16de9c5c34ff6fc2621d0aa60e6e23e76632`.
+- Cloned expectation correction commit: `539591ac916df04b2acf21abef6202c53253506c`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** replace the second-`PerformMove` stop with a focused enemy-side `PerformMove -> DoTurn` entry regression: deterministically seed the wild opponent's selected Tackle, let the second `PerformMove` setup execute for real with `hBattleTurn = 1`, verify native player/enemy identities and enemy-perspective move state survive to `DoTurn`, then stop before the opponent's move script commands execute.
+
 ## Latest checkpoint: native non-fainting ResolveFaints regression (2026-09-24)
 
 - Added `tests/test_native_resolvefaints_nonfaint_boundary.py` and wired it into normal/debug CI.
