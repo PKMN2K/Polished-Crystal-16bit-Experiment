@@ -1,3 +1,30 @@
+## Latest checkpoint: native enemy usedmovetext -> doturn boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_usedmovetext_doturn_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous second-script-byte stop: the second enemy `ReadMoveScriptByte` returns `usedmovetext` (`$03`) and the real command dispatcher enters `BattleCommand_usedmovetext`.
+- Real `BattleCommand_usedmovetext` far-jumps into real `DisplayUsedMoveText`; only the existing presentation-only `ApplyTilemapInVBlank` tail remains stubbed.
+- The regression verifies enemy `DisplayUsedMoveText` runs with `hBattleTurn = 1`, native player identity 25, the expected native enemy identity, `wCurPlayerMove = 45`, `wCurEnemyMove = 33` (Tackle), and preserved `wMoveState = $01`.
+- Enemy `DisplayUsedMoveText` correctly skips the player-only `UpdateUsedMoves` path; the player's used-move history is unchanged across the enemy text command.
+- Real enemy move-history logic sets `wMoveGrammar = 33`, `wLastEnemyMove = 33`, and `wLastEnemyCounterMove = 33`.
+- With `wAlreadyDisobeyed = 0`, the real text-selection branch chooses `UsedMoveText`, verified at the `StdBattleTextbox` presentation stub entry.
+- The command reaches the existing `ApplyTilemapInVBlank` presentation-only boundary with native identities and enemy move-history state intact.
+- The controlled post-read stop is installed dynamically only after enemy `BattleCommand_usedmovetext` has actually been dispatched, so the full stateful command body and `DisplayUsedMoveText` logic execute before the next read.
+- After the real `usedmovetext` return, the move-script loop performs a third real enemy `ReadMoveScriptByte`. Its entry pointer is exactly two bytes after the enemy script start.
+- The third read returns `$04`, Tackle's `doturn` command, advances the script pointer by exactly three bytes from the enemy script start, and stores `$04` in `wBattleEnded` at the controlled post-read stop.
+- Enemy `BattleCommand_doturn` is not dispatched in this checkpoint, so opponent PP-consumption logic remains the next boundary.
+- Native identities and distinct player/enemy move bytes remain intact across all three enemy reads, real `checkobedience`, and real `usedmovetext` for all six identity cases.
+- Final validation: GitHub Actions CI run **#273** (`36158367444`) passed on commit `612a1d45ad5d9b11ce10f9899c73b2202e20347b`.
+  - native enemy `usedmovetext -> doturn` boundary: 6/6 cases passed on normal ROM
+  - native enemy `usedmovetext -> doturn` boundary: 6/6 cases passed on debug ROM
+  - prior enemy `checkobedience -> usedmovetext`, `DoTurn` initialization, and `PerformMove -> DoTurn` regressions also passed
+  - all configured ROM build variants completed successfully
+  - no CI step failed
+- Regression commit: `3eb2a2a40e68515d5b0b7ad711f5de19db67b08b`.
+- CI wiring commit: `612a1d45ad5d9b11ce10f9899c73b2202e20347b`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy `BattleCommand_doturn` dispatch for real and exercise the enemy-side `BattleConsumePP` path, verify Tackle PP is consumed from the enemy active/OT-party state without changing the player's PP or either native identity, then stop at the fourth enemy `ReadMoveScriptByte` / `hastarget` boundary before the opponent's target/Pressure command body executes.
+
 ## Latest checkpoint: native enemy checkobedience -> usedmovetext boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_checkobedience_usedmovetext_boundary.py` and wired it into normal/debug CI.
