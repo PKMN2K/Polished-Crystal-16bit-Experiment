@@ -220,6 +220,10 @@ jobs:
         name: "Test native non-fainting ResolveFaints boundary (normal)"
         run: python tests/test_native_resolvefaints_nonfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-postresolve-turnflip-boundary
+        name: "Test native post-ResolveFaints turn-flip boundary (normal)"
+        run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -407,6 +411,10 @@ jobs:
       - id: test-native-resolvefaints-nonfaint-boundary-debug
         name: "Test native non-fainting ResolveFaints boundary (debug)"
         run: python tests/test_native_resolvefaints_nonfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-postresolve-turnflip-boundary-debug
+        name: "Test native post-ResolveFaints turn-flip boundary (debug)"
+        run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
