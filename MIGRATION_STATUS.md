@@ -1,3 +1,23 @@
+## Latest checkpoint: native supereffectivetext regression (2026-09-24)
+
+- Added `tests/test_native_supereffectivetext_boundary.py` and wired it into normal/debug CI.
+- The first sixteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext -> supereffectivetext`.
+- The test replaces only the following `postfainteffects` script byte with `endturn_command`, so real `BattleCommand_supereffectivetext` completes while post-faint processing remains outside this checkpoint.
+- The validated path remains non-critical and neutral-effectiveness: base damage 14 -> STAB 21 -> deterministic variation 17 -> enemy HP 100 -> 83, with `wDamageTaken = 17`.
+- Real `BattleCommand_supereffectivetext` executes its user substatus checks with no Parental Bond/multi-hit loop active, observes neutral `wTypeModifier = EFFECTIVE ($10)`, and takes the no-message early return.
+- No effectiveness textbox is displayed, no faint-dependent super-effective handling is entered, and an `wInverseBattleScore` sentinel remains unchanged.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Enemy HP remains 83 and `wDamageTaken` remains 17.
+- `BattleCommand_postfainteffects` is not reached.
+- Final validation: GitHub Actions CI run **#231** (`36075307410`) passed on commit `6341459e4eb0bfc79e7cf5871928e5c6b66509a4`.
+  - native supereffectivetext boundary: 6/6 cases passed on normal ROM
+  - native supereffectivetext boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_postfainteffects` regression for the non-fainting 83-HP target, then stop before `posthiteffects`.
+
 ## Latest checkpoint: native criticaltext regression (2026-09-24)
 
 - Added `tests/test_native_criticaltext_boundary.py` and wired it into normal/debug CI.
