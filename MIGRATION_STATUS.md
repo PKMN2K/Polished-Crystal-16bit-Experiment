@@ -1,3 +1,25 @@
+## Latest checkpoint: native posthiteffects regression (2026-09-24)
+
+- Added `tests/test_native_posthiteffects_boundary.py` and wired it into normal/debug CI.
+- The first eighteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext -> supereffectivetext -> postfainteffects -> posthiteffects`.
+- The test replaces only the following `endmove` script byte (`$ff`) with `endturn_command` (`$fe`), so real `BattleCommand_posthiteffects` completes while the normal end-of-move termination remains outside this checkpoint.
+- The validated successful neutral Tackle path still produces 17 damage, leaves the target at 83 HP, keeps the user at 100 HP, and keeps `wAttackMissed = 0`.
+- Reactive ability/item state is neutralized at the posthiteffects boundary so this regression stays on the ordinary successful-hit path; the posthiteffects command and its control flow remain real.
+- Native player identity 25 and all six enemy native-identity cases remain intact through the real posthiteffects command and its return to the nineteenth script-byte read.
+- The first CI attempt (#244) exposed only a cloned harness expectation that still required 18 script reads. The real deeper path correctly performs 19 reads; that test expectation was corrected without changing gameplay/migration source.
+- Final validation: GitHub Actions CI run **#245** (`36077596759`) passed on commit `28400016f8ee1b2eed9ab953a15186adeb13de2c`.
+  - native posthiteffects boundary: 6/6 cases passed on normal ROM
+  - native posthiteffects boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- Regression commit: `9fe869855b9b91a2ebedd9060e64755e3d09038f`.
+- CI wiring commit: `1ee926755b73437da5d6a8ded202b328445aa3d3`.
+- Harness read-count correction commit: `28400016f8ee1b2eed9ab953a15186adeb13de2c`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `endmove` termination regression that leaves the original `$ff` byte in place, proves the validated Tackle script exits normally after posthiteffects, and stops before unrelated post-move/faint resolution in `PerformMove`.
+
 ## Latest checkpoint: native postfainteffects regression (2026-09-24)
 
 - Added `tests/test_native_postfainteffects_boundary.py` and wired it into normal/debug CI.
