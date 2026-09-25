@@ -268,7 +268,7 @@ def main():
     force_deferred_switch_calls = []
     reset_ability_ignorance_calls = []
     second_perform_move_calls = []
-    enemy_do_turn_boundary_calls = []
+    enemy_move_read_calls = []
     active_base_calls = []
     enemy_base_calls = []
     legacy_calls = []
@@ -442,21 +442,19 @@ def main():
                 mem[addr("wBattleEnded")],
             ))
 
-    def observe_do_turn(_):
-        do_turn_calls.append(True)
-        snapshot = (
-            read_native("wBattleMonNativeSpecies"),
-            read_native("wEnemyMonNativeSpecies"),
-            mem[addr("hBattleTurn")],
-            mem[addr("wCurPlayerMove")],
-            mem[addr("wCurEnemyMove")],
-            mem[addr("wCurEnemyMoveNum")],
-            mem[addr("wDamageTaken")],
-            mem[addr("wDamageTaken") + 1],
-        )
-        do_turn_snapshots.append(snapshot)
-        if len(do_turn_calls) == 2:
-            enemy_do_turn_boundary_calls.append(snapshot)
+    def observe_enemy_move_read(_):
+        if len(perform_move_calls) == 2:
+            enemy_move_read_calls.append((
+                read_native("wBattleMonNativeSpecies"),
+                read_native("wEnemyMonNativeSpecies"),
+                mem[addr("hBattleTurn")],
+                regs.A,
+                mem[addr("wCurPlayerMove")],
+                mem[addr("wCurEnemyMove")],
+                mem[addr("wCurEnemyMoveNum")],
+                mem[addr("wDamageTaken")],
+                mem[addr("wDamageTaken") + 1],
+            ))
 
     def observe_check_turn(_):
         check_turn_calls.append(True)
@@ -1407,11 +1405,12 @@ def main():
             # and carry wCurEnemyMove (Tackle=33) to the DoTurn boundary.
             mem[addr("wCurPlayerMove")] = 45
 
-            # Stop only at the second DoTurn entry. The opponent's PerformMove
-            # setup remains entirely real; this six-byte stub sets
-            # wBattleEnded and returns before any opponent move-script command.
+            # Stop the opponent's real DoTurn body at entry. $a5 is a
+            # harness-only sentinel proving this boundary stub executed; the
+            # surrounding real PerformMove can then unwind without running any
+            # opponent move-script command.
             stop = [
-                0x3E, 0x01, 0xEA,
+                0x3E, 0xA5, 0xEA,
                 addr("wBattleEnded") & 0xff,
                 addr("wBattleEnded") >> 8,
                 0xC9,
@@ -1626,7 +1625,7 @@ def main():
             resolve_faint_animation_calls, resolve_give_experience_calls,
             resolve_victory_music_calls, deferred_switch_calls,
             force_deferred_switch_calls, reset_ability_ignorance_calls,
-            second_perform_move_calls, enemy_do_turn_boundary_calls,
+            second_perform_move_calls, enemy_move_read_calls,
             active_base_calls, enemy_base_calls, legacy_calls,
         ):
             calls.clear()
@@ -1872,7 +1871,7 @@ def main():
         hook("UpdateMoveData", lambda _: update_move_data_calls.append(True))
         hook("DetermineMoveOrder", observe_determine_order)
         hook("BattleTurn.do_move", observe_perform_move_boundary)
-        hook("DoTurn", observe_do_turn)
+        hook("PerformMove.skip_destinybond_reset", observe_enemy_move_read)
         hook("CheckTurn", observe_check_turn)
         hook("InitializeMove", observe_initialize_move)
         hook("ReadMoveScriptByte", observe_read_script)
@@ -2061,23 +2060,12 @@ def main():
                 "native identity/turn state at PerformMove boundaries",
                 context, perform_move_snapshots
             )
-            assert do_turn_calls == [True, True], (
-                "DoTurn entry count", context, do_turn_calls
-            )
-            assert do_turn_snapshots == [
-                (25, native, 0, 33, 33, 0, 0, 0),
-                (25, native, 1, 45, 33, 0, 0, 0),
+            assert enemy_move_read_calls == [
+                (25, native, 1, 33, 45, 33, 0, 0, 0),
             ], (
-                "real player/enemy PerformMove setup did not reach DoTurn "
-                "with the correct side-specific move state",
-                context, do_turn_snapshots
-            )
-            assert enemy_do_turn_boundary_calls == [
-                (25, native, 1, 45, 33, 0, 0, 0),
-            ], (
-                "enemy DoTurn boundary lost native identity, turn, selected "
-                "Tackle, or zeroed damage bookkeeping",
-                context, enemy_do_turn_boundary_calls
+                "real enemy PerformMove did not read enemy-side Tackle with "
+                "hBattleTurn=1 after clearing damage bookkeeping",
+                context, enemy_move_read_calls
             )
             assert check_turn_calls == [True], (
                 "real CheckTurn count", context, check_turn_calls
@@ -3124,7 +3112,10 @@ def main():
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 1, context
+            assert mem[addr("wBattleEnded")] == 0xA5, (
+                "enemy DoTurn boundary sentinel was not reached", context,
+                mem[addr("wBattleEnded")]
+            )
             assert bytes(
                 mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
             ) == bytes([0, 100]), ("player party write-back HP changed", context)
