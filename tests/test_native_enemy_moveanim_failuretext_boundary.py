@@ -3218,7 +3218,7 @@ def main():
                     read_script_snapshots[30][6],
                 ),
                 (
-                    25, native, 1, 45, 33, 0, 0, 0,
+                    25, native, 1, 45, 33, 0, 0, 0x10,
                     read_script_snapshots[31][5],
                     read_script_snapshots[31][6],
                 ),
