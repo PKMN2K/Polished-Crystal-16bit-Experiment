@@ -1,3 +1,29 @@
+## Latest checkpoint: native enemy PerformMove -> DoTurn entry regression (2026-09-25)
+
+- Added `tests/test_native_enemy_performmove_doturn_boundary.py` and wired it into normal/debug CI.
+- The validated player-first neutral Tackle path now continues past the previous second-`PerformMove` stop: real `BattleTurn` flips to `hBattleTurn = 1` and the opponent's real `PerformMove` setup executes.
+- The wild opponent is deterministically seeded with Tackle (33) in enemy-side move storage. Immediately before the opponent turn, the harness changes `wCurPlayerMove` to 45 so the two sides cannot accidentally alias the same move value.
+- At `PerformMove.skip_destinybond_reset`, the regression verifies that real `GetBattleVar(BATTLE_VARS_MOVE)` returned enemy Tackle 33 while `hBattleTurn = 1`, `wCurPlayerMove = 45`, `wCurEnemyMove = 33`, and both native identities remain intact.
+- The opponent's real `PerformMove` clears `wDamageTaken` from the player's prior 17-damage result to zero before reaching `DoTurn`.
+- `DoTurn` is the new controlled boundary. A six-byte entry stub writes the harness-only `wBattleEnded = $a5` sentinel and returns, proving the enemy-side `DoTurn` entry was reached without executing any opponent move-script command.
+- Because the `DoTurn` entry stub returns normally to the surrounding real `PerformMove`, the opponent-side post-`DoTurn` cleanup and non-fainting `ResolveFaints` tail also execute once. The regression now explicitly verifies that second cleanup/write-back pass instead of treating it as an unexpected duplicate.
+- Native player identity 25 and all six enemy native-identity cases remain preserved through the opponent `PerformMove` setup, enemy move read, `DoTurn` boundary, and cleanup tail.
+- The first CI attempt (#261) exposed a harness issue: restoring `DoTurn` bytes per case overwrote a PyBoy hook placed at the same address. The direct `DoTurn` hook was removed; the boundary stub sentinel plus the internal `PerformMove.skip_destinybond_reset` hook now provide the proof without self-overwriting.
+- The second CI attempt (#262) reached the intended enemy-side boundary successfully; it exposed only cloned one-pass `ResolveFaints` expectations. Those were updated to account for the real opponent `PerformMove` cleanup tail.
+- Final validation: GitHub Actions CI run **#263** (`36129727049`) passed on commit `abe35e3d4adb9a33b80b9df23d50e1e2ec5095d8`.
+  - native enemy `PerformMove -> DoTurn` boundary: 6/6 cases passed on normal ROM
+  - native enemy `PerformMove -> DoTurn` boundary: 6/6 cases passed on debug ROM
+  - the prior post-`ResolveFaints` turn-flip regression also passed on normal and debug ROMs
+  - all configured ROM build variants completed successfully
+  - no CI step failed
+- Regression commit: `2dcabe67e3bd16291638e786e649a1c8aa79b3f5`.
+- CI wiring commit: `ac5d6fc5dc971b68969e7d69f47659b3ca639cb3`.
+- DoTurn-hook harness correction commit: `4bcbceb2071c3e5f23a23fe69571815f49f4541f`.
+- Opponent cleanup-tail expectation correction commit: `abe35e3d4adb9a33b80b9df23d50e1e2ec5095d8`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** replace the enemy `DoTurn` entry stop with a focused enemy-side `DoTurn` initialization regression: let real `DoTurn`, `CheckTurn`, `UpdateMoveData`, and `InitializeMove` run with `hBattleTurn = 1`, verify enemy Tackle/native identities survive to the first `ReadMoveScriptByte`, then stop before the opponent's first battle-command body executes.
+
 ## Latest checkpoint: native post-ResolveFaints turn-flip regression (2026-09-24)
 
 - Added `tests/test_native_postresolve_turnflip_boundary.py` and wired it into normal/debug CI.
