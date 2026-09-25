@@ -3,6 +3,28 @@
 - Added `tests/test_native_supereffectivetext_boundary.py` and wired it into normal/debug CI.
 - The first sixteen original Tackle `NormalHit` commands now execute for real through:
   `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext -> supereffectivetext`.
+- The test replaces only the following `postfainteffects` script byte with `endturn_command`, so real `BattleCommand_supereffectivetext` completes while post-faint/post-hit processing remains outside this checkpoint.
+- The validated damage chain remains 14 base damage -> 21 after STAB -> 17 after deterministic 85% damage variation -> enemy HP 100 -> 83 after real `applydamage`, with `wDamageTaken = 17`.
+- The effectiveness fixture is deterministic and neutral: user substatus2/substatus3 loop/ability state is clear, `wTypeModifier = $10` (neutral), and `wInverseBattleScore` is seeded to 7.
+- Real `BattleCommand_supereffectivetext` reads the loop/ability state, reaches the neutral type-modifier check, and returns without printing an effectiveness textbox or changing inverse-battle scoring.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Enemy HP remains 83 and `wDamageTaken` remains 17.
+- `BattleCommand_postfainteffects` is not reached.
+- One intermediate workflow failure was CI-YAML-only: the newly inserted normal/debug supereffectivetext steps were duplicated once, creating duplicate step IDs. The duplicate pair was removed; no gameplay source change was involved.
+- Final validation: GitHub Actions CI run **#233** (`36075754370`) passed on commit `0b769f47fcd4ae10331129a267333b0047443a8b`.
+  - native supereffectivetext boundary: 6/6 cases passed on normal ROM
+  - native supereffectivetext boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- Supereffectivetext regression commit: `2690eb6e13f0a89ca018e2267058a0cc03ee2338`.
+- Workflow duplicate cleanup commit: `0b769f47fcd4ae10331129a267333b0047443a8b`.
+
+**Next recommended step:** add a focused `BattleCommand_postfainteffects` regression that executes the real non-faint path after the validated neutral hit, then stops before `posthiteffects`.
+
+## Latest checkpoint: native supereffectivetext regression (2026-09-24)
+
+- Added `tests/test_native_supereffectivetext_boundary.py` and wired it into normal/debug CI.
+- The first sixteen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext -> supereffectivetext`.
 - The test replaces only the following `postfainteffects` script byte with `endturn_command`, so real `BattleCommand_supereffectivetext` completes while post-faint processing remains outside this checkpoint.
 - The validated path remains non-critical and neutral-effectiveness: base damage 14 -> STAB 21 -> deterministic variation 17 -> enemy HP 100 -> 83, with `wDamageTaken = 17`.
 - Real `BattleCommand_supereffectivetext` executes its user substatus checks with no Parental Bond/multi-hit loop active, observes neutral `wTypeModifier = EFFECTIVE ($10)`, and takes the no-message early return.
