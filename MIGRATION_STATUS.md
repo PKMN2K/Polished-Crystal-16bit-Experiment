@@ -1,3 +1,22 @@
+## Latest checkpoint: native endmove termination regression (2026-09-24)
+
+- Added `tests/test_native_endmove_boundary.py` and wired it into normal/debug CI.
+- The validated first-turn Tackle path now executes all eighteen real `NormalHit` battle commands through `BattleCommand_posthiteffects`, then reads the original nineteenth `endmove` byte (`$ff`) without modifying it.
+- The `$ff` byte takes DoMove's normal terminal branch. The regression verifies that branch reaches `CheckEndMoveEffects`, `CheckThroatSpray`, and `CheckPowerHerb` in sequence. Those three routines are controlled return boundaries in this focused test; their internal item/end-of-move mechanics are not newly validated here.
+- The harness marks the outer battle ended only at the final `CheckPowerHerb` boundary, after the real `$ff` branch has already been selected. `PerformMove.end_protect` remains patched to return so unrelated post-move/faint resolution stays outside this checkpoint.
+- The successful neutral Tackle result remains unchanged: 17 damage, enemy HP 83, player HP 100, `wDamageTaken = 17`, and `wAttackMissed = 0`.
+- Native player identity 25 and all six enemy native-identity cases remain intact through posthiteffects, the original `$ff` read, and all three terminal helper boundaries.
+- Final validation: GitHub Actions CI run **#248** (`36078637933`) passed on commit `7cdb1b021569c9cdb4d88c4d125762b106ab1bed`.
+  - native endmove termination boundary: 6/6 cases passed on normal ROM
+  - native endmove termination boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - no CI step failed
+- Regression commit: `32e5a7615a798d77162d9dc76e098d280ee397f7`.
+- CI wiring commit: `7cdb1b021569c9cdb4d88c4d125762b106ab1bed`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** remove the `PerformMove.end_protect` early-return harness patch and add a focused regression for the real post-DoTurn cleanup (ability-state cleanup, `TickDisableAndEncoreAfterMove`, and Protect/Endure reset), stopping at `ResolveFaints` before faint/experience/party write-back resolution.
+
 ## Latest checkpoint: native posthiteffects regression (2026-09-24)
 
 - Added `tests/test_native_posthiteffects_boundary.py` and wired it into normal/debug CI.
