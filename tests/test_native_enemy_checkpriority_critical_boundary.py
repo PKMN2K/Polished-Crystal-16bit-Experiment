@@ -2601,8 +2601,8 @@ def main():
                 "enemy DoTurn did not add its real UpdateMoveData refresh",
                 context, update_move_data_calls
             )
-            assert read_script_calls == [True] * 25, (
-                "expected the 19 validated player reads plus six real enemy "
+            assert read_script_calls == [True] * 26, (
+                "expected the 19 validated player reads plus seven real enemy "
                 "script-byte reads",
                 context, read_script_calls
             )
@@ -2636,6 +2636,11 @@ def main():
                     25, native, 1, 45, 33, 0, 0, 0,
                     read_script_snapshots[24][5],
                     read_script_snapshots[24][6],
+                ),
+                (
+                    25, native, 1, 45, 33, 0, 0, 0,
+                    read_script_snapshots[25][5],
+                    read_script_snapshots[25][6],
                 ),
             ], (
                 "enemy script reads lost native identity, turn, move state, "
@@ -2680,6 +2685,13 @@ def main():
                 "enemy checkhit did not return to the sixth script read at "
                 "exactly the checkpriority command byte",
                 context, read_script_snapshots[19:25]
+            )
+            assert read_script_snapshots[25][5:] == advance_script_pointer(
+                read_script_snapshots[19], 6
+            ), (
+                "enemy checkpriority did not return to the seventh script read "
+                "at exactly the critical command byte",
+                context, read_script_snapshots[19:26]
             )
             assert read_script_snapshots[0][:5] == (25, native, 0, 33, 0), (
                 "native/move state at first real script read",
