@@ -4125,8 +4125,8 @@ def main():
                 "posthiteffects changed native identity/HP/damage/hit state",
                 context, posthiteffects_result_snapshots
             )
-            assert len(read_script_calls) == 26, (
-                "expected the validated 19 player reads plus seven enemy reads",
+            assert len(read_script_calls) == 27, (
+                "expected the validated 19 player reads plus eight enemy reads",
                 context, len(read_script_calls)
             )
             assert read_script_snapshots[18][:5] == (25, native, 0, 33, 0), (
