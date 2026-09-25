@@ -232,6 +232,10 @@ jobs:
         name: "Test native enemy DoTurn initialization boundary (normal)"
         run: python tests/test_native_enemy_doturn_initialization_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-checkobedience-usedmovetext-boundary
+        name: "Test native enemy checkobedience to usedmovetext boundary (normal)"
+        run: python tests/test_native_enemy_checkobedience_usedmovetext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -431,6 +435,10 @@ jobs:
       - id: test-native-enemy-doturn-initialization-boundary-debug
         name: "Test native enemy DoTurn initialization boundary (debug)"
         run: python tests/test_native_enemy_doturn_initialization_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkobedience-usedmovetext-boundary-debug
+        name: "Test native enemy checkobedience to usedmovetext boundary (debug)"
+        run: python tests/test_native_enemy_checkobedience_usedmovetext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
