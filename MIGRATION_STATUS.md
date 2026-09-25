@@ -1,3 +1,26 @@
+## Latest checkpoint: native enemy hastarget -> checkhit boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_hastarget_checkhit_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous fourth-script-byte stop: the fourth enemy `ReadMoveScriptByte` returns `hastarget` (`$3f`) and the real command dispatcher enters `BattleCommand_hastarget`.
+- The regression keeps the player target alive at 100 HP with `hBattleTurn = 1`, so real `HasOpponentFainted` takes the living-target path.
+- The player-side active ability is seeded to Pressure for this boundary; real `GetOpponentIgnorableAbility` observes Pressure while native player identity 25 and each of the six enemy native-identity cases remain intact.
+- Real enemy `BattleCommand_hastarget` falls through to real `BattleConsumePP` for Pressure. After enemy `doturn` has already consumed one Tackle PP (35 -> 34), Pressure consumes exactly one additional enemy active and OT-party PP (34 -> 33).
+- Player active and party PP remain unchanged at 34 throughout the enemy `hastarget`/Pressure path.
+- Distinct move bytes remain intact: `wCurPlayerMove = 45`, `wCurEnemyMove = 33`, and `wCurEnemyMoveNum = 0`.
+- After real `hastarget` returns, the move-script loop performs a fifth real enemy `ReadMoveScriptByte`. It returns `$09` (`checkhit`) and advances the enemy script pointer by exactly five bytes from the script start.
+- The returned `$09` is stored in `wBattleEnded` by the post-read harness stop, so enemy `BattleCommand_checkhit` is not dispatched in this checkpoint.
+- Final validation: GitHub Actions CI run **#279** (`36180633340`) passed on commit `94f7abcd0477a0e397028c41d041f927f7cf76a8`.
+  - native enemy `hastarget -> checkhit` boundary: 6/6 cases passed on normal ROM
+  - native enemy `hastarget -> checkhit` boundary: 6/6 cases passed on debug ROM
+  - prior enemy `doturn -> hastarget`, `usedmovetext -> doturn`, and `checkobedience -> usedmovetext` regressions also passed on normal and debug ROMs
+  - all configured ROM build variants completed successfully
+  - no CI step failed
+- Regression commit: `2e5fe1a6ac6283d35070de5de787966894d2fb1c`.
+- CI wiring commit: `94f7abcd0477a0e397028c41d041f927f7cf76a8`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_checkhit` dispatch for real, exercise its normal enemy accuracy/evasion path with preserved native identities and enemy Tackle state, then stop at the sixth enemy `ReadMoveScriptByte` / `checkpriority` boundary before enemy priority logic executes.
+
 ## Latest checkpoint: native enemy doturn -> hastarget boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_doturn_hastarget_boundary.py` and wired it into normal/debug CI.
