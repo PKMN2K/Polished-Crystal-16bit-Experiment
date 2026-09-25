@@ -1,13 +1,13 @@
-"""Sixteenth real move-script command / supereffectivetext native-identity regression.
+"""Sixteenth real move-script command / supereffectivetext regression.
 
 Drive the validated first-turn wild Tackle path through real criticaltext, then
-execute real BattleCommand_supereffectivetext. The matchup is neutral, with no
-Parental Bond/multi-hit loop state, so the command must return without showing
-effectiveness text or changing inverse-battle scoring.
+execute real BattleCommand_supereffectivetext. The fixture is deliberately
+neutral: wTypeModifier is EFFECTIVE ($10), so the command must take its real
+no-message return without changing native identities, enemy HP 83, or
+wDamageTaken 17.
 
-The following postfainteffects script byte is replaced with endturn_command.
-Enemy HP must remain 83, wDamageTaken must remain 17, and both native battle
-identity words must remain intact.
+The following postfainteffects script byte is replaced with endturn_command,
+so this checkpoint stops immediately after supereffectivetext.
 """
 import argparse
 from pathlib import Path
@@ -236,6 +236,7 @@ def main():
     supereffectivetext_calls = []
     supereffectivetext_snapshots = []
     supereffectivetext_text_calls = []
+    supereffectivetext_item_calls = []
     supereffectivetext_result_snapshots = []
     postfainteffects_calls = []
     active_base_calls = []
@@ -534,7 +535,6 @@ def main():
                 mem[addr("hBattleTurn")],
                 mem[addr("wCurPlayerMove")],
                 mem[addr("wTypeModifier")],
-                mem[addr("wInverseBattleScore")],
                 mem[addr("wEnemyMonHP")],
                 mem[addr("wEnemyMonHP") + 1],
                 mem[addr("wDamageTaken")],
@@ -1092,11 +1092,6 @@ def main():
 
     def observe_supereffectivetext(_):
         supereffectivetext_active[0] = True
-        # Deterministic neutral branch: no Parental Bond/multi-hit loop state.
-        mem[addr("wPlayerSubStatus2")] = 0
-        mem[addr("wPlayerSubStatus3")] = 0
-        mem[addr("wTypeModifier")] = 0x10
-        mem[addr("wInverseBattleScore")] = 7
         supereffectivetext_calls.append(True)
         supereffectivetext_snapshots.append((
             read_native("wBattleMonNativeSpecies"),
@@ -1104,7 +1099,6 @@ def main():
             mem[addr("hBattleTurn")],
             mem[addr("wCurPlayerMove")],
             mem[addr("wTypeModifier")],
-            mem[addr("wInverseBattleScore")],
             mem[addr("wEnemyMonHP")],
             mem[addr("wEnemyMonHP") + 1],
             mem[addr("wDamageTaken")],
@@ -1113,9 +1107,13 @@ def main():
             mem[addr("wBattleScriptBufferLoc") + 1],
         ))
 
-    def observe_supereffectivetext_text(_):
+    def observe_supereffective_textbox(_):
         if supereffectivetext_active[0]:
             supereffectivetext_text_calls.append(True)
+
+    def observe_supereffective_item(_):
+        if supereffectivetext_active[0]:
+            supereffectivetext_item_calls.append(True)
 
     def observe_damage_reset(_):
         if damagestats_active[0]:
@@ -1301,8 +1299,8 @@ def main():
             criticaltext_delay_calls, criticaltext_delay_snapshots,
             criticaltext_result_snapshots,
             supereffectivetext_calls, supereffectivetext_snapshots,
-            supereffectivetext_text_calls, supereffectivetext_result_snapshots,
-            postfainteffects_calls,
+            supereffectivetext_text_calls, supereffectivetext_item_calls,
+            supereffectivetext_result_snapshots, postfainteffects_calls,
             active_base_calls, enemy_base_calls, legacy_calls,
         ):
             calls.clear()
@@ -1395,11 +1393,11 @@ def main():
         # ReadMoveScriptByte, checkobedience, usedmovetext, DisplayUsedMoveText,
         # doturn/BattleConsumePP, hastarget, checkhit, checkpriority, critical,
         # damagestats, damagecalc, STAB, damagevariation, moveanim,
-        # failuretext, applydamage and criticaltext real. Replace only the
-        # supereffectivetext real. Replace only the following postfainteffects
-        # command with endturn_command ($fe), so the real neutral-effectiveness
-        # no-message path completes and the seventeenth real script read
-        # terminates before post-faint handling.
+        # failuretext, applydamage, criticaltext and supereffectivetext real.
+        # Replace only the following postfainteffects command with
+        # endturn_command ($fe), so the neutral effectiveness-text path
+        # completes and the seventeenth real script read terminates before
+        # post-faint processing.
         normal_bank, normal_addr = symbols["NormalHit"]
         assert mem[normal_bank, normal_addr] == 2, (
             "NormalHit no longer begins with checkobedience",
@@ -1588,7 +1586,8 @@ def main():
         hook("CheckCrit", observe_criticaltext_checkcrit)
         hook("DelayFrames", observe_criticaltext_delay)
         hook("BattleCommand_supereffectivetext", observe_supereffectivetext)
-        hook("StdBattleTextbox", observe_supereffectivetext_text)
+        hook("StdBattleTextbox", observe_supereffective_textbox)
+        hook("GetOpponentItemAfterUnnerve", observe_supereffective_item)
         hook(
             "BattleCommand_postfainteffects",
             lambda _: postfainteffects_calls.append(True),
@@ -2550,23 +2549,26 @@ def main():
             )
             assert supereffectivetext_snapshots == [
                 (
-                    25, native, 0, 33, 0x10, 7, 0, 83, 0, 17,
+                    25, native, 0, 33, 0x10, 0, 83, 0, 17,
                     *advance_script_pointer(read_script_snapshots[0], 16),
                 ),
             ], (
-                "native identity/neutral type/HP state changed entering "
+                "native identity/neutral modifier/HP changed entering "
                 "supereffectivetext",
                 context, supereffectivetext_snapshots
             )
             assert not supereffectivetext_text_calls, (
-                "neutral effectiveness path attempted to print a battle textbox",
+                "neutral effectiveness path printed effectiveness text",
                 context, supereffectivetext_text_calls
             )
+            assert not supereffectivetext_item_calls, (
+                "neutral effectiveness path entered Weakness Policy handling",
+                context, supereffectivetext_item_calls
+            )
             assert supereffectivetext_result_snapshots == [
-                (25, native, 0, 33, 0x10, 7, 0, 83, 0, 17),
+                (25, native, 0, 33, 0x10, 0, 83, 0, 17),
             ], (
-                "supereffectivetext changed identity, neutral modifier, inverse "
-                "score, HP, or damage bookkeeping",
+                "supereffectivetext changed identity/modifier/HP/damage",
                 context, supereffectivetext_result_snapshots
             )
             assert read_script_snapshots[16][:5] == (25, native, 0, 33, 0), (
@@ -2608,11 +2610,11 @@ def main():
             f"PASS: {count} native supereffectivetext cases; real "
             "checkobedience -> usedmovetext -> doturn/BattleConsumePP -> "
             "hastarget -> checkhit -> checkpriority -> critical -> "
-            "damagestats -> damagecalc (14) -> STAB (21) -> damagevariation "
-            "(17) -> moveanim -> failuretext -> applydamage (enemy HP 83) -> "
-            "criticaltext -> real neutral supereffectivetext no-message return "
-            "-> seventeenth script-byte terminal boundary before "
-            "postfainteffects"
+            "damagestats -> damagecalc (14) -> STAB (21) -> "
+            "damagevariation (17) -> moveanim -> failuretext -> applydamage "
+            "(enemy HP 83) -> criticaltext -> real neutral "
+            "supereffectivetext return -> seventeenth script-byte terminal "
+            "boundary before postfainteffects"
         )
     finally:
         pyboy.stop(save=False)
