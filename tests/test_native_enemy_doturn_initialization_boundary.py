@@ -3072,8 +3072,9 @@ def main():
                 "posthiteffects changed native identity/HP/damage/hit state",
                 context, posthiteffects_result_snapshots
             )
-            assert len(read_script_calls) == 19, (
-                "posthiteffects did not return to the original endmove byte",
+            assert len(read_script_calls) == 20, (
+                "expected the validated player endmove read plus exactly one "
+                "enemy first-script-byte read",
                 context, len(read_script_calls)
             )
             assert read_script_snapshots[18][:5] == (25, native, 0, 33, 0), (
