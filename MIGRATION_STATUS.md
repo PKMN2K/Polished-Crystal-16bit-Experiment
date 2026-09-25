@@ -1,3 +1,22 @@
+## Latest checkpoint: native postfainteffects regression (2026-09-24)
+
+- Added `tests/test_native_postfainteffects_boundary.py` and wired it into normal/debug CI.
+- The first seventeen original Tackle `NormalHit` commands now execute for real through:
+  `checkobedience -> usedmovetext -> doturn/BattleConsumePP -> hastarget -> checkhit -> checkpriority -> critical -> damagestats -> damagecalc -> stab -> damagevariation -> moveanim -> failuretext -> applydamage -> criticaltext -> supereffectivetext -> postfainteffects`.
+- The test replaces only the following `posthiteffects` script byte with `endturn_command`, so real `BattleCommand_postfainteffects` completes while post-hit processing remains outside this checkpoint.
+- The validated path remains non-critical and neutral-effectiveness: base damage 14 -> STAB 21 -> deterministic variation 17 -> enemy HP 100 -> 83, with `wDamageTaken = 17`.
+- Because the target remains alive at 83 HP, real `BattleCommand_postfainteffects` calls `HasOpponentFainted`, observes a nonzero HP result, and immediately returns before Destiny Bond, multi-hit termination, or faint-ability handling.
+- Native player identity 25 and all six enemy native-identity cases remain intact through the real post-faint command. Enemy HP remains 83 and `wDamageTaken` remains 17.
+- `BattleCommand_posthiteffects` is not reached.
+- Final validation: GitHub Actions CI run **#237** (`36076362093`) passed on commit `2063f7232af0d38868b86ca987e44b980af6e683`.
+  - native postfainteffects boundary: 6/6 cases passed on normal ROM
+  - native postfainteffects boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - artifact upload steps were skipped by the existing repository-owner guard as intended
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** add a focused `BattleCommand_posthiteffects` regression for this same successful, non-fainting Tackle path, then stop before `endmove`.
+
 ## Latest checkpoint: native supereffectivetext regression (2026-09-24)
 
 - Added `tests/test_native_supereffectivetext_boundary.py` and wired it into normal/debug CI.
