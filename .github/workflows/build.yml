@@ -252,6 +252,10 @@ jobs:
         name: "Test native enemy checkhit to checkpriority boundary (normal)"
         run: python tests/test_native_enemy_checkhit_checkpriority_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-checkpriority-critical-boundary
+        name: "Test native enemy checkpriority to critical boundary (normal)"
+        run: python tests/test_native_enemy_checkpriority_critical_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -471,6 +475,10 @@ jobs:
       - id: test-native-enemy-checkhit-checkpriority-boundary-debug
         name: "Test native enemy checkhit to checkpriority boundary (debug)"
         run: python tests/test_native_enemy_checkhit_checkpriority_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkpriority-critical-boundary-debug
+        name: "Test native enemy checkpriority to critical boundary (debug)"
+        run: python tests/test_native_enemy_checkpriority_critical_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
