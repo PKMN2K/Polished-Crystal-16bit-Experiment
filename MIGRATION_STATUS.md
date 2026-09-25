@@ -1,3 +1,23 @@
+## Latest checkpoint: native enemy damagevariation -> moveanim boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_damagevariation_moveanim_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous eleventh-script-byte stop: the eleventh enemy `ReadMoveScriptByte` returns `damagevariation` (`$08`) and the real dispatcher enters `BattleCommand_damagevariation`.
+- The regression starts from the already validated enemy Normal-type Tackle state after real STAB has produced damage **21**. `BattleRandomRange(16)` is deterministically forced to return 0, selecting the real 85% floor.
+- Real enemy damage variation converts STAB damage **21** to integer-truncated damage **17**.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 remains distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, and the ordinary hit state remains valid.
+- After real enemy `BattleCommand_damagevariation` returns, the move-script loop performs a twelfth real enemy `ReadMoveScriptByte`. It returns `moveanim` (`$6d`) and advances the enemy script pointer exactly twelve bytes from the script start.
+- The returned `$6d` is captured by the post-read harness stop, so enemy `BattleCommand_moveanim` is not dispatched in this checkpoint. Enemy HP application also remains outside this checkpoint.
+- Final validation: GitHub Actions CI run **#308** (`36200479589`) passed on commit `38fe6243db9d337729645d94ddd676eb0601d2c4`.
+  - native enemy `damagevariation -> moveanim` boundary: 6/6 cases passed on normal ROM
+  - native enemy `damagevariation -> moveanim` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `19e091d8ca4034da0e398a74a1cd0d7d406a76a2`.
+- CI wiring commit: `38fe6243db9d337729645d94ddd676eb0601d2c4`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_moveanim` dispatch for real under the existing presentation-only animation boundary, prove varied damage **17** and native/enemy state survive the command, then stop at the following `failuretext` command before its body executes.
+
 ## Latest checkpoint: native enemy STAB -> damagevariation boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_stab_damagevariation_boundary.py` and wired it into normal/debug CI.
