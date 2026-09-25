@@ -268,6 +268,10 @@ jobs:
         name: "Test native enemy damagecalc to STAB boundary (normal)"
         run: python tests/test_native_enemy_damagecalc_stab_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-stab-damagevariation-boundary
+        name: "Test native enemy STAB to damagevariation boundary (normal)"
+        run: python tests/test_native_enemy_stab_damagevariation_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -503,6 +507,10 @@ jobs:
       - id: test-native-enemy-damagecalc-stab-boundary-debug
         name: "Test native enemy damagecalc to STAB boundary (debug)"
         run: python tests/test_native_enemy_damagecalc_stab_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-stab-damagevariation-boundary-debug
+        name: "Test native enemy STAB to damagevariation boundary (debug)"
+        run: python tests/test_native_enemy_stab_damagevariation_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
