@@ -3011,8 +3011,8 @@ def main():
                 "enemy DoTurn did not add its real UpdateMoveData refresh",
                 context, update_move_data_calls
             )
-            assert read_script_calls == [True] * 29, (
-                "expected the 19 validated player reads plus ten real enemy "
+            assert read_script_calls == [True] * 30, (
+                "expected the 19 validated player reads plus eleven real enemy "
                 "script-byte reads",
                 context, read_script_calls
             )
