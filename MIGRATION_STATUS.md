@@ -1,3 +1,25 @@
+## Latest checkpoint: native enemy damagestats -> damagecalc boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_damagestats_damagecalc_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous eighth-script-byte stop: the eighth enemy `ReadMoveScriptByte` returns `damagestats` (`$06`) and the real command dispatcher enters `BattleCommand_damagestats`.
+- The regression exercises the real physical Tackle stat-selection path from the enemy perspective. Immediately before the command, enemy Attack is seeded to 90 and player Defense to 80 so the real shared stat helpers must select enemy-user Attack and player-target Defense rather than stale player-side state.
+- Real `ResetDamage` executes, then the command performs the expected enemy-side user/opponent attribute reads, Future Sight user resolution, neutral player-screen handling, true-user held-item/level party reads, and real user-ability lookup.
+- Native player identity 25 and all six enemy native-identity cases remain intact throughout the command. Distinct move state is preserved with player move 45 and enemy Tackle 33; player PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33 after the earlier Pressure path, the player target keeps Pressure, and the hit state remains valid.
+- The resulting Attack and Defense values are both nonzero; Tackle power remains 40 and the enemy level remains 30.
+- After real enemy `BattleCommand_damagestats` returns, the move-script loop performs a ninth real enemy `ReadMoveScriptByte`. It returns `damagecalc` (`$50`) and advances the script pointer exactly nine bytes from the script start.
+- The returned `$50` is captured by the post-read harness stop, so enemy `BattleCommand_damagecalc` is not dispatched in this checkpoint.
+- Final validation: GitHub Actions CI run **#297** (`36195050580`) passed on commit `61760d03ef9952953ba87f2c2ef9af71362b77ba`.
+  - native enemy `damagestats -> damagecalc` boundary passed in the normal ROM
+  - native enemy `damagestats -> damagecalc` boundary passed in the debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `3a78be9030a82d893d7704f6c8abde3454ea46f5`.
+- CI wiring commit: `d0d3403834dbcfdd28ba52bb994dc4160108e36b`.
+- Final damage-state expectation correction: `61760d03ef9952953ba87f2c2ef9af71362b77ba`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_damagecalc` dispatch for real, exercise the ordinary physical Tackle damage formula with the Attack/Defense/power/level tuple produced by real enemy `damagestats`, preserve native identities and enemy-side move state, then stop at the tenth enemy `ReadMoveScriptByte` / `stab` boundary before STAB logic executes.
+
 ## Latest checkpoint: native enemy critical -> damagestats boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_critical_damagestats_boundary.py` and wired it into normal/debug CI.
