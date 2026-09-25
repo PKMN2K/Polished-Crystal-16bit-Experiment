@@ -4155,10 +4155,13 @@ def main():
                 "animation parameter",
                 context, moveanim_result_snapshots
             )
+            # The player-side snapshots above prove moveanim preserved
+            # the varied 17 damage. By final checkpoint state, the newly-real
+            # enemy damagestats command has legitimately run ResetDamage.
             assert bytes(
                 mem[addr("wCurDamage"):addr("wCurDamage") + 2]
-            ) == bytes([0, 17]), (
-                "moveanim changed varied damage", context,
+            ) == bytes([0, 0]), (
+                "enemy damagestats did not reset prior player damage", context,
                 bytes(mem[addr("wCurDamage"):addr("wCurDamage") + 2])
             )
             assert read_script_snapshots[12][:5] == (25, native, 0, 33, 0), (
