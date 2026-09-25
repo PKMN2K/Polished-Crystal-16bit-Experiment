@@ -1466,14 +1466,12 @@ def main():
 
             # Leave DoTurn and ReadMoveScriptByte entirely real. Stop at the
             # continuation immediately after the first script-byte CALL,
-            # before command dispatch. Store the returned command byte in
-            # wCurDamage as a harness-only observation, then set the $a5
-            # battle-ended sentinel and return from DoMove/DoTurn.
+            # before command dispatch. Store the returned command byte itself
+            # in wBattleEnded and return from DoMove/DoTurn. The first Tackle
+            # command is checkobedience ($02), so the nonzero value is both
+            # the captured result and the controlled stop sentinel.
             stop = [
                 0xEA,
-                addr("wCurDamage") & 0xff,
-                addr("wCurDamage") >> 8,
-                0x3E, 0xA5, 0xEA,
                 addr("wBattleEnded") & 0xff,
                 addr("wBattleEnded") >> 8,
                 0xC9,
@@ -3217,8 +3215,9 @@ def main():
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 0xA5, (
-                "enemy DoTurn boundary sentinel was not reached", context,
+            assert mem[addr("wBattleEnded")] == 2, (
+                "post-read boundary did not capture Tackle's first "
+                "checkobedience command byte", context,
                 mem[addr("wBattleEnded")]
             )
             assert bytes(
@@ -3241,10 +3240,6 @@ def main():
             ], (
                 "native identity/turn state changed across PerformMove entries",
                 context, perform_move_snapshots
-            )
-            assert mem[addr("wCurDamage")] == 2, (
-                "post-read boundary did not capture Tackle's first "
-                "checkobedience command byte", context, mem[addr("wCurDamage")]
             )
             assert (
                 mem[addr("wBattleScriptBufferLoc")],
