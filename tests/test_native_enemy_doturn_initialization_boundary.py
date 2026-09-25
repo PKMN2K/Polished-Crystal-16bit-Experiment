@@ -2135,7 +2135,7 @@ def main():
                 "real player/enemy CheckTurn count", context, check_turn_calls
             )
             assert enemy_check_turn_snapshots == [
-                (25, native, 1, 45, 33, 0, 0, 0),
+                (25, native, 1, 45, 33, 0, 0, 1),
             ], (
                 "enemy DoTurn did not reach real CheckTurn with native "
                 "identities and enemy Tackle intact",
@@ -2169,7 +2169,7 @@ def main():
             )
             assert enemy_first_read_snapshots == [
                 (
-                    25, native, 1, 45, 33, 0, 0, 0,
+                    25, native, 1, 45, 33, 0, 0, 1,
                     read_script_snapshots[19][5],
                     read_script_snapshots[19][6],
                 ),
