@@ -1,3 +1,25 @@
+## Latest checkpoint: native enemy damagecalc -> STAB boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_damagecalc_stab_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous ninth-script-byte stop: the ninth enemy `ReadMoveScriptByte` returns `damagecalc` (`$50`) and the real command dispatcher enters `BattleCommand_damagecalc`.
+- The real enemy base-damage formula consumes the Attack/Defense/power/level tuple produced by real enemy `BattleCommand_damagestats`: nonzero enemy-user Attack, nonzero player-target Defense, Tackle power 40, and enemy level 30.
+- Native player identity 25 and all six enemy native-identity cases remain intact throughout real enemy damage calculation. Player move 45 remains distinct from enemy Tackle 33; player PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, and the hit/critical state remains ordinary and successful.
+- Real enemy `BattleCommand_damagecalc` produces neutral pre-STAB base damage **14**, matching the equivalent validated player-side formula.
+- After real enemy `BattleCommand_damagecalc` returns, the move-script loop performs a tenth real enemy `ReadMoveScriptByte`. It returns `stab` (`$07`) and advances the enemy script pointer exactly ten bytes from the script start.
+- The returned `$07` is captured by the post-read harness stop, so enemy `BattleCommand_stab` is not dispatched in this checkpoint.
+- The first CI attempt, run **#300**, reached all 29 expected script reads and exposed only a copied harness count that still expected 28 reads. No gameplay-source failure was indicated.
+- Final validation: GitHub Actions CI run **#301** (`36197943798`) passed on commit `b9e59e83d822164ee0b681288a1b0d129f9b42e9`.
+  - native enemy `damagecalc -> STAB` boundary: 6/6 cases passed on normal ROM
+  - native enemy `damagecalc -> STAB` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `ea7de487ffec36157fb5e9321746c8faf33b342b`.
+- CI wiring commit: `4bc003c30b40763a31b2d301d61679dcc48aec8b`.
+- Final read-count expectation correction: `b9e59e83d822164ee0b681288a1b0d129f9b42e9`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_stab` dispatch for real, exercise deterministic Normal-type Tackle STAB plus neutral type-matchup/weather/ability handling while preserving native identities and the base damage 14, then stop at the eleventh enemy `ReadMoveScriptByte` / `damagevariation` (`$08`) boundary before random damage variation executes.
+
 ## Latest checkpoint: native enemy damagestats -> damagecalc boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_damagestats_damagecalc_boundary.py` and wired it into normal/debug CI.
