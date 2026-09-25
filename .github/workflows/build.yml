@@ -224,6 +224,10 @@ jobs:
         name: "Test native post-ResolveFaints turn-flip boundary (normal)"
         run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-performmove-doturn-boundary
+        name: "Test native enemy PerformMove to DoTurn boundary (normal)"
+        run: python tests/test_native_enemy_performmove_doturn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -415,6 +419,10 @@ jobs:
       - id: test-native-postresolve-turnflip-boundary-debug
         name: "Test native post-ResolveFaints turn-flip boundary (debug)"
         run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-performmove-doturn-boundary-debug
+        name: "Test native enemy PerformMove to DoTurn boundary (debug)"
+        run: python tests/test_native_enemy_performmove_doturn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
