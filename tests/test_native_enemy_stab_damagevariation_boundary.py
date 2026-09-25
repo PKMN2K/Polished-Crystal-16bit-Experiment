@@ -3896,10 +3896,10 @@ def main():
                 context, enemy_stab_type_matchup_snapshots
             )
             assert enemy_stab_weather_snapshots == [
-                (25, native, 1, 0, 0, 21),
+                (25, native, 1, 0, 0, 14),
             ], (
-                "enemy STAB skipped real neutral-weather handling or did not "
-                "apply 1.5x STAB before weather modifiers",
+                "enemy STAB skipped real neutral-weather handling or changed "
+                "base damage before the weather-modifier entry",
                 context, enemy_stab_weather_snapshots
             )
             assert enemy_stab_result_snapshots == [
