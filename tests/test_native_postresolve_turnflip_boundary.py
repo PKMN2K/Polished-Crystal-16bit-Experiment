@@ -32,7 +32,7 @@ def main():
 
     data = rom.read_bytes()
     perform_move_bank, perform_move_addr = symbols["PerformMove"]
-    perform_move_original = data[offset("PerformMove")]
+    perform_move_original = data[offset("PerformMove"):offset("PerformMove") + 6]
     root = Path(__file__).resolve().parents[1]
 
     nvariants = sum(
@@ -406,7 +406,7 @@ def main():
         # PerformMove must clear it before the DoTurn boundary.
         mem[addr("wDamageTaken"):addr("wDamageTaken") + 2] = [0xA5, 0x5A]
 
-    def observe_perform_move(_):
+    def observe_perform_move_boundary(_):
         perform_move_calls.append(True)
         snapshot = (
             read_native("wBattleMonNativeSpecies"),
@@ -425,9 +425,6 @@ def main():
                 mem[addr("wMoveState")],
                 mem[addr("wBattleEnded")],
             ))
-            # Stop before a single opponent PerformMove instruction executes.
-            mem[addr("wBattleEnded")] = 1
-            mem[perform_move_bank, perform_move_addr] = 0xC9
 
     def observe_do_turn(_):
         do_turn_calls.append(True)
@@ -1384,6 +1381,17 @@ def main():
                 mem[addr("wMoveState")],
                 mem[addr("wBattleEnded")],
             ))
+            # Prepare a six-byte second-PerformMove boundary stub *before* the
+            # enemy turn is entered. It sets wBattleEnded and returns, so no
+            # original opponent PerformMove instruction executes.
+            stop = [
+                0x3E, 0x01, 0xEA,
+                addr("wBattleEnded") & 0xff,
+                addr("wBattleEnded") >> 8,
+                0xC9,
+            ]
+            for i, value in enumerate(stop):
+                mem[perform_move_bank, perform_move_addr + i] = value
             resolve_active[0] = False
 
     def observe_damage_reset(_):
@@ -1486,7 +1494,8 @@ def main():
         posthiteffects_active[0] = False
         cleanup_active[0] = False
         resolve_active[0] = False
-        mem[perform_move_bank, perform_move_addr] = perform_move_original
+        for i, value in enumerate(perform_move_original):
+            mem[perform_move_bank, perform_move_addr + i] = value
 
         mem[addr("wOtherTrainerClass")] = 0
         mem[addr("wBattleType")] = 0
@@ -1834,7 +1843,7 @@ def main():
         hook("ParsePlayerAction", observe_parse_action)
         hook("UpdateMoveData", lambda _: update_move_data_calls.append(True))
         hook("DetermineMoveOrder", observe_determine_order)
-        hook("PerformMove", observe_perform_move)
+        hook("BattleTurn.do_move", observe_perform_move_boundary)
         hook("DoTurn", observe_do_turn)
         hook("CheckTurn", observe_check_turn)
         hook("InitializeMove", observe_initialize_move)
@@ -3081,7 +3090,7 @@ def main():
                 mem[addr("wPartyMon1PP")]
             )
             assert perform_move_calls == [True, True], (
-                "did not stop exactly at the second PerformMove entry",
+                "did not reach exactly two BattleTurn PerformMove boundaries",
                 context, perform_move_calls
             )
             assert perform_move_snapshots == [
@@ -3104,7 +3113,7 @@ def main():
             f"PASS: {count} native post-ResolveFaints turn-flip cases; real "
             "Tackle -> real non-fainting ResolveFaints -> real no-op "
             "DeferredSwitch -> real ResetAbilityIgnorance (0x55->0x11) -> "
-            "BattleTurn flips to enemy -> second PerformMove entry stop"
+            "BattleTurn flips to enemy -> second PerformMove boundary stub"
         )
     finally:
         pyboy.stop(save=False)
