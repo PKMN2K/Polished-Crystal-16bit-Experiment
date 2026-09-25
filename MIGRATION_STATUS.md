@@ -1,3 +1,31 @@
+## Latest checkpoint: native PerformMove post-DoTurn cleanup regression (2026-09-24)
+
+- Added `tests/test_native_performmove_cleanup_boundary.py` and wired it into normal/debug CI.
+- Removed the test harness patch that previously replaced the first byte of `PerformMove.end_protect` with `ret`; `PerformMove` now continues through its real immediate post-`DoTurn` cleanup.
+- The validated first-turn Tackle path still runs through the original `$ff endmove` byte and the controlled `CheckEndMoveEffects -> CheckThroatSpray -> CheckPowerHerb` helper boundaries.
+- At the final endmove helper boundary the regression seeds only the state needed to prove the following real cleanup:
+  - both user/opponent `SUBSTATUS_IN_ABILITY` bits are set
+  - target Protect and Endure bits are set
+  - player Disable count is 5 and Encore count is 4
+  - enemy Disable/Encore sentinels are 7/6
+- Real `PerformMove` cleanup then:
+  - clears both `SUBSTATUS_IN_ABILITY` bits before the disable/encore tick
+  - calls the real `TickDisableAndEncoreAfterMove`, producing player Disable `5 -> 4` and Encore `4 -> 3` while leaving enemy sentinels `7/6` unchanged
+  - clears the target Protect and Endure bits
+  - reaches the `LoadTileMapToTempTileMap` presentation boundary with all cleanup state correct
+- The regression stops by replacing only the first byte of `ResolveFaints` with `ret`; its entry hook verifies cleanup is complete before any faint animation, experience, battle-over, or party write-back resolution executes.
+- At `ResolveFaints` entry, native player identity 25 and all six enemy native-identity cases remain intact; enemy HP remains 83, player HP remains 100, and `wDamageTaken` remains 17.
+- Final validation: GitHub Actions CI run **#251** (`36080543988`) passed on commit `bf6e58e168910fd5c911c8bd6c4c7e0c61556819`.
+  - native PerformMove cleanup boundary: 6/6 cases passed on normal ROM
+  - native PerformMove cleanup boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - no CI step failed
+- Regression commit: `aab9e2450547d97fceed0ca12009b1a73ce69775`.
+- CI wiring commit: `bf6e58e168910fd5c911c8bd6c4c7e0c61556819`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** remove the `ResolveFaints` return stub and add a focused non-fainting `ResolveFaints` regression for this same 83-HP target, verifying real `UpdateBattleMonInParty` / `UpdateEnemyMonInParty` write-back and the alive-opponent battle-over checks while preserving native identities, then stop immediately after `ResolveFaints` returns before the opponent's turn.
+
 ## Latest checkpoint: native endmove termination regression (2026-09-24)
 
 - Added `tests/test_native_endmove_boundary.py` and wired it into normal/debug CI.
