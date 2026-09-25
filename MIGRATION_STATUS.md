@@ -1,3 +1,27 @@
+## Latest checkpoint: native non-fainting ResolveFaints regression (2026-09-24)
+
+- Added `tests/test_native_resolvefaints_nonfaint_boundary.py` and wired it into normal/debug CI.
+- Removed the `ResolveFaints` return stub used by the previous checkpoint. The same successful neutral Tackle path now continues through real `ResolveFaints` with the target alive at 83 HP.
+- The regression verifies real `UpdateBattleMonInParty` and `UpdateEnemyMonInParty` execution:
+  - player party HP remains 100
+  - player party PP remains the already-consumed Tackle value 34
+  - enemy OT-party HP is written back from 100 to 83
+  - the enemy's transitional species/form representation remains unchanged through write-back
+- Real non-fainting `ResolveFaints` performs all three expected `HasEnemyFainted` checks with the enemy still alive, verifies the player still has a fit party member, and skips faint animations, experience award, and victory music.
+- Native player identity 25 and all six enemy native-identity cases remain intact at `ResolveFaints` entry, both party write-back routines, every alive-opponent check, the player-party fitness check, and return.
+- The regression stops at a controlled `DeferredSwitch` boundary immediately after `ResolveFaints` returns. No deferred-switch logic or opponent `PerformMove` executes; `perform_move_calls` remains exactly one.
+- The validated battle result remains unchanged: player HP 100, enemy active HP 83, enemy OT-party HP 83, and `wDamageTaken = 17`.
+- Final validation: GitHub Actions CI run **#254** (`36082307283`) passed on commit `73eb3420667f03c73de3ba8047d639ebddeed54c`.
+  - native non-fainting ResolveFaints boundary: 6/6 cases passed on normal ROM
+  - native non-fainting ResolveFaints boundary: 6/6 cases passed on debug ROM
+  - all eight configured ROM build variants passed
+  - no CI step failed
+- Regression commit: `cb711f174ff8941045c998c0925ffcc9b691aa68`.
+- CI wiring commit: `73eb3420667f03c73de3ba8047d639ebddeed54c`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** remove the controlled `DeferredSwitch` stop, let the real no-op deferred-switch path and `ResetAbilityIgnorance` complete, verify `BattleTurn` flips to the opponent turn with native identities preserved, and stop at the second `PerformMove` entry before the opponent's move executes.
+
 ## Latest checkpoint: native PerformMove post-DoTurn cleanup regression (2026-09-24)
 
 - Added `tests/test_native_performmove_cleanup_boundary.py` and wired it into normal/debug CI.
