@@ -1,3 +1,25 @@
+## Latest checkpoint: native enemy STAB -> damagevariation boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_stab_damagevariation_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches the real `BattleCommand_stab` after real enemy `BattleCommand_damagecalc` has produced neutral pre-STAB base damage **14**.
+- The regression uses deterministic Normal-type Tackle with NORMAL/NORMAL attacker and target types, neutral weather/items, and the player target's previously validated Pressure state.
+- Real enemy STAB/type handling runs without changing native identities or enemy-side move state. Native player identity 25 and all six enemy native-identity cases remain intact; player move 45 remains distinct from enemy Tackle 33; player PP remains 34/34 and enemy active/OT-party Tackle PP remains 33/33.
+- Real enemy `BattleCommand_stab` applies 1.5x STAB to damage 14, producing **21** before random damage variation. The real neutral type-matchup and weather path is also exercised.
+- After STAB returns, the move-script loop performs an eleventh real enemy `ReadMoveScriptByte`. It returns `damagevariation` (`$08`) and advances the enemy script pointer exactly eleven bytes from the script start.
+- The returned `$08` is captured by the post-read harness stop, so enemy `BattleCommand_damagevariation` is not dispatched in this checkpoint.
+- Final validation: GitHub Actions CI run **#306** (`36199443800`) passed on commit `bcaedf1e0092f9c50093791bacf806e1769aeba3`.
+  - native enemy `STAB -> damagevariation` boundary: 6/6 cases passed on normal ROM
+  - native enemy `STAB -> damagevariation` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `71df52a9e93991e3e6567121ff1568e77c9035c0`.
+- CI wiring commit: `60962dbe302fcbf66d98e341ea07b9b9186b6f9f`.
+- Final read-count expectation correction: `d197ac5e6a08388b47891b12b40ae3b521f29974`.
+- Final weather-order expectation correction: `bcaedf1e0092f9c50093791bacf806e1769aeba3`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_damagevariation` dispatch for real. Mirror the validated player-side deterministic fixture by forcing `BattleRandomRange(16)` to 0, prove the real 85%-100% variation path converts STAB damage 21 to integer-truncated damage **17**, preserve native identities and enemy-side state, then stop before the following `moveanim` command executes.
+
 ## Latest checkpoint: native enemy damagecalc -> STAB boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_damagecalc_stab_boundary.py` and wired it into normal/debug CI.
