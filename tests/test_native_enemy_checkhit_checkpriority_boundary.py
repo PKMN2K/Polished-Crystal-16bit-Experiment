@@ -940,18 +940,8 @@ def main():
                 mem[addr("wBattleScriptBufferLoc") + 1],
                 mem[addr("wBattleEnded")],
             ))
-            # hastarget has already been read and dispatched. Install the stop
-            # at the next read continuation so its living-target check,
-            # Pressure lookup, and extra BattleConsumePP complete before the
-            # fifth real enemy read returns checkhit ($09).
-            stop = [
-                0xEA,
-                addr("wBattleEnded") & 0xff,
-                addr("wBattleEnded") >> 8,
-                0xC9,
-            ]
-            for i, value in enumerate(stop):
-                mem[read_dispatch_bank, read_dispatch_addr + 3 + i] = value
+            # Unlike the previous checkpoint, do not install a post-read
+            # stop here: let the fifth enemy command dispatch checkhit for real.
         else:
             hastarget_calls.append(True)
             hastarget_snapshots.append((
