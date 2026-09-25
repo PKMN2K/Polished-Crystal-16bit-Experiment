@@ -3024,6 +3024,7 @@ def main():
             )
             assert resolve_faints_calls == [
                 (25, native, 0, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 17),
+                (25, native, 1, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 0),
             ], (
                 "PerformMove cleanup did not reach real ResolveFaints with "
                 "preserved native identity, HP, damage, and cleanup state",
@@ -3031,12 +3032,14 @@ def main():
             )
             assert resolve_player_writeback_calls == [
                 (25, native, 0, 0, 100, 0, 100, 34, 34),
+                (25, native, 1, 0, 100, 0, 100, 34, 34),
             ], (
                 "real player party write-back boundary changed identity/HP/PP",
                 context, resolve_player_writeback_calls
             )
             assert resolve_enemy_writeback_calls == [
                 (25, native, 0, 0, 83, 0, 100, species, form),
+                (25, native, 1, 0, 83, 0, 83, species, form),
             ], (
                 "real enemy party write-back boundary changed identity/layout",
                 context, resolve_enemy_writeback_calls
@@ -3045,6 +3048,9 @@ def main():
                 (25, native, 0, 0, 83),
                 (25, native, 0, 0, 83),
                 (25, native, 0, 0, 83),
+                (25, native, 1, 0, 83),
+                (25, native, 1, 0, 83),
+                (25, native, 1, 0, 83),
             ], (
                 "non-fainting ResolveFaints did not perform all three alive-"
                 "opponent checks",
@@ -3052,6 +3058,7 @@ def main():
             )
             assert resolve_fit_party_calls == [
                 (25, native, 0, 1, 0, 100),
+                (25, native, 1, 1, 0, 100),
             ], (
                 "ResolveFaints did not verify the player still has a fit mon",
                 context, resolve_fit_party_calls
