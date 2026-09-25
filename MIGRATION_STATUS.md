@@ -1,3 +1,32 @@
+## Latest checkpoint: native enemy DoTurn initialization regression (2026-09-25)
+
+- Added `tests/test_native_enemy_doturn_initialization_boundary.py` and wired it into normal/debug CI.
+- The validated player-first neutral Tackle path now continues through the enemy turn flip and the opponent's real `PerformMove` into real `DoTurn`.
+- With `hBattleTurn = 1`, the regression now executes real enemy-side `DoTurn`, `CheckTurn`, `UpdateMoveData`, `InitializeMove`, and the first `ReadMoveScriptByte`.
+- The harness deliberately keeps `wCurPlayerMove = 45` while the opponent's selected move remains Tackle (33), proving the initialization path is reading enemy-side move state rather than accidentally reusing the player's byte.
+- At enemy `CheckTurn`, native player identity 25 and all six enemy native-identity cases remain intact. The real `DoTurn` category-state mask preserves `wMoveState = $01` on this path.
+- Real `UpdateMoveData` and `InitializeMove` run for the enemy turn and publish a valid move-script pointer without changing native identities or the selected enemy move.
+- The first real enemy `ReadMoveScriptByte` returns command byte `$02`, Tackle's `checkobedience` command, and advances `wBattleScriptBufferLoc` by exactly one byte.
+- The stop is installed only at the continuation after `ReadMoveScriptByte` returns. It writes the returned command byte directly to `wBattleEnded` and returns, so `wBattleEnded = $02` proves the real read occurred while no opponent battle-command body executes.
+- The `BattleCommand_checkobedience` hook remains player-only in this checkpoint, confirming the opponent's first command was read but not dispatched.
+- The first CI attempt (#266) exposed a harness expectation issue: enemy `DoTurn` correctly preserved the category-state bit (`wMoveState = $01`) instead of clearing the whole byte. The expected state was corrected.
+- The next CI attempt (#267) exposed a harness-only side effect from temporarily storing the returned command byte in `wCurDamage`; that observation was moved out of damage state and into `wBattleEnded`.
+- CI run #268 then exposed one remaining cloned assertion that still required 19 total script reads. The deeper path correctly performs 20: the validated 19 player reads plus one enemy read. That expectation was corrected.
+- Final validation: GitHub Actions CI run **#269** (`36132970935`) passed on commit `b83ec7a8c52059a988a4559392f175a902093194`.
+  - native enemy `DoTurn` initialization boundary: 6/6 cases passed on normal ROM
+  - native enemy `DoTurn` initialization boundary: 6/6 cases passed on debug ROM
+  - prior enemy `PerformMove -> DoTurn` regression also passed on normal and debug ROMs
+  - all configured ROM build variants completed successfully
+  - no CI step failed
+- Regression commit: `17958b5458e703c442dd838974e3641e58a14771`.
+- CI wiring commit: `141372734ce27be6be0dd7fe7b359ead89882316`.
+- Preserved move-state expectation correction: `e6c33d951b80fd2d0d81f4712d74b0f35e45fbfd`.
+- Damage-state-free post-read stop correction: `a95b454641ccd20b79f3c85824d705374bd411fd`.
+- Final script-read-count correction: `b83ec7a8c52059a988a4559392f175a902093194`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy's first `BattleCommand_checkobedience` dispatch for real (it should immediately return on the enemy turn), verify the script pointer and native identities remain correct, then stop at the second enemy `ReadMoveScriptByte` / `usedmovetext` boundary before that second command body executes.
+
 ## Latest checkpoint: native enemy PerformMove -> DoTurn entry regression (2026-09-25)
 
 - Added `tests/test_native_enemy_performmove_doturn_boundary.py` and wired it into normal/debug CI.
