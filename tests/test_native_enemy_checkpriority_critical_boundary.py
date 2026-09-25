@@ -3101,13 +3101,13 @@ def main():
                 (
                     25, native, 1, 45, 33, 0,
                     0, 100, 0, 83,
-                    34, 34, 33, 33, PRESSURE, 0, 0x10, 0x10,
+                    34, 34, 33, 33, PRESSURE, 0, 33, 0x10,
                     *advance_script_pointer(read_script_snapshots[19], 6),
                     0,
                 ),
             ], (
                 "enemy checkpriority entry lost native IDs, Tackle/PP, HP, "
-                "Pressure, hit state, neutral matchup, or script pointer",
+                "Pressure, hit state, preserved matchup scratch, or script pointer",
                 context, enemy_checkpriority_snapshots
             )
             assert enemy_priority_fainted_snapshots == [
@@ -3159,12 +3159,12 @@ def main():
             assert enemy_priority_result_snapshots == [
                 (
                     25, native, 1, 45, 33, 0,
-                    34, 34, 33, 33, PRESSURE, 0, 0x10, 0x10,
+                    34, 34, 33, 33, PRESSURE, 0, 33, 0x10,
                     *advance_script_pointer(read_script_snapshots[19], 7),
                 ),
             ], (
                 "enemy checkpriority did not return normally with preserved "
-                "native IDs, Tackle/PP, Pressure, hit/matchup state, and "
+                "native IDs, Tackle/PP, Pressure, hit/matchup scratch state, and "
                 "seventh-byte script pointer",
                 context, enemy_priority_result_snapshots
             )
