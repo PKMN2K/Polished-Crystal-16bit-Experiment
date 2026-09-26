@@ -1,3 +1,23 @@
+## Latest checkpoint: native enemy moveanim -> failuretext boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_moveanim_failuretext_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches the real `BattleCommand_moveanim` after deterministic enemy damage variation has produced damage **17**.
+- The existing presentation-only `PlayFXAnimID` boundary remains stubbed, while the real `lowersub -> moveanimnosub -> raisesub` move-animation control flow executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact through the real move-animation command. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, and varied damage remains **17**.
+- After real enemy `BattleCommand_moveanim` returns, the move-script loop performs a thirteenth real enemy `ReadMoveScriptByte`. It returns `failuretext` (`$0e`) and advances the enemy script pointer exactly thirteen bytes from the script start.
+- The returned `$0e` is captured at the controlled post-read stop, so enemy `BattleCommand_failuretext` and HP application are not dispatched in this checkpoint.
+- Final validation: GitHub Actions CI run **#312** (`36202590324`) passed on commit `7dfcba435c5a7b6a9e1ce4ddbb3b65cdded41d48`.
+  - native enemy `moveanim -> failuretext` boundary: 6/6 cases passed on normal ROM
+  - native enemy `moveanim -> failuretext` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `b8ba733c07aba067e47508aa14340ea20642df55`.
+- CI wiring commit: `31151bf1027d80d23f22b1cf3b90db39ac0c81d7`.
+- Final state-preservation correction: `7dfcba435c5a7b6a9e1ce4ddbb3b65cdded41d48`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_failuretext` dispatch for real, verify the successful-hit path preserves native identities and enemy-side state, then stop at the following `applydamage` command before enemy HP subtraction executes.
+
 ## Latest checkpoint: native enemy damagevariation -> moveanim boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_damagevariation_moveanim_boundary.py` and wired it into normal/debug CI.
