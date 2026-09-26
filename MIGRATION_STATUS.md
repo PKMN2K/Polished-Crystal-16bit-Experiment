@@ -1,3 +1,21 @@
+## Latest checkpoint: native HandleBetweenTurnEffects initial CheckFaint -> HandleWeather boundary regression (2026-09-26)
+
+- Added `tests/test_native_betweenturn_checkfaint_weather_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now enters the real `HandleBetweenTurnEffects` body after the post-flee `wBattleEnded = 0` check.
+- The routine's first real `call CheckFaint` executes through `ResolveFaints` with both active Pokémon still alive at **83 HP**. The carry result remains clear, so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandleWeather` entry, where the regression stops before weather processing begins.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, and `wEnemyFleeing` remains **0**.
+- Final validation: GitHub Actions CI run **#367** (`36222844831`) passed on commit `19d1d16dfbee32af1face34843beb808a55f8655`.
+  - native between-turn `CheckFaint -> HandleWeather` boundary: 6/6 cases passed on normal ROM
+  - native between-turn `CheckFaint -> HandleWeather` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `bf283b65c2525f06b9c92c4320aa62607c529801`.
+- CI wiring commit: `19d1d16dfbee32af1face34843beb808a55f8655`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real `HandleWeather` body on this fixture and advance to the following `CheckFaint` boundary, verifying the weather path does not disturb native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, or `wEnemyFleeing`.
+
 ## Latest checkpoint: native enemy post-flee -> HandleBetweenTurnEffects boundary regression (2026-09-26)
 
 - Added `tests/test_native_enemy_postcheck_betweenturn_boundary.py` and wired it into normal/debug CI.
