@@ -1,3 +1,24 @@
+## Latest checkpoint: native enemy criticaltext -> supereffectivetext boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_criticaltext_supereffectivetext_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches real `BattleCommand_criticaltext` after real enemy `applydamage` has reduced the player target from **100 HP to 83 HP** and recorded **17** damage.
+- The enemy Tackle remains on the ordinary non-critical path. Real `CheckCrit` observes no critical-hit bit, so `BattleCommand_criticaltext` takes its standard no-message wait and reaches `DelayFrames(20)`.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, player HP remains **83**, and `wDamageTaken` remains **17**.
+- After real enemy `BattleCommand_criticaltext` returns, the move-script loop performs a sixteenth real enemy `ReadMoveScriptByte`. It returns `supereffectivetext` (`$11`) and advances the enemy script pointer exactly sixteen bytes from the script start.
+- The returned `$11` is captured at the controlled post-read stop, so enemy `BattleCommand_supereffectivetext` does not dispatch in this checkpoint.
+- The first CI attempt exposed only an inherited regression-harness stop from the preceding applydamage checkpoint: it still stopped on the `criticaltext` byte before the command could dispatch. Removing that old stop allowed the real criticaltext command to execute; no gameplay/migration source code change was required.
+- Final validation: GitHub Actions CI run **#325** (`36207827975`) passed on commit `e65dabb47744a89bc660b936815aa3791a72034b`.
+  - native enemy `criticaltext -> supereffectivetext` boundary: 6/6 cases passed on normal ROM
+  - native enemy `criticaltext -> supereffectivetext` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `7c60c3dc84c4bb0fe114794adf91aa6ed402d449`.
+- CI wiring commit: `cc2873031de297c152862d19b6341c5f9ad92200`.
+- Inherited applydamage-stop correction: `e65dabb47744a89bc660b936815aa3791a72034b`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_supereffectivetext` dispatch for real on the validated neutral Normal-vs-Normal Tackle path, prove it takes the no-effectiveness-message return without disturbing native identity, PP, Pressure, player HP **83**, or damage bookkeeping **17**, then stop at the following `postfainteffects` command before its body executes.
+
 ## Latest checkpoint: native enemy applydamage -> criticaltext boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_applydamage_criticaltext_boundary.py` and wired it into normal/debug CI.
