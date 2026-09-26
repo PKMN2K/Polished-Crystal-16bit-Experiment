@@ -1,3 +1,21 @@
+## Latest checkpoint: native HandleWeather no-weather -> following CheckFaint boundary regression (2026-09-26)
+
+- Added `tests/test_native_betweenturn_weather_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated between-turn path now executes the real `HandleWeather` body after the initial `CheckFaint -> ResolveFaints` pass returns carry clear.
+- With `wBattleWeather = 0`, real `HandleWeather` executes `ld a, [wBattleWeather]`, `and a`, and its immediate `ret z`; no deeper weather handling is entered.
+- Execution then reaches the following real `CheckFaint` entry, where the regression stops before that second faint check executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, and `wEnemyFleeing` remains **0**.
+- Final validation: GitHub Actions CI run **#370** (`36223713779`) passed on commit `6138291e90890c26a0ce9b1d0c7d64496638175e`.
+  - native `HandleWeather` no-weather -> following `CheckFaint` boundary: 6/6 cases passed on normal ROM
+  - native `HandleWeather` no-weather -> following `CheckFaint` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `42bfca83a10672609fe60e5c24b8c7adaa7de022`.
+- CI wiring commit: `6138291e90890c26a0ce9b1d0c7d64496638175e`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the following between-turn `CheckFaint` execute through its real non-fainting `ResolveFaints` path, verify carry remains clear with both active Pokémon still at **83 HP**, then advance to the next stable `HandleBetweenTurnEffects` boundary while preserving native identities, PP, Pressure, damage bookkeeping, `wMoveState`, `wBattleEnded`, and `wEnemyFleeing`.
+
 ## Latest checkpoint: native HandleBetweenTurnEffects initial CheckFaint -> HandleWeather boundary regression (2026-09-26)
 
 - Added `tests/test_native_betweenturn_checkfaint_weather_boundary.py` and wired it into normal/debug CI.
