@@ -1,3 +1,22 @@
+## Latest checkpoint: native enemy supereffectivetext -> postfainteffects boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_supereffectivetext_postfainteffects_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches real `BattleCommand_supereffectivetext` after real enemy `criticaltext` has completed the non-critical `CheckCrit` + `DelayFrames(20)` path.
+- The deterministic Normal-vs-Normal Tackle remains neutral with `wTypeModifier = $10` (`EFFECTIVE`). Real `BattleCommand_supereffectivetext` therefore returns immediately without calling `StdBattleTextbox` and without entering Weakness Policy/item handling.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, player HP remains **83**, and `wDamageTaken` remains **17**.
+- After real enemy `BattleCommand_supereffectivetext` returns, the move-script loop performs a seventeenth real enemy `ReadMoveScriptByte`. It returns `postfainteffects` (`$12`) and advances the enemy script pointer exactly seventeen bytes from the script start.
+- The returned `$12` is captured at the controlled post-read stop, so enemy `BattleCommand_postfainteffects` does not dispatch in this checkpoint.
+- Final validation: GitHub Actions CI run **#328** (`36208791313`) passed on commit `bbbd9058c3aefd43bd9d30eccdbca08953e00975`.
+  - native enemy `supereffectivetext -> postfainteffects` boundary: 6/6 cases passed on normal ROM
+  - native enemy `supereffectivetext -> postfainteffects` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `df7392e757abce67f437c45116f5b57e0c5c87ff`.
+- CI wiring commit: `bbbd9058c3aefd43bd9d30eccdbca08953e00975`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_postfainteffects` dispatch for real on the validated non-fainting Tackle path, prove the player target at **83 HP** is recognized as alive and that post-faint handling returns without faint animation/experience/victory side effects while preserving native identity, PP, Pressure and damage bookkeeping **17**, then stop at the following `posthiteffects` command before its body executes.
+
 ## Latest checkpoint: native enemy criticaltext -> supereffectivetext boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_criticaltext_supereffectivetext_boundary.py` and wired it into normal/debug CI.
