@@ -43,6 +43,10 @@ def main():
     data = rom.read_bytes()
     perform_move_bank, perform_move_addr = symbols["PerformMove"]
     perform_move_original = data[offset("PerformMove"):offset("PerformMove") + 6]
+    end_protect_bank, end_protect_addr = symbols["PerformMove.end_protect"]
+    end_protect_original = data[
+        offset("PerformMove.end_protect"):offset("PerformMove.end_protect") + 6
+    ]
     read_dispatch_bank, read_dispatch_addr = symbols["DoMove.ReadMoveEffectCommand"]
     # The first instruction at ReadMoveEffectCommand is a 3-byte CALL to
     # ReadMoveScriptByte. Save the following dispatch bytes so each case can
@@ -2985,6 +2989,8 @@ def main():
         usedmovetext_active[0] = False
         for i, value in enumerate(perform_move_original):
             mem[perform_move_bank, perform_move_addr + i] = value
+        for i, value in enumerate(end_protect_original):
+            mem[end_protect_bank, end_protect_addr + i] = value
         for i, value in enumerate(read_dispatch_original):
             mem[read_dispatch_bank, read_dispatch_addr + 3 + i] = value
 
