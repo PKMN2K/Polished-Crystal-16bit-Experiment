@@ -21,6 +21,10 @@ from pyboy import PyBoy
 PRESSURE = 43
 
 
+class EnemyResolveBoundary(Exception):
+    pass
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("rom", type=Path)
@@ -45,10 +49,6 @@ def main():
     end_protect_bank, end_protect_addr = symbols["PerformMove.end_protect"]
     end_protect_original = data[
         offset("PerformMove.end_protect"):offset("PerformMove.end_protect") + 6
-    ]
-    resolve_faints_bank, resolve_faints_addr = symbols["ResolveFaints"]
-    resolve_faints_original = data[
-        offset("ResolveFaints"):offset("ResolveFaints") + 6
     ]
     read_dispatch_bank, read_dispatch_addr = symbols["DoMove.ReadMoveEffectCommand"]
     # The first instruction at ReadMoveEffectCommand is a 3-byte CALL to
@@ -386,6 +386,7 @@ def main():
     enemy_endmove_throat_spray_calls = []
     enemy_endmove_power_herb_calls = []
     enemy_cleanup_boundary_calls = []
+    enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
     endmove_effect_calls = []
     endmove_throat_spray_calls = []
@@ -2718,18 +2719,31 @@ def main():
                 mem[addr("wEnemyDisableCount")],
                 mem[addr("wEnemyEncoreCount")],
             ))
-            if enemy_resolve_stop_armed[0] and (mem[addr("hBattleTurn")] & 1):
-                # This refresh call is the final operation before PerformMove
-                # falls through into ResolveFaints.
-                stop = [
-                    0x3E, 0x7D,
-                    0xEA, addr("wBattleEnded") & 0xff, addr("wBattleEnded") >> 8,
-                    0xC9,
-                ]
-                for i, value in enumerate(stop):
-                    mem[resolve_faints_bank, resolve_faints_addr + i] = value
 
     def observe_resolve_faints(_):
+        if enemy_resolve_stop_armed[0] and (mem[addr("hBattleTurn")] & 1):
+            enemy_resolve_boundary_calls.append((
+                read_native("wBattleMonNativeSpecies"),
+                read_native("wEnemyMonNativeSpecies"),
+                mem[addr("hBattleTurn")],
+                mem[addr("wPlayerSubStatus2")],
+                mem[addr("wEnemySubStatus2")],
+                mem[addr("wPlayerSubStatus1")],
+                mem[addr("wEnemySubStatus1")],
+                mem[addr("wPlayerDisableCount")],
+                mem[addr("wPlayerEncoreCount")],
+                mem[addr("wEnemyDisableCount")],
+                mem[addr("wEnemyEncoreCount")],
+                mem[addr("wBattleMonHP")],
+                mem[addr("wBattleMonHP") + 1],
+                mem[addr("wEnemyMonHP")],
+                mem[addr("wEnemyMonHP") + 1],
+                mem[addr("wDamageTaken")],
+                mem[addr("wDamageTaken") + 1],
+            ))
+            cleanup_active[0] = False
+            mem[addr("wBattleEnded")] = 0x7D
+            raise EnemyResolveBoundary
         resolve_active[0] = True
         resolve_faints_calls.append((
             read_native("wBattleMonNativeSpecies"),
@@ -3003,8 +3017,6 @@ def main():
             mem[perform_move_bank, perform_move_addr + i] = value
         for i, value in enumerate(end_protect_original):
             mem[end_protect_bank, end_protect_addr + i] = value
-        for i, value in enumerate(resolve_faints_original):
-            mem[resolve_faints_bank, resolve_faints_addr + i] = value
         for i, value in enumerate(read_dispatch_original):
             mem[read_dispatch_bank, read_dispatch_addr + 3 + i] = value
 
@@ -3178,6 +3190,7 @@ def main():
             enemy_endmove_throat_spray_calls,
             enemy_endmove_power_herb_calls,
             enemy_cleanup_boundary_calls,
+            enemy_resolve_boundary_calls,
             endmove_effect_calls, endmove_throat_spray_calls,
             endmove_power_herb_calls,
             cleanup_tick_calls, cleanup_tilemap_calls, resolve_faints_calls,
@@ -3534,7 +3547,14 @@ def main():
             enemy_base_before = len(enemy_base_calls)
             active_base_before = len(active_base_calls)
 
-            invoke("DoBattle", max_frames=256)
+            try:
+                invoke("DoBattle", max_frames=256)
+            except EnemyResolveBoundary:
+                pass
+            else:
+                raise AssertionError(
+                    ("enemy cleanup did not reach ResolveFaints boundary", context)
+                )
 
             assert do_battle_calls == [True], ("DoBattle count", context, do_battle_calls)
             assert battle_turn_calls == [True], (
@@ -5750,6 +5770,18 @@ def main():
                 "did not produce the expected state before tilemap refresh",
                 context, cleanup_tilemap_calls
             )
+            assert enemy_resolve_boundary_calls == [
+                (
+                    25, native, 1,
+                    0, 0, 0, 0,
+                    5, 4, 6, 5,
+                    0, 83, 0, 83, 0, 17,
+                ),
+            ], (
+                "enemy cleanup did not reach ResolveFaints entry with the "
+                "expected cleaned side state and preserved HP/damage",
+                context, enemy_resolve_boundary_calls
+            )
             assert resolve_faints_calls == [
                 (25, native, 0, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 17),
             ], (
@@ -5841,7 +5873,7 @@ def main():
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
             assert mem[addr("wBattleEnded")] == 0x7D, (
-                "ResolveFaints entry sentinel did not execute after the real "
+                "ResolveFaints hook boundary did not stop after the real "
                 "enemy PerformMove cleanup tail", context,
                 mem[addr("wBattleEnded")]
             )
