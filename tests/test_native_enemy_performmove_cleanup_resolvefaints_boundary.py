@@ -5764,7 +5764,7 @@ def main():
             )
             assert cleanup_tilemap_calls == [
                 (25, native, 0, 0, 0, 0, 0, 4, 3, 7, 6),
-                (25, native, 1, 0, 0, 0, 0, 5, 4, 6, 5),
+                (25, native, 1, 0, 0, 0, 0, 5, 4, 7, 6),
             ], (
                 "real TickDisableAndEncoreAfterMove or Protect/Endure cleanup "
                 "did not produce the expected state before tilemap refresh",
@@ -5774,7 +5774,7 @@ def main():
                 (
                     25, native, 1,
                     0, 0, 0, 0,
-                    5, 4, 6, 5,
+                    5, 4, 7, 6,
                     0, 83, 0, 83, 0, 17,
                 ),
             ], (
@@ -5941,8 +5941,8 @@ def main():
             f"PASS: {count} native enemy PerformMove cleanup -> ResolveFaints cases; "
             "real enemy Normal Tackle preserved native IDs, PP, Pressure, "
             "player HP 83 and damage 17 -> real enemy cleanup cleared both "
-            "IN_ABILITY bits -> enemy Disable/Encore 7->6 and 6->5 -> player "
-            "Protect/Endure cleared -> tilemap boundary -> stop before "
+            "IN_ABILITY bits -> enemy Disable/Encore remained 7/6 on this "
+            "path -> player Protect/Endure cleared -> tilemap boundary -> stop before "
             "ResolveFaints body"
         )
     finally:
