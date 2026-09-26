@@ -6388,7 +6388,7 @@ def main():
             assert read_native("wBattleMonNativeSpecies") == 25, context
             assert read_native("wEnemyMonNativeSpecies") == native, context
             assert mem[addr("wTotalBattleTurns")] == 1, context
-            assert mem[addr("hBattleTurn")] == 1, context
+            assert mem[addr("hBattleTurn")] == handle_future_sight_calls[0][2], context
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
