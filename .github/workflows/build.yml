@@ -320,6 +320,10 @@ jobs:
         name: "Test native enemy DeferredSwitch to ResetAbilityIgnorance boundary (normal)"
         run: python tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-resetabilityignorance-postmove-boundary
+        name: "Test native enemy ResetAbilityIgnorance to post-move boundary (normal)"
+        run: python tests/test_native_enemy_resetabilityignorance_postmove_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -607,6 +611,10 @@ jobs:
       - id: test-native-enemy-deferredswitch-resetabilityignorance-boundary-debug
         name: "Test native enemy DeferredSwitch to ResetAbilityIgnorance boundary (debug)"
         run: python tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resetabilityignorance-postmove-boundary-debug
+        name: "Test native enemy ResetAbilityIgnorance to post-move boundary (debug)"
+        run: python tests/test_native_enemy_resetabilityignorance_postmove_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
