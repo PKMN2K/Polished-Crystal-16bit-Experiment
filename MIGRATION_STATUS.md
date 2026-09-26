@@ -1,3 +1,22 @@
+## Latest checkpoint: native enemy ResetAbilityIgnorance -> post-move boundary regression (2026-09-26)
+
+- Added `tests/test_native_enemy_resetabilityignorance_postmove_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues through the real enemy `ResetAbilityIgnorance` call after the real no-op `DeferredSwitch` path with `wDeferredSwitch = 0`.
+- The regression seeds `wMoveState = $55` before the enemy post-move switch/reset tail. Real `ResetAbilityIgnorance` clears exactly `MOVESTATE_IGNOREABIL` and `MOVESTATE_OPP_IGNOREABIL`, producing **$11**.
+- Execution then reaches the following `BattleTurn.do_move` post-reset `wBattleEnded` read boundary with `wBattleEnded = 0`, and stops before that read executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83** on both sides, and `wDamageTaken` remains **17**.
+- The earlier player-side `ResetAbilityIgnorance` remains real so the battle naturally advances to the enemy turn; the controlled post-reset stop applies only to the enemy-side boundary.
+- Final validation: GitHub Actions CI run **#355** (`36217520593`) passed on commit `9d318f96dcfea0a3ec4aa5ccb7aea4ab0a380d56`.
+  - native enemy `ResetAbilityIgnorance -> post-move` boundary: 6/6 cases passed on normal ROM
+  - native enemy `ResetAbilityIgnorance -> post-move` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `4bd5a69aad2054fa352e76fcccfbd9b24349665d`.
+- CI wiring commit: `9d318f96dcfea0a3ec4aa5ccb7aea4ab0a380d56`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy `BattleTurn.do_move` post-reset `wBattleEnded` read, `and a`, and `ret` execute for real with `wBattleEnded = 0`; verify the second `.do_move` returns cleanly to `BattleTurn`, then stop at the following `ProcessEnemyFleeing` entry before its body executes while proving native identities, PP, Pressure, both party HP **83**, damage bookkeeping **17**, and `wMoveState = $11` remain intact.
+
 ## Latest checkpoint: native enemy DeferredSwitch -> ResetAbilityIgnorance boundary regression (2026-09-26)
 
 - Added `tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py` and wired it into normal/debug CI.
