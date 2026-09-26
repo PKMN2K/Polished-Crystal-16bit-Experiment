@@ -1265,6 +1265,7 @@ endr
 .got_partymon
 	ld a, [wCurPartyMon]
 	call GetPartyLocation
+	call .store_native_identity
 	push hl
 	ld de, wBattleMonSpecies
 	call .get_user_mon_attr_de
@@ -1285,6 +1286,12 @@ endr
 	rst CopyBytes ; copy Level, Status, Unused, HP, MaxHP, Stats
 	pop de
 
+	; Player records may contain transient IDs; battle structs remain legacy.
+	; Opponent parties still use their established legacy representation.
+	ldh a, [hBattleTurn]
+	and a
+	call z, .decode_player_identity
+
 	ldh a, [hBattleTurn]
 	and a
 	ld hl, wTempBattleMonSpecies
@@ -1295,8 +1302,12 @@ endr
 	ld [wCurSpecies], a
 	ld [wCurPartySpecies], a
 	ld [hl], a
-	pop hl
-	ld bc, MON_FORM - MON_SPECIES
+	pop hl ; discard the saved source pointer
+	; Read the decoded battle form, including its preserved metadata bits.
+	ld h, d
+	ld l, e
+	assert wBattleMonForm - wBattleMonSpecies == wEnemyMonForm - wEnemyMonSpecies
+	ld bc, wBattleMonForm - wBattleMonSpecies
 	add hl, bc
 	ldh a, [hBattleTurn]
 	and a
@@ -1310,7 +1321,7 @@ endr
 .got_temp_form
 	ld [de], a
 
-	call GetBaseData
+	farcall GetBaseDataFromActiveBattleNativeSpecies
 	ld de, wBattleMonType1
 	call .get_user_mon_attr_de
 	ld hl, wBaseType1
@@ -1456,6 +1467,52 @@ endr
 	ld hl, wEnemySwitchTarget
 .got_switch_target
 	ld [hl], 0
+	ret
+
+.store_native_identity
+; Preserve a full native identity beside the legacy active-battle structure.
+; Player records follow the persistent format marker; opponent records remain
+; legacy until the broader battle/opponent representation migration.
+	push hl
+	push de
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	ldh a, [hBattleTurn]
+	and a
+	jr nz, .store_enemy_native
+	farcall GetNativeSpeciesIDFromPokemonDataStruct
+	ld hl, wBattleMonNativeSpecies
+	jr .store_native_word
+.store_enemy_native
+	farcall GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	ld hl, wEnemyMonNativeSpecies
+.store_native_word
+	ld [hl], c
+	inc hl
+	ld [hl], b
+	pop bc
+	pop de
+	pop hl
+	ret
+
+.decode_player_identity
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld a, [wCurPartyMon]
+	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
+	ld a, c
+	ld [wBattleMonSpecies], a
+	ld a, [wBattleMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wBattleMonForm], a
+	pop bc
+	pop de
+	pop hl
 	ret
 
 .get_user_mon_attr_de
@@ -2154,14 +2211,7 @@ FaintUserPokemon:
 .got_cry_tracks
 	ld [wCryTracks], a
 
-	ld hl, wBattleMonSpecies
-	call GetUserMonAttr
-	ld c, [hl]
-	assert wBattleMonForm - wBattleMonSpecies == wEnemyMonForm - wEnemyMonSpecies
-	ld de, wBattleMonForm - wBattleMonSpecies
-	add hl, de
-	ld b, [hl]
-	farcall PlaySlowCryBC
+	farcall PlayFaintCryFromActiveNativeSpecies
 	ld de, SFX_KINESIS
 	call PlaySFX
 
@@ -2984,13 +3034,13 @@ OfferSwitch:
 	ret
 
 Function_SetEnemyPkmnAndSendOutAnimation:
-	; wCurPartySpecies and wCurForm should already be set
-	ld a, [wCurPartySpecies]
-	ld [wCurSpecies], a
-	call GetBaseData
+	; Decode the selected opponent party member for legacy temporary-record
+	; users, but load base data from its already-published native battle ID.
+	; The previous preliminary GetBaseData was redundant: the old copy
+	; routine immediately repeated that one-byte species/form lookup.
 	ld a, OTPARTYMON
 	ld [wMonType], a
-	farcall CopyPkmnToTempMon
+	farcall CopyEnemyBattlePkmnToTempMon
 	call GetMonFrontpic
 
 	xor a
@@ -3032,17 +3082,13 @@ BattleAnimateFrontpic:
 
 .no_substitute
 	hlcoord 12, 0
-	lb de, $0, ANIM_MON_SLOW
-	farjp AnimateFrontpic ; also plays cry
+	lb de, $0, ANIM_MON_BATTLE_SLOW
+	farjp AnimateNativeEnemyBattleFrontpic ; also plays cry
 
 .cry_no_anim
 	ld a, $f
 	ld [wCryTracks], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wCurForm]
-	ld b, a
-	jmp PlayStereoCry
+	farjp PlayEnemyBattleStereoCry
 
 CheckPlayerActiveSubPic:
 	ld a, [wPlayerSubStatus4]
@@ -3086,10 +3132,12 @@ NewEnemyMonStatus:
 
 ResetEnemyAbility:
 	push hl
+	ld hl, wEnemyMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
 	ld hl, wEnemyMonPersonality
-	ld a, [wEnemyMonSpecies]
-	ld c, a
-	call GetAbility
+	farcall GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wEnemyAbility], a
@@ -3098,10 +3146,12 @@ ResetEnemyAbility:
 
 ResetPlayerAbility:
 	push hl
+	ld hl, wBattleMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
 	ld hl, wBattleMonPersonality
-	ld a, [wBattleMonSpecies]
-	ld c, a
-	call GetAbility
+	farcall GetAbilityFromNativeIDBC
 	pop hl
 	ld a, b
 	ld [wPlayerAbility], a
@@ -3225,11 +3275,7 @@ SendOutPlayerMon:
 	jr c, .statused
 	ld a, $f0
 	ld [wCryTracks], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wCurForm]
-	ld b, a
-	call PlayStereoCry
+	farcall PlayPlayerBattleStereoCry
 
 .statused
 	call UpdatePlayerHUD
@@ -4042,14 +4088,8 @@ endr
 	ld a, [wCurBattleMon]
 	ld hl, wPartyMon1Species
 	call GetPartyLocation
-	ld a, [hl]
-	ld [wCurPartySpecies], a
-	ld [wCurSpecies], a
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	ld a, [hl]
-	ld [wCurForm], a
-	call GetBaseData
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
+	farcall GetBaseDataFromPokemonDataStruct
 
 	pop hl
 	dec hl
@@ -6647,12 +6687,10 @@ GiveExperiencePoints:
 .skip2
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
-	ld [wCurSpecies], a
-	ld de, MON_FORM - MON_SPECIES
-	add hl, de
-	ld a, [hl]
-	ld [wCurForm], a
-	call GetBaseData
+	push bc ; experience recipient's party pointer
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
+	pop bc
+	farcall GetBaseDataFromPokemonDataStruct
 	push bc
 	ld d, MAX_LEVEL
 	farcall CalcExpAtLevel
@@ -7695,6 +7733,20 @@ TextJump_GoodComeBack:
 	text_farend Text_GoodComeBack
 TextJump_ComeBack:
 	text_farend Text_ComeBack
+ResetSafariCatchRateFromEnemyNativeSpecies::
+; Restore the wild opponent's normal catch rate after bait/rock modifiers.
+; Preserve the legacy species/form globals as before, but use the direct native
+; active-enemy identity for the base-data lookup.
+	ld a, [wEnemyMonSpecies]
+	ld [wCurSpecies], a
+	ld a, [wEnemyMonForm]
+	ld [wCurForm], a
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
+	ret c
+	ld a, [wBaseCatchRate]
+	ld [wEnemyMonCatchRate], a
+	ret
+
 HandleSafariAngerEatingStatus:
 	ld hl, wSafariMonEating
 	ld a, [hl]
@@ -7713,14 +7765,7 @@ HandleSafariAngerEatingStatus:
 	ld hl, BattleText_WildPkmnIsAngry
 	jr nz, .finish
 	push hl
-	; reset the catch rate to normal if bait/rock effects have worn off
-	ld a, [wEnemyMonSpecies]
-	ld [wCurSpecies], a
-	ld a, [wEnemyMonForm]
-	ld [wCurForm], a
-	call GetBaseData
-	ld a, [wBaseCatchRate]
-	ld [wEnemyMonCatchRate], a
+	call ResetSafariCatchRateFromEnemyNativeSpecies
 	pop hl
 
 .finish
@@ -7872,12 +7917,11 @@ DropPlayerSub:
 	push af
 	ld a, [wCurForm]
 	push af
-	ld a, [wBattleMonSpecies]
-	ld [wCurPartySpecies], a
-	ld a, [wBattleMonForm]
-	ld [wCurForm], a
+	farcall PreparePlayerBattlePictureIdentity
+	jr c, .restore_identity
 	ld de, vTiles2 tile $31
 	farcall GetBackpic
+.restore_identity
 	pop af
 	ld [wCurForm], a
 	pop af
@@ -7906,13 +7950,13 @@ DropEnemySub:
 	push af
 	ld a, [wCurForm]
 	push af
-	ld a, [wEnemyMonSpecies]
+	farcall PrepareEnemyBattlePictureIdentity
+	jr c, .restore_identity
+	ld a, [wCurPartySpecies]
 	ld [wCurSpecies], a
-	ld [wCurPartySpecies], a
-	ld a, [wEnemyMonForm]
-	ld [wCurForm], a
-	call GetBaseData
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
 	call GetFrontpicOrGhostpic
+.restore_identity
 	pop af
 	ld [wCurForm], a
 	pop af
@@ -7930,7 +7974,8 @@ GetFrontpicOrGhostpic:
 
 .not_ghost_battle
 	ld de, vTiles2
-	farjp PrepareAnimatedFrontpic
+	; Only battle pictures skip the generic legacy base-data lookup.
+	farjp PrepareNativeEnemyBattleAnimatedFrontpic
 
 GetFrontpic_DoAnim:
 	ldh a, [hBattleTurn]
@@ -7996,21 +8041,14 @@ BattleIntro:
 	jr nc, .skip_ghost_reveal
 	ld hl, SilphScopeRevealText
 	call StdBattleTextbox
-	ld de, vTiles0
-	farcall GetFrontpic
+	call RevealGhostEnemyFrontpic
 	ld de, ANIM_GHOST_TRANSFORM
 	call PlayBattleAnimDE
 	ld hl, WildPokemonAppearedText
 	call StdBattleTextbox
 	ld a, BATTLETYPE_NORMAL
 	ld [wBattleType], a
-	ld a, [wCurPartySpecies]
-	ld c, a
-	ld a, [wEnemyMonForm]
-	ld b, a
-	push bc
-	call SetSeenMon
-	pop bc
+	call RecordRevealedGhostEnemySeen
 .skip_ghost_reveal
 	ld hl, rLCDC
 	set B_LCDC_WIN_MAP, [hl]
@@ -8030,6 +8068,29 @@ BattleIntro:
 	call z, UpdateEnemyHUD
 	ld a, TRANSFER_TILEMAP
 	ldh [hBGMapMode], a
+	ret
+
+RevealGhostEnemyFrontpic:
+; Silph Scope exposes the active enemy, not the legacy pre-battle species.
+; Keep the established vTiles0 ghost-to-Pokemon animation destination.
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld de, vTiles0
+	farcall GetFrontpic
+	ret
+
+RecordRevealedGhostEnemySeen:
+; The animation may alter renderer globals. Resolve the native shadow again
+; so the Dex sees the same mechanical/cosmetic form that was revealed.
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld a, [wCurPartySpecies]
+	ld c, a
+	ld a, [wCurForm]
+	ld b, a
+	push bc
+	call SetSeenMon
+	pop bc
 	ret
 
 LoadTrainerOrWildMonPic:

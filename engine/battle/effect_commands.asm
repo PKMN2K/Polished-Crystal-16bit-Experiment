@@ -1339,25 +1339,35 @@ TrueUserValidBattleItem:
 	ret nz
 	; fallthrough
 UserValidBattleItem:
-; Checks if the user's held item applies to the species+form.
+; Checks if the user's held item applies to the current native species identity.
 ; Used for items like Leek, Lucky Punch, Thick Club, etc.
 ; Returns z if the item is valid.
 	push hl
 	push de
 	push bc
 
-	; Get item, species and form data.
+	; Get the current held item.
 	ld hl, wBattleMonItem
 	call GetUserMonAttr
-	ld a, [hl]
-	ld de, wBattleMonSpecies - wBattleMonItem
-	add hl, de
+	ld d, [hl]
+
+	; Get the current active native identity. This deliberately follows
+	; Transform rather than the original party species.
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_native
+	ld hl, wEnemyMonNativeSpecies
+.got_native
 	ld c, [hl]
-	ld de, wBattleMonForm - wBattleMonSpecies
-	add hl, de
+	inc hl
 	ld b, [hl]
-	ld d, a
-	ld hl, .ValidBattleItemTable
+	; The old zero-form table entry was a form wildcard. Resolve a mechanical
+	; native variant back to its root species before matching to preserve that.
+	push de
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
+	ld hl, ValidBattleItemTableNative
 
 .loop
 	; Check if we reached the end of the table.
@@ -1369,17 +1379,17 @@ UserValidBattleItem:
 	dec a
 	cp d
 	ld a, [hli]
-	jr nz, .next
+	jr nz, .skip_high
 
-	; Does the item apply to the species?
+	; Does the full native species ID match?
 	cp c
-	jr nz, .next
-
-	; Check exact species+form.
-	ld a, [hl]
-	call CompareSpeciesForm
+	jr nz, .skip_high
+	ld a, [hli]
+	cp b
 	jr z, .matched
-.next
+	jr .loop
+
+.skip_high
 	inc hl
 	jr .loop
 .matched
@@ -1392,11 +1402,10 @@ UserValidBattleItem:
 
 MACRO species_battle_item
 	db \1
-	shift
-	dp \#
+	dw \2
 ENDM
 
-.ValidBattleItemTable:
+ValidBattleItemTableNative::
 	species_battle_item LIGHT_BALL, PIKACHU
 	species_battle_item LEEK, FARFETCH_D
 	species_battle_item LEEK, SIRFETCH_D
@@ -1456,19 +1465,22 @@ UserCanLoseItem:
 	jmp PopBCDEHL
 
 .CompareUserSpecies:
+	push de
 	push hl
-	ld a, MON_SPECIES
-	call UserPartyAttr
+	push bc
+	farcall GetUserPartySpeciesAndForm
+	ld a, c
+	ld e, b
+	pop bc
+	pop hl
 	cp c
-	pop hl
-	ret nz
-	push hl
-	ld a, MON_FORM
-	call UserPartyAttr
-	pop hl
-	ld b, a
+	jr nz, .comparison_done
+	ld b, e
 	ld a, [hl]
-	jmp CompareSpeciesForm
+	call CompareSpeciesForm
+.comparison_done
+	pop de
+	ret
 
 .EssentialItemTable:
 	species_battle_item ARMOR_SUIT, MEWTWO, MEWTWO_ARMORED_FORM
@@ -1526,14 +1538,14 @@ BattleCommand_stab:
 	ld b, a
 	call GetFutureSightUser
 	jr z, .not_external
-	ld a, MON_SPECIES
-	call TrueUserPartyAttr
+	push bc ; retain move type for STAB comparison
+	farcall GetTrueUserPartySpeciesAndForm
+	ld a, c
 	ld [wCurSpecies], a
-	ld a, MON_FORM
-	call TrueUserPartyAttr
-	and SPECIESFORM_MASK
+	ld a, b
 	ld [wCurForm], a
-	call GetBaseData
+	pop bc
+	farcall GetBaseDataFromTrueUserParty
 	ld hl, wBaseType
 	jr .got_attacker_types
 .not_external
@@ -3850,25 +3862,19 @@ DittoMetalPowder:
 	assert !HIGH(DITTO)
 if !DEF(FAITHFUL)
 	; grabs true species -- works even if transformed to non-Ditto
-	ld a, MON_FORM
-	call OpponentPartyAttr
+	push bc
+	farcall GetOpponentPartySpeciesAndForm
+	ld a, b
 	and EXTSPECIES_MASK
+	ld a, c
+	pop bc
 	ret nz
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
 else
 	; only works if current species is Ditto
-	ld hl, wBattleMonForm
-	call GetOpponentMonAttr
-	ld a, [hl]
-	and EXTSPECIES_MASK
+	ld bc, DITTO
+	farcall IsOpponentActiveNativeSpeciesBC
 	ret nz
-	ld hl, wBattleMonSpecies
-	call GetOpponentMonAttr
-	ld a, [hl]
 endc
-	cp DITTO
-	ret nz
 
 	push bc
 	call GetOpponentItem
@@ -3881,16 +3887,8 @@ endc
 UnevolvedEviolite:
 	push hl
 	push bc
-	; c = species
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
-	ld c, a
-	; b = form
-	ld a, MON_FORM
-	call OpponentPartyAttr
-	and SPECIESFORM_MASK
-	ld b, a
-	; bc = index
+	farcall GetOpponentPartySpeciesAndForm
+	; bc = decoded species/form
 	farcall GetEvosAttacksPointer
 	ld a, BANK(EvosAttacks)
 	call GetFarByte
@@ -6772,16 +6770,7 @@ CheckBattleAnimSubstitution:
 	ld hl, HardenUsers
 	; fallthrough
 .check_species_list
-	push hl
-	ld hl, wBattleMonSpecies
-	call GetUserMonAttr
-	ld a, [hl]
-	ld bc, wBattleMonForm - wBattleMonSpecies
-	add hl, bc
-	ld c, a
-	ld b, [hl]
-	pop hl
-	farcall IsLegacySpeciesInNativeList
+	farcall IsActiveBattleNativeSpeciesInList
 	ret nc
 	ld a, e
 	ld [wFXAnimIDLo], a

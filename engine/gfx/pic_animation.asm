@@ -17,6 +17,7 @@ PokeAnims:
 	dw .Menu ; unused
 	dw .Egg1
 	dw .Egg2
+	dw .BattleSlow
 
 .Slow:   pokeanim StereoCry, Setup2, Play
 .Normal: pokeanim StereoCry, Setup, Play
@@ -26,6 +27,7 @@ PokeAnims:
 .Hatch:  pokeanim Extra, Play, CryNoWait, Setup, Play, SetWait, Wait, Extra, Play
 .Egg1:   pokeanim Setup, Play
 .Egg2:   pokeanim Extra, Play
+.BattleSlow: pokeanim NativeEnemyStereoCry, Setup2, Play
 
 AnimateFrontpic::
 	call IsCurPartySpeciesAPokemon
@@ -45,10 +47,46 @@ AnimateFrontpic::
 	ldh [rWBK], a
 	ret
 
+AnimateNativeEnemyBattleFrontpic::
+; Explicit battle-only animation entry. The regular animation entry keeps
+; its legacy base-data side effect for trade, hatch and menu pictures.
+	ld a, [wCurPartySpecies]
+	push af
+	ld a, [wCurForm]
+	push af
+	farcall PrepareEnemyBattlePictureIdentity
+	jr c, .restore_identity
+	call IsCurPartySpeciesAPokemon
+	jr c, .restore_identity
+
+	ldh a, [rWBK]
+	push af
+	ld a, BANK(wPokeAnimStruct)
+	ldh [rWBK], a
+	call LoadNativeEnemyBattleMonAnimation
+.loop
+	call TickPokeAnim
+	jr nc, .loop
+
+	pop af
+	ldh [rWBK], a
+.restore_identity
+	pop af
+	ld [wCurForm], a
+	pop af
+	ld [wCurPartySpecies], a
+	ret
+
 LoadFrontpicAnim::
 	ld a, BANK(wPokeAnimStruct)
 	call StackCallInWRAMBankA
 LoadMonAnimation:
+	and a ; generic animation dimensions
+	jr LoadMonAnimationWithMode
+LoadNativeEnemyBattleMonAnimation:
+	scf ; native enemy dimensions; never infer battle context from globals
+LoadMonAnimationWithMode:
+	push af
 ; hl contains TileMap coords
 	ld a, l
 	ld [wPokeAnimCoord], a
@@ -80,7 +118,13 @@ LoadMonAnimation:
 	call GetFarWRAMByte
 	ld [wPokeAnimVariant], a
 
+	pop af
+	jr nc, .generic_dims
+	call GetNativeEnemyFrontpicDims
+	jr .got_dims
+.generic_dims
 	call GetFrontpicDims
+.got_dims
 	ld a, c
 	ld [wPokeAnimFrontpicHeight], a
 	ret
@@ -91,12 +135,23 @@ GetFrontpicDims:
 	ld a, $1
 	ldh [rWBK], a
 
-	; This is no longer needed for the pic size, but do it just
-	; in case subsequent code expects base data available
+	; Generic callers retain the base-data side effect.
 	ld a, [wCurPartySpecies]
 	ld [wCurSpecies], a
 	call GetBaseData ; [wCurForm] is already set
+	jr GetNativeEnemyFrontpicDims.read_size
 
+GetNativeEnemyFrontpicDims:
+; Load native base data into WRAM bank 1 for battle animation sizing.
+; The previous picture preparation may be separated by battle effects.
+	ldh a, [rWBK]
+	push af
+	ld a, $1
+	ldh [rWBK], a
+	ld a, [wCurPartySpecies]
+	ld [wCurSpecies], a
+	farcall GetBaseDataFromEnemyBattleNativeSpecies
+.read_size
 	call GetPicSize
 	ld c, a
 	pop af
@@ -140,6 +195,7 @@ PokeAnim_SetupCommands:
 	add_setup_command PokeAnim_Play2
 	add_setup_command PokeAnim_CryNoWait
 	add_setup_command PokeAnim_StereoCry
+	add_setup_command PokeAnim_NativeEnemyStereoCry
 
 PokeAnim_SetWait:
 	ld a, 18
@@ -216,6 +272,21 @@ PokeAnim_CryNoWait:
 	ld a, [wPokeAnimVariant]
 	ld b, a
 	call PlayMonCry2
+	ld hl, wPokeAnimSceneIndex
+	inc [hl]
+	ret
+
+PokeAnim_NativeEnemyStereoCry:
+; Battle-only command: animation WRAM differs from the active battle bank.
+	ldh a, [rWBK]
+	push af
+	ld a, BANK(wEnemyMonNativeSpecies)
+	ldh [rWBK], a
+	ld a, $f
+	ld [wCryTracks], a
+	farcall PlayEnemyBattleStereoCryNoWait
+	pop af
+	ldh [rWBK], a
 	ld hl, wPokeAnimSceneIndex
 	inc [hl]
 	ret

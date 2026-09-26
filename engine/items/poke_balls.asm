@@ -237,17 +237,28 @@ GetSpeciesWeight::
 	ld a, BANK(PokemonBodyData)
 	jmp GetFarWord ; get weight
 
+GetNativeSpeciesWeight::
+; input: bc = one-based native species ID
+; output: hl = weight
+	call GetBodyDataPointerFromNativeIDBC
+	inc hl ; skip height
+	ld a, BANK(PokemonBodyData)
+	jmp GetFarWord ; get weight
+
 HeavyBallMultiplier:
 ; subtract 20 from base catch rate if weight < 102.4 kg
 ; else add 0 to base catch rate if weight < 204.8 kg
 ; else add 20 to base catch rate if weight < 307.2 kg
 ; else add 30 to base catch rate if weight < 409.6 kg
 ; else add 40 to base catch rate
-	ld a, [wEnemyMonSpecies]
-	ld c, a
-	ld a, [wEnemyMonForm]
-	ld b, a
-	call GetSpeciesWeight
+	ld hl, wEnemyMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	ld a, b
+	or c
+	ret z
+	call GetNativeSpeciesWeight
 
 	ld b, h
 	ld hl, wEnemyMonCatchRate
@@ -350,28 +361,7 @@ MoonBallMultiplier:
 
 LoveBallMultiplier:
 ; multiply catch rate by 8 if mons are of same species, different sex
-	push bc
-
-	; does species match?
-	ld a, MON_SPECIES
-	call TrueUserPartyAttr
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	ld c, a
-	ld a, [hl]
-	and EXTSPECIES_MASK
-	ld b, a
-
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
-	cp c
-	ld a, b
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	pop bc
-	ret nz
-	and EXTSPECIES_MASK
-	cp [hl]
+	farcall BattlePartyRootsMatch
 	ret nz
 
 	farcall CheckOppositeGender

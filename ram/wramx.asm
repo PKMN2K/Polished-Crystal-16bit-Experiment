@@ -737,7 +737,7 @@ wLinkBattleRNs:: ds 10
 
 NEXTU
 ; battle data
-	ds 7
+	ds 3
 wCurEnemyItem:: db
 	ds 15
 
@@ -870,6 +870,14 @@ wTimeOfDay:: db
 wOtherTrainerType:: db
 
 wTrainerGroupBank:: db
+
+; Direct native identities for the active battlers. These must not live in the
+; scratch UNION above: real HP subtraction uses wHPBuffer1/2/3 and would
+; otherwise overwrite these words during BattleCommand_applydamage.
+; These are native words, not transient conversion-table IDs, so battle state
+; does not create table roots.
+wBattleMonNativeSpecies:: dw
+wEnemyMonNativeSpecies:: dw
 
 
 SECTION "Enemy Party", WRAMX
@@ -1510,7 +1518,8 @@ wPokemonData::
 wPartyCount::   db ; number of Pokémon in party
 
 wPokemonDataFormat:: dw
-	ds 5 ; unused
+wPokemonIndexTableFormat:: dw ; checksummed save-envelope version
+	ds 3 ; unused
 
 wPartyMons::
 assert wPartyMons - wPartyCount == 8

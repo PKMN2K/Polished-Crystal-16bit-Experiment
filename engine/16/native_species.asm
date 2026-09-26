@@ -6,6 +6,55 @@ GetBaseDataFromNativeIDBC::
 	dec bc
 	jp GetBaseDataFromIndexBC
 
+
+GetAbilityFromNativeIDBC::
+; in: bc = one-based native species ID, hl = target personality
+; out: ability in a and b; preserves hl, de and c
+; Reads the base-data ability bytes through a far pointer so this routine can
+; live outside ROM0 without disturbing the current base-data buffer.
+	ld a, b
+	or c
+	jr z, .no_ability
+
+	ld a, [wInitialOptions]
+	and ABILITIES_OPTMASK
+	jr z, .got_ability
+
+	push de
+	push hl
+	ld a, [hl]
+	and ABILITY_MASK
+	push af
+	push bc
+
+	ld hl, BaseData
+	ld a, BANK(BaseData)
+	call LoadIndirectPointer
+	ld d, a
+	ld bc, BASE_ABILITIES
+	add hl, bc
+
+	pop bc
+	pop af
+	cp ABILITY_1
+	jr z, .got_ability_ptr
+	inc hl
+	cp ABILITY_2
+	jr z, .got_ability_ptr
+	inc hl
+.got_ability_ptr
+	ld a, d
+	call GetFarByte
+	pop hl
+	pop de
+	jr .got_ability
+
+.no_ability
+	xor a
+.got_ability
+	ld b, a
+	ret
+
 GetEggMovePointerFromNativeIDBC::
 ; in: bc = one-based native species ID
 ; out: a:hl = egg-move record pointer
@@ -152,9 +201,11 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 ; representation.
 ; in: bc = one-based native species ID, a = raw form
 ; out: a = c = root species byte, b = encoded form
+	push hl
 	push af
 	call GetRootSpeciesFromNativeIDBC
 	pop af
+	pop hl
 	ld e, a
 	ld a, b
 	assert MON_EXTSPECIES_F == 5
@@ -179,6 +230,66 @@ LoadLegacySpeciesFromNativeWord::
 	ld b, a
 	xor a
 	jp GetLegacySpeciesAndFormFromNativeIDBC
+
+IsOpponentActiveNativeSpeciesBC::
+; Compare the current move user's opponent with a one-based native species ID.
+; hBattleTurn selects which active shadow is the opponent.
+; in: bc = native species ID
+; out: z if the opponent matches exactly; preserves hl
+	push hl
+	ld hl, wEnemyMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_opponent
+	ld hl, wBattleMonNativeSpecies
+.got_opponent
+	ld a, [hli]
+	cp c
+	jr nz, .done
+	ld a, [hl]
+	cp b
+.done
+	pop hl
+	ret
+
+IsActiveBattleNativeSpeciesInList::
+; Test the current move user's direct native battle identity against a
+; zero-terminated native-ID word list. hBattleTurn selects player (0) or enemy.
+; in: hl = native-ID list
+; out: carry set if found; preserves de
+	push de
+	push hl
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_shadow
+	ld hl, wEnemyMonNativeSpecies
+.got_shadow
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	pop hl
+.loop
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	inc hl
+	ld a, d
+	or e
+	jr z, .not_found
+	ld a, e
+	cp c
+	jr nz, .loop
+	ld a, d
+	cp b
+	jr nz, .loop
+	scf
+	pop de
+	ret
+.not_found
+	and a
+	pop de
+	ret
 
 IsLegacySpeciesInNativeList::
 ; Test a transitional species/form pair against a zero-terminated native-ID
@@ -276,6 +387,8 @@ StoreRoamMonNativeSpecies::
 ; Store a native species ID in a structure's transient species byte.
 ; in: bc = one-based native species ID, hl = structure species byte
 	push hl
+	ld h, b
+	ld l, c
 	call GetPokemonIDFromIndex
 	pop hl
 	ld [hl], a
@@ -417,11 +530,548 @@ PrepareLegacyPokemonDataStructForStorage::
 	ret
 
 PokemonDataUsesTransientSpecies::
-; Return z when party, opponent-party, and daycare structures use transient
-; conversion-table species IDs.
+; Return z when persistent player-party and daycare structures use transient
+; conversion-table species IDs. This marker does not describe legacy opponent
+; workspaces; source-selecting loaders must also check their record type.
 	ld a, [wPokemonDataFormat]
 	cp LOW(POKEMON_DATA_TRANSIENT_FORMAT)
 	ret nz
 	ld a, [wPokemonDataFormat + 1]
 	cp HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	ret
+
+PokemonDataSourceUsesTransientSpecies::
+; Opponent/link parties remain legacy even when player/daycare records use
+; transient IDs. Match GetPkmnSpecies/GetPkmnForm's source selection; do not
+; apply the player save-format marker to an opponent record.
+; out: z for a transient source, nz for a legacy source; preserves bc/de/hl
+	ld a, [wMonType]
+	cp OTPARTYMON
+	jr z, .legacy_opponent
+	jp PokemonDataUsesTransientSpecies
+.legacy_opponent
+	ld a, 1
+	and a
+	ret
+
+CopyCaughtPokemonToParty::
+; Copy the legacy wild opponent into a player slot, then convert only the
+; completed destination identity to the active persistent format.
+; in: a = zero-based player-party slot (caller has increased wPartyCount)
+; The opponent record and all non-identity bytes remain unchanged.
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	push hl
+	ld d, h
+	ld e, l
+	ld hl, wOTPartyMon1Species
+	ld bc, PARTYMON_STRUCT_LENGTH
+	rst CopyBytes
+	pop hl
+	jp PrepareLegacyPokemonDataStructForStorage
+
+GetLeadAbilityFromPokemonData::
+; Returns a = lead ability (zero for an Egg/empty record), preserving bc/de/hl
+; and the current species/form globals and base data.
+	ld a, [wPartyMon1IsEgg]
+	and IS_EGG_MASK
+	xor IS_EGG_MASK
+	ret z
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	inc a
+	jr z, .done
+	dec a
+	jr z, .done
+	ld hl, wPartyMon1Personality
+	call GetAbility
+.done
+	jp PopBCDEHL
+
+PrepareGeneratedPlayerMonForStorage::
+; TryAddMonToParty has finished its legacy construction. Convert only player
+; records; trainer/wild/temporary gift opponent workspaces remain legacy.
+; Preserves bc/de/hl; caller sets carry to report successful insertion.
+	ld a, [wMonType]
+	and $f
+	ret nz
+	push hl
+	push de
+	push bc
+	ldh a, [hMoveMon]
+	dec a
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	call PrepareLegacyPokemonDataStructForStorage
+	jp PopBCDEHL
+
+GetUserPartySpeciesAndForm::
+; Return a=c=legacy species, b=encoded form, hl=source species address.
+; Preserve de; player records follow the marker, opponents remain legacy.
+	ld a, MON_SPECIES
+	call UserPartyAttr
+	ldh a, [hBattleTurn]
+	jr DecodeBattlePartySpeciesAndForm
+
+GetOpponentPartySpeciesAndForm::
+	ld a, MON_SPECIES
+	call OpponentPartyAttr
+	ldh a, [hBattleTurn]
+	xor 1
+	; fallthrough
+DecodeBattlePartySpeciesAndForm:
+	push de
+	and a
+	jr nz, .legacy
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	pop de
+	ret
+.legacy
+	ld c, [hl]
+	push hl
+	ld de, MON_FORM - MON_SPECIES
+	add hl, de
+	ld a, [hl]
+	and SPECIESFORM_MASK
+	ld b, a
+	ld a, c
+	pop hl
+	pop de
+	ret
+
+GetTrueUserPartySpeciesAndForm::
+; TrueUserPartyAttr accounts for a delayed Future Sight user off the field.
+	ld a, MON_SPECIES
+	call TrueUserPartyAttr
+	ldh a, [hBattleTurn]
+	jp DecodeBattlePartySpeciesAndForm
+
+BattlePartyRootsMatch::
+; z if the true user and opponent have the same root species (forms ignored).
+	push hl
+	push de
+	push bc
+	call GetTrueUserPartySpeciesAndForm
+	ld d, b
+	ld e, c
+	call GetOpponentPartySpeciesAndForm
+	ld a, c
+	cp e
+	jr nz, .done
+	ld a, b
+	xor d
+	and EXTSPECIES_MASK
+.done
+	jp PopBCDEHL
+
+ConvertCopiedPartyTempIdentity::
+; After CopyBetweenPartyAndTemp copies a record: b=direction/type flags,
+; c=zero-based slot. Both the OT workspace and temp records remain legacy.
+	bit 7, b
+	ret nz
+	push hl
+	push de
+	push bc
+	ld a, c
+	ld hl, wPartyMon1Species
+	call GetPartyLocation
+	bit 0, b
+	jr z, .to_party
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	ld a, c
+	ld [wTempMonSpecies], a
+	ld a, [wTempMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wTempMonForm], a
+	jr .done
+.to_party
+	call PrepareLegacyPokemonDataStructForStorage
+.done
+	jp PopBCDEHL
+
+EncodeNativeBoxIdentity::
+; Newbox reserves species byte zero as an explicit native-record tag.
+; Native ID lives in the two formerly unused extra bytes; layout is unchanged.
+	ld a, [wEncodedTempMonSpecies]
+	ld c, a
+	ld a, [wEncodedTempMonForm]
+	and SPECIESFORM_MASK
+	ld b, a
+	call GetSpeciesAndFormIndex
+	inc bc
+	ld a, c
+	ld [wEncodedTempMonExtra + 1], a
+	ld a, b
+	ld [wEncodedTempMonExtra + 2], a
+	xor a
+	ld [wEncodedTempMonSpecies], a
+	ret
+
+DecodeNativeBoxIdentity::
+; Called only after the stored checksum has been checked. Carry on bad ID.
+; Old nonzero legacy species records need no conversion and remain readable.
+	ld a, [wEncodedTempMonSpecies]
+	and a
+	ret nz
+	ld a, [wEncodedTempMonExtra + 1]
+	ld c, a
+	ld a, [wEncodedTempMonExtra + 2]
+	ld b, a
+	or c
+	jr z, .invalid
+	ld a, b
+	cp HIGH(NUM_NATIVE_SPECIES + 1)
+	jr c, .valid
+	jr nz, .invalid
+	ld a, c
+	cp LOW(NUM_NATIVE_SPECIES + 1)
+	jr nc, .invalid
+.valid
+	; $0100 is the unused root slot, not a storable species.
+	ld a, b
+	cp 1
+	jr nz, .decode
+	ld a, c
+	and a
+	jr z, .invalid
+.decode
+	ld a, [wEncodedTempMonForm]
+	and FORM_MASK
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld a, c
+	ld [wEncodedTempMonSpecies], a
+	ld a, [wEncodedTempMonForm]
+	and ~SPECIESFORM_MASK
+	or b
+	ld [wEncodedTempMonForm], a
+	and a
+	ret
+.invalid
+	scf
+	ret
+
+RefreshPartyIdentityAfterFormChange::
+; Mechanical forms have their own native IDs; refresh the stored slot after
+; a form-byte edit without ever treating the transient byte as a root species.
+	call PokemonDataUsesTransientSpecies
+	ret nz
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld a, [wCurPartyMon]
+	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
+	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	push hl
+	farcall GetTransientIDFromLegacySpeciesAndForm
+	pop hl
+	ld [hl], a
+	jp PopBCDEHL
+
+MigrateLegacyPlayerPokemonData::
+; RAM-only migration; publish the format marker after all eight records exist.
+; Dedicated locks keep partially converted records alive during collection,
+; while the old marker still prevents scanning them as transient records.
+; Caller must already have loaded/validated the save's conversion table.
+; Kept behind the activation gate until gameplay and >$01ff proofs pass.
+	call PokemonDataUsesTransientSpecies
+	ret z
+	push hl
+	push de
+	push bc
+	ld hl, wPartyMon1Species
+	ld b, PARTY_LENGTH
+	ld c, MON_LOCK_SAVE_MIGRATION_START
+.party
+	call .convert_and_lock
+	ld de, PARTYMON_STRUCT_LENGTH
+	add hl, de
+	dec b
+	jr nz, .party
+	ld hl, wBreedMon1Species
+	call .convert_and_lock
+	ld hl, wBreedMon2Species
+	call .convert_and_lock
+	ld a, LOW(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat], a
+	ld a, HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat + 1], a
+	ld l, MON_LOCK_SAVE_MIGRATION_START
+.unlock
+	xor a
+	push hl
+	call LockPokemonID
+	pop hl
+	inc l
+	ld a, l
+	cp MON_LOCK_SAVE_MIGRATION_END
+	jr nz, .unlock
+	jp PopBCDEHL
+.convert_and_lock
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	farcall MigrateLegacySpeciesAndFormAtHL
+	pop bc
+	push hl
+	ld a, [hl]
+	ld l, c
+	push bc
+	call LockPokemonID
+	pop bc
+	pop hl
+	inc c
+	ret
+
+GetNativeSpeciesIDFromPokemonDataStruct::
+; in: hl = player/daycare species byte, de = form offset
+; out: bc = one-based native ID (zero for an empty record)
+; Preserve hl/de and do not publish legacy globals or allocate a table slot.
+	call PokemonDataUsesTransientSpecies
+	jr nz, GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	push hl
+	push de
+	ld a, [hl]
+	farcall GetNativeSpeciesIDFromTransientID
+	pop de
+	pop hl
+	ret
+
+GetNativeSpeciesIDFromLegacyPokemonDataStruct::
+; Same contract, for opponent records independent of the player format marker.
+	push hl
+	push de
+	ld a, [hl]
+	ld c, a
+	ld b, 0
+	add hl, de
+	ld a, [hl]
+	and SPECIESFORM_MASK
+	ld b, a
+	ld a, c
+	and a
+	jr nz, .convert
+	ld a, b
+	and EXTSPECIES_MASK
+	jr z, .done
+.convert
+	call GetSpeciesAndFormIndex
+	inc bc
+.done
+	pop de
+	pop hl
+	ret
+
+GetBaseDataFromPokemonDataStruct::
+; Load base data directly from a persistent native identity. This avoids a
+; native -> legacy root/form -> native round-trip at the data lookup boundary.
+; in: hl = player/daycare species byte; preserves bc/de/hl and species globals
+; out: carry set for an empty identity (base-data buffer left unchanged)
+	push hl
+	push de
+	push bc
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
+LoadBaseDataFromNonzeroNativeIDBC:
+	ld a, b
+	or c
+	scf
+	ret z
+	farcall GetBaseDataFromNativeIDBC
+	and a
+	ret
+
+GetBaseDataFromEnemyBattleNativeSpecies::
+; Load base data directly from the active enemy's native identity shadow.
+; Preserve bc/de/hl and species globals; carry set for an empty shadow.
+	push hl
+	push de
+	push bc
+	ld hl, wEnemyMonNativeSpecies
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
+PreparePlayerBattlePictureIdentity::
+; Publish renderer-compatible species/form from the current native shadow.
+; Preserve bc/de/hl; carry for an empty/reserved identity, globals unchanged.
+	push hl
+	push de
+	push bc
+	ld hl, wBattleMonNativeSpecies
+	ld a, [wBattleMonForm]
+	jr PrepareBattlePictureIdentity
+
+PrepareEnemyBattlePictureIdentity::
+	push hl
+	push de
+	push bc
+	ld hl, wEnemyMonNativeSpecies
+	ld a, [wEnemyMonForm]
+PrepareBattlePictureIdentity:
+	and FORM_MASK
+	ld e, a
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	ld a, b
+	or c
+	jr z, .invalid
+	; The reserved root $0100 has no renderable legacy species byte.
+	ld a, b
+	cp 1
+	jr nz, .valid
+	ld a, c
+	and a
+	jr z, .invalid
+.valid
+	ld a, b
+	cp HIGH(NUM_SPECIES)
+	jr c, .root
+	jr nz, .variant
+	ld a, c
+	cp LOW(NUM_SPECIES) + 1
+	jr c, .root
+.variant
+	; Mechanical form comes from native identity, not a stale legacy form.
+	push bc
+	farcall GetNativeVariantIdentityPointer
+	ld de, 4
+	add hl, de
+	ld a, BANK(NativeVariantIdentityTable)
+	call GetFarByte
+	pop bc
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	jr .publish
+.root
+	; Keep cosmetic overlays only when they resolve to the same native root.
+	push bc
+	ld a, e
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	push bc
+	call GetSpeciesAndFormIndex
+	inc bc
+	pop de
+	pop hl
+	ld a, b
+	cp h
+	jr nz, .plain
+	ld a, c
+	cp l
+	jr nz, .plain
+	ld b, d
+	ld c, e
+	jr .publish
+.plain
+	ld b, h
+	ld c, l
+	ld a, PLAIN_FORM
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+.publish
+	ld a, c
+	ld [wCurPartySpecies], a
+	ld a, b
+	ld [wCurForm], a
+	and a
+	jp PopBCDEHL
+.invalid
+	scf
+	jp PopBCDEHL
+
+GetBaseDataFromActiveBattleNativeSpecies::
+; Load base data from the native identity shadow of the active battler.
+; hBattleTurn selects player (0) or enemy (1). Preserve bc/de/hl and species
+; globals; carry set for an empty shadow, leaving base data unchanged.
+	push hl
+	push de
+	push bc
+	ld hl, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .got_shadow
+	ld hl, wEnemyMonNativeSpecies
+.got_shadow
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jp PopBCDEHL
+
+GetBaseDataFromTrueUserParty::
+; Load the original attacker's base data, including delayed Future Sight.
+; Player records follow their format marker; opponent records remain legacy.
+; Preserve bc/de/hl and species globals; carry set for an empty identity.
+	push hl
+	push de
+	push bc
+	ld a, MON_SPECIES
+	call TrueUserPartyAttr
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .player
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	call LoadBaseDataFromNonzeroNativeIDBC
+	jr .done
+.player
+	call GetBaseDataFromPokemonDataStruct
+.done
+	jp PopBCDEHL
+
+
+CopyEnemyBattlePkmnToTempMon::
+; Send-out-only bridge lives outside the full bank14. Decode the selected
+; opponent party member into the existing temporary legacy representation,
+; but load its base data from the current native enemy battle identity.
+; Caller sets wMonType = OTPARTYMON and wCurPartyMon to the selected slot.
+	farcall GetPkmnSpecies
+	farcall GetPkmnForm
+	call GetBaseDataFromEnemyBattleNativeSpecies
+	jr nc, .copy
+	; Preserve the legacy fallback when the native shadow is not populated.
+	farcall GetBaseData
+.copy
+	; Reuse the existing byte-exact temporary-record copy without doing its
+	; redundant legacy base-data lookup.
+	farcall _CopyPkmnToTempMon.copy_data
+	ret
+
+
+PrepareNativeEnemyBattleAnimatedFrontpic::
+; Explicit battle-only frontpic entry. Generic renderer consumers retain
+; their legacy GetBaseData side effect. The native shadow is the authority
+; even if the transitional species/form globals disagree.
+; in: de = frontpic VRAM destination (vTiles2 for the enemy)
+	farcall PrepareEnemyBattlePictureIdentity
+	ret c
+	ld a, [wCurPartySpecies]
+	ld [wCurSpecies], a
+	call GetBaseDataFromEnemyBattleNativeSpecies
+	ret c
+
+	ldh a, [rWBK]
+	push af
+	xor a
+	assert NO_BG_MAP_TRANSFER == 0
+	ldh [hBGMapMode], a
+	farcall _GetNativeFrontpic
+	ld a, BANK(vTiles3)
+	ldh [rVBK], a
+	farcall GetAnimatedFrontpic
+	xor a
+	ldh [rVBK], a
+	pop af
+	ldh [rWBK], a
 	ret
