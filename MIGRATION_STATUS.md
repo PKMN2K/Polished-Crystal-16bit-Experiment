@@ -1,3 +1,21 @@
+## Latest checkpoint: native second CheckFaint -> HandleAffectionSelfCure boundary regression (2026-09-26)
+
+- Added `tests/test_native_betweenturn_second_checkfaint_affection_boundary.py` and wired it into normal/debug CI.
+- The validated between-turn path now continues past the real `HandleWeather` WEATHER_NONE return and executes the following real `CheckFaint -> ResolveFaints` pass.
+- Both active Pokémon remain alive at **83 HP**. The second `ResolveFaints` returns carry clear, so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandleAffectionSelfCure` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, and `wBattleWeather` remains **0**.
+- Final validation: GitHub Actions CI run **#373** (`36248718907`) passed on commit `d39d8d9ad8a4ad63a8a728cd27364ee0c53370c9`.
+  - native second `CheckFaint -> HandleAffectionSelfCure` boundary: 6/6 cases passed on normal ROM
+  - native second `CheckFaint -> HandleAffectionSelfCure` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `84114c1ef4e49d9863ef01db5d406e6bffdb4f83`.
+- CI wiring commit: `d39d8d9ad8a4ad63a8a728cd27364ee0c53370c9`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real `HandleAffectionSelfCure` body on this fixture and advance to the `HandleFutureSight` entry. Verify both sides take the intended low-affection/no-cure path without changing native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, or weather state.
+
 ## Latest checkpoint: native HandleWeather no-weather -> following CheckFaint boundary regression (2026-09-26)
 
 - Added `tests/test_native_betweenturn_weather_postcheck_boundary.py` and wired it into normal/debug CI.
