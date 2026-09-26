@@ -304,6 +304,10 @@ jobs:
         name: "Test native enemy posthiteffects to endmove boundary (normal)"
         run: python tests/test_native_enemy_posthiteffects_endmove_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-endmove-performmove-cleanup-boundary
+        name: "Test native enemy endmove to PerformMove cleanup boundary (normal)"
+        run: python tests/test_native_enemy_endmove_performmove_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -575,6 +579,10 @@ jobs:
       - id: test-native-enemy-posthiteffects-endmove-boundary-debug
         name: "Test native enemy posthiteffects to endmove boundary (debug)"
         run: python tests/test_native_enemy_posthiteffects_endmove_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-endmove-performmove-cleanup-boundary-debug
+        name: "Test native enemy endmove to PerformMove cleanup boundary (debug)"
+        run: python tests/test_native_enemy_endmove_performmove_cleanup_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
