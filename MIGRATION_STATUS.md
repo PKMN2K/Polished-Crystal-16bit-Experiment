@@ -1,3 +1,27 @@
+## Latest checkpoint: native enemy endmove -> PerformMove cleanup boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_endmove_performmove_cleanup_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now lets the original terminal **`$ff`** endmove byte execute its real `DoTurn` terminal helper chain: `CheckEndMoveEffects -> CheckThroatSpray -> CheckPowerHerb`.
+- After `CheckPowerHerb` returns, the regression stops exactly at `PerformMove.end_protect`, before the enemy cleanup tail clears `SUBSTATUS_IN_ABILITY`, ticks Disable/Encore, clears Protect/Endure, refreshes the tilemap, or enters `ResolveFaints`.
+- A one-shot **`$7e`** `wBattleEnded` sentinel is written by the patched `PerformMove.end_protect` boundary. The test also verifies that only the already-completed player cleanup/ResolveFaints calls exist at that point, proving no enemy cleanup work has started.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP is 34/34, enemy active/OT-party Tackle PP is 33/33, the player target keeps Pressure, active player HP remains **83**, enemy HP remains **83**, and `wDamageTaken` remains **17**.
+- Because enemy `ResolveFaints` is intentionally not reached in this checkpoint, the player party record correctly remains at **100 HP** while the active player battle record is **83 HP**. The enemy party record already remains at **83 HP** from the earlier player-turn write-back.
+- The nineteenth enemy `ReadMoveScriptByte` still reads the untouched terminal `$ff` byte and advances the enemy move-script pointer exactly nineteen bytes before the terminal helper chain executes.
+- Initial CI attempt #338 exposed only a PyBoy harness limitation: a hook registered at `PerformMove.end_protect` did not fire after that address was dynamically overwritten. The stop was changed to self-verify with the `$7e` sentinel instead.
+- CI attempt #339 then exposed only test-case isolation: the dynamically patched `PerformMove.end_protect` bytes persisted into the next native-species case. The original six bytes are now restored at the start of every case.
+- Final validation: GitHub Actions CI run **#340** (`36211499502`) passed on commit `2c9753e467084f33916a8e8db2f438103c2deffb`.
+  - native enemy `endmove -> PerformMove cleanup` boundary: 6/6 cases passed on normal ROM
+  - native enemy `endmove -> PerformMove cleanup` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `75023aaf5a67a7e403ee79cc828a96113f9687ba`.
+- CI wiring commit: `a1874c4b5370589fcaf19e485d0da2eb1e8e6d38`.
+- Self-verifying pre-cleanup stop correction: `e8c22d1049aab3c3d2a2af78e15ccc6f8172669c`.
+- Per-case `PerformMove.end_protect` restoration correction: `2c9753e467084f33916a8e8db2f438103c2deffb`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy `PerformMove` cleanup tail execute for real: clear both `SUBSTATUS_IN_ABILITY` bits, run the real `TickDisableAndEncoreAfterMove`, clear opponent Protect/Endure, and reach the real tilemap-refresh call site; then stop at the `ResolveFaints` entry before its body executes, while proving native identity, Tackle/PP, Pressure, player HP **83**, enemy HP **83**, and damage bookkeeping **17** are preserved.
+
 ## Latest checkpoint: native enemy posthiteffects -> endmove boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_posthiteffects_endmove_boundary.py` and wired it into normal/debug CI.
