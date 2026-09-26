@@ -312,6 +312,10 @@ jobs:
         name: "Test native enemy PerformMove cleanup to ResolveFaints boundary (normal)"
         run: python tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-enemy-resolvefaints-deferredswitch-boundary
+        name: "Test native enemy ResolveFaints to DeferredSwitch boundary (normal)"
+        run: python tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -591,6 +595,10 @@ jobs:
       - id: test-native-enemy-performmove-cleanup-resolvefaints-boundary-debug
         name: "Test native enemy PerformMove cleanup to ResolveFaints boundary (debug)"
         run: python tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resolvefaints-deferredswitch-boundary-debug
+        name: "Test native enemy ResolveFaints to DeferredSwitch boundary (debug)"
+        run: python tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
