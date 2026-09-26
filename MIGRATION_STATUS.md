@@ -1,3 +1,22 @@
+## Latest checkpoint: native enemy post-flee -> HandleBetweenTurnEffects boundary regression (2026-09-26)
+
+- Added `tests/test_native_enemy_postcheck_betweenturn_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the real `ProcessEnemyFleeing` zero-return boundary. With `wBattleEnded = 0`, `BattleTurn` executes the following real `ld a, [wBattleEnded]`, `and a`, and `ret nz`; the return is not taken.
+- Execution then reaches the real farcalled `HandleBetweenTurnEffects` entry, where the regression stops before that routine's body executes.
+- `wEnemyFleeing` remains **0** and `EnemyCanFlee` is not entered.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83** on both sides, `wDamageTaken` remains **17**, and `wMoveState` remains **$11**.
+- Final validation: GitHub Actions CI run **#364** (`36222154839`) passed on commit `0353946bb8b58f06f49502e8f26dd27a793fa847`.
+  - native enemy post-flee -> `HandleBetweenTurnEffects` boundary: 6/6 cases passed on normal ROM
+  - native enemy post-flee -> `HandleBetweenTurnEffects` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `136e67cf062d21114b0898df67b64f3c5e34c241`.
+- CI wiring commit: `0983480f14f4f83e63a61052e426ff1c042903a2`.
+- Boundary-test fixes: `934b27c5fa85f056542b37c9febd9059711ff2c0`, `0353946bb8b58f06f49502e8f26dd27a793fa847`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** enter the real `HandleBetweenTurnEffects` body and advance to its first stable internal boundary while preserving the same native identity, PP, Pressure, HP, damage-bookkeeping, move-state, and fleeing-state invariants.
+
 ## Latest checkpoint: native enemy ProcessEnemyFleeing -> post-check boundary regression (2026-09-26)
 
 - Added `tests/test_native_enemy_processenemyfleeing_postcheck_boundary.py` and wired it into normal/debug CI.
