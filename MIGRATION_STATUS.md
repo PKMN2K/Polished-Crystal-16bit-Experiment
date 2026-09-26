@@ -1,3 +1,23 @@
+## Latest checkpoint: native enemy ResolveFaints -> DeferredSwitch boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues through the real non-fainting `ResolveFaints` body after the enemy's real `PerformMove` cleanup tail completes.
+- Real `UpdateBattleMonInParty` writes the active player battle HP of **83** back to the player party record, replacing the pre-checkpoint party HP of 100. Real `UpdateEnemyMonInParty` preserves the enemy party HP at **83**, matching the active enemy battle record.
+- The real non-fainting path performs its living-opponent and fit-player-party checks while avoiding `FaintUserPokemon`, `GiveExperience`, and `PlayVictoryMusic`. `wBattleEnded` remains 0.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, active player HP remains **83**, enemy HP remains **83**, and `wDamageTaken` remains **17**.
+- After enemy `ResolveFaints` returns, the regression reaches the enemy `DeferredSwitch` entry with `wDeferredSwitch = 0` and stops before the first `DeferredSwitch` instruction executes. No forced-switch handling or later `ResetAbilityIgnorance` work is included in this checkpoint.
+- The controlled stop uses a PyBoy entry hook that redirects the CPU to a WRAM self-loop only on the enemy-side `DeferredSwitch` boundary. The earlier player-side `DeferredSwitch` remains real so the battle can naturally advance to the enemy turn.
+- Final validation: GitHub Actions CI run **#349** (`36215411180`) passed on commit `acf68938a54e0dbf8780b92d1fe2c1325c81efd1`.
+  - native enemy `ResolveFaints -> DeferredSwitch` boundary: 6/6 cases passed on normal ROM
+  - native enemy `ResolveFaints -> DeferredSwitch` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `219ef7b8ce9f51e0aff71f317ef69984552af66f`.
+- CI wiring commit: `acf68938a54e0dbf8780b92d1fe2c1325c81efd1`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy `DeferredSwitch` routine execute for real with `wDeferredSwitch = 0`, verify it takes the natural no-op return without entering `ForceDeferredSwitch`, then stop at the following `ResetAbilityIgnorance` entry before its body executes while proving native identity, PP, Pressure, player/enemy party HP **83**, and damage bookkeeping **17** remain intact.
+
 ## Latest checkpoint: native enemy PerformMove cleanup -> ResolveFaints boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py` and wired it into normal/debug CI.
