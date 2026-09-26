@@ -1,3 +1,30 @@
+## Latest checkpoint: native enemy PerformMove cleanup -> ResolveFaints boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now runs the real `PerformMove` cleanup tail after the original terminal **`$ff`** endmove helper chain returns.
+- The enemy cleanup clears both player/enemy `SUBSTATUS_IN_ABILITY` bits, executes the real `TickDisableAndEncoreAfterMove` call, clears the player opponent's Protect/Endure bits, and reaches the real `LoadTileMapToTempTileMap` call site.
+- Side-specific cleanup sentinels confirm that on this validated wild enemy-Tackle path the seeded player Disable/Encore counters remain 5/4 and the seeded enemy Disable/Encore counters remain **7/6** after `TickDisableAndEncoreAfterMove`. The regression records this observed engine behavior rather than assuming the player-side 5->4 / 4->3 behavior applies to the enemy path.
+- After the tilemap-refresh boundary returns, execution reaches the `ResolveFaints` entry. The PyBoy hook records the entry state and redirects the CPU back to `PerformMove`'s caller before the first `ResolveFaints` instruction executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, active player HP remains **83**, enemy HP remains **83**, and `wDamageTaken` remains **17**.
+- Because enemy `ResolveFaints` is intentionally not executed yet, the player party record remains at **100 HP** while the active player battle record is **83 HP**. The enemy party record remains at **83 HP** from the earlier player-turn write-back.
+- Early validation attempts exposed harness-only stop issues:
+  - the first dynamic `ResolveFaints` ROM-entry patch interacted poorly with the already-installed PyBoy hook and left the test running into the battle loop;
+  - raising an exception inside the PyBoy hook was swallowed by PyBoy rather than propagating to the test harness;
+  - the final boundary stop records the hook state, writes a `$7d` sentinel, pops `PerformMove`'s real caller return address from the CPU stack, and redirects `PC` there, stopping before the `ResolveFaints` body without gameplay source changes.
+- Final validation: GitHub Actions CI run **#346** (`36214211461`) passed on commit `de57a4ef29bfb3526e3fbdff14a83c33e1f3bb13`.
+  - native enemy `PerformMove cleanup -> ResolveFaints` boundary: 6/6 cases passed on normal ROM
+  - native enemy `PerformMove cleanup -> ResolveFaints` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `9db19d466fb46f35cdfc48f8edd53be99eeeffce`.
+- CI wiring commit: `b68655c5b64ed54ab1d0a9c16eb75a1c7ca03354`.
+- Hook-entry stop correction: `4935fa020e7de6389880dfce263a4d11ad7a5277`.
+- CPU return-address boundary correction: `3c77d40383252ddf1e03672ea3389b5c6e240347`.
+- Final observed enemy counter-state correction: `de57a4ef29bfb3526e3fbdff14a83c33e1f3bb13`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `ResolveFaints` execute for real on this non-fainting path, verify player/enemy active state is written back to their party records (including player HP **83**), confirm no faint animation, experience, or victory handling runs, then stop at the following `DeferredSwitch` boundary before post-move switching logic executes.
+
 ## Latest checkpoint: native enemy endmove -> PerformMove cleanup boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_endmove_performmove_cleanup_boundary.py` and wired it into normal/debug CI.
