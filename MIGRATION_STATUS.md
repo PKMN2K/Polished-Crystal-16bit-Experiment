@@ -1,3 +1,23 @@
+## Latest checkpoint: native HandleAffectionSelfCure -> HandleFutureSight boundary regression (2026-09-26)
+
+- Added `tests/test_native_betweenturn_affection_futuresight_boundary.py` and wired it into normal/debug CI.
+- The validated between-turn path now executes the real `HandleAffectionSelfCure` body after the second non-fainting `CheckFaint -> ResolveFaints` pass.
+- `HandleAffectionSelfCure` executes its real `SetFastestTurn -> .do_it -> SwitchTurn -> .do_it` structure. The deterministic `CheckAffection` test stub returns below `AFFECTION_LEVEL_2` on both battlers, so both native `.do_it` passes take their immediate `ret c` before cure RNG or status mutation.
+- Execution then reaches the real `HandleFutureSight` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, and `wBattleWeather` remains **0**.
+- The first CI attempt exposed a regression-harness-only assumption that `hBattleTurn` would still be enemy-side after real affection turn ordering. The corrected assertion now verifies the final turn matches the second affection-side pass instead of forcing `hBattleTurn = 1`.
+- Final validation: GitHub Actions CI run **#377** (`36249709932`) passed on commit `7a595c77586e80a3092abecbb7f781de19cf98f5`.
+  - native `HandleAffectionSelfCure -> HandleFutureSight` boundary: 6/6 cases passed on normal ROM
+  - native `HandleAffectionSelfCure -> HandleFutureSight` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `06c0c15c4751bff2dc6b86853c41998f9a4536f2`.
+- CI wiring commit: `b15139bab8b273ca80c5ccad84f52b2f95beafcc`.
+- Harness turn-state correction: `7a595c77586e80a3092abecbb7f781de19cf98f5`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real `HandleFutureSight` body with both Future Sight counters at zero. Verify `SetFastestTurn` visits both sides, each `.do_it` takes the native zero-counter return without delayed-move processing, then advance to the following `CheckFaint` boundary while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, and weather state.
+
 ## Latest checkpoint: native second CheckFaint -> HandleAffectionSelfCure boundary regression (2026-09-26)
 
 - Added `tests/test_native_betweenturn_second_checkfaint_affection_boundary.py` and wired it into normal/debug CI.
