@@ -2167,17 +2167,9 @@ def main():
                 mem[addr("wBattleScriptBufferLoc")],
                 mem[addr("wBattleScriptBufferLoc") + 1],
             ))
-            # applydamage has already been read and dispatched. Stop only after
-            # its real body returns and the next real read yields criticaltext
-            # ($10), before criticaltext dispatches.
-            stop = [
-                0xEA,
-                addr("wBattleEnded") & 0xff,
-                addr("wBattleEnded") >> 8,
-                0xC9,
-            ]
-            for i, value in enumerate(stop):
-                mem[read_dispatch_bank, read_dispatch_addr + 3 + i] = value
+            # Continue through the real criticaltext command. The controlled
+            # post-read stop is installed only when criticaltext itself
+            # dispatches.
         else:
             applydamage_active[0] = True
             applydamage_calls.append(True)
