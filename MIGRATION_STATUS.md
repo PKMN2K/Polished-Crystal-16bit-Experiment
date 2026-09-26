@@ -1,3 +1,21 @@
+## Latest checkpoint: native enemy post-move -> ProcessEnemyFleeing boundary regression (2026-09-26)
+
+- Added `tests/test_native_enemy_postmove_processenemyfleeing_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues past the previous post-`ResetAbilityIgnorance` stop. With `wBattleEnded = 0`, the real final `BattleTurn.do_move` `ld a, [wBattleEnded]`, `and a`, and `ret` execute normally.
+- The caller's following `ret nz` does not return from `BattleTurn`; execution falls through to the real `ProcessEnemyFleeing` entry, where the regression stops before that routine's first instruction executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83** on both sides, `wDamageTaken` remains **17**, and `wMoveState` remains **$11**.
+- The earlier player-side post-move return remains real so the battle naturally advances to the enemy turn; the controlled stop applies only to the final enemy-side `ProcessEnemyFleeing` boundary.
+- Final validation: GitHub Actions CI run **#357** (`36219429793`) passed on commit `cf8f12cf3fe5c108b717603e4fb0c79e73c207d4`.
+  - native enemy post-move -> `ProcessEnemyFleeing` boundary: 6/6 cases passed on normal ROM
+  - native enemy post-move -> `ProcessEnemyFleeing` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `e2f20c3b97e7af27f16469c77189ab7e361e26b0`.
+- CI wiring commit: `cf8f12cf3fe5c108b717603e4fb0c79e73c207d4`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let `ProcessEnemyFleeing` execute for real with the fixture's `wEnemyFleeing = 0`, prove it takes its immediate `ret z` without entering `EnemyCanFlee` or any flee text, then stop at the following `BattleTurn` `wBattleEnded` read before that read executes while preserving native identities, PP, Pressure, both party HP **83**, damage bookkeeping **17**, and `wMoveState = $11`.
+
 ## Latest checkpoint: native enemy ResetAbilityIgnorance -> post-move boundary regression (2026-09-26)
 
 - Added `tests/test_native_enemy_resetabilityignorance_postmove_boundary.py` and wired it into normal/debug CI.
