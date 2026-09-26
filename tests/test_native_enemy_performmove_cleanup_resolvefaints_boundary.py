@@ -21,10 +21,6 @@ from pyboy import PyBoy
 PRESSURE = 43
 
 
-class EnemyResolveBoundary(Exception):
-    pass
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("rom", type=Path)
@@ -2743,7 +2739,14 @@ def main():
             ))
             cleanup_active[0] = False
             mem[addr("wBattleEnded")] = 0x7D
-            raise EnemyResolveBoundary
+            # ResolveFaints is reached by fallthrough from PerformMove, so the
+            # current stack top is PerformMove's caller return address. Emulate
+            # RET here to stop before the first ResolveFaints instruction.
+            sp = regs.SP
+            return_pc = mem[sp] | (mem[(sp + 1) & 0xffff] << 8)
+            regs.SP = (sp + 2) & 0xffff
+            regs.PC = return_pc
+            return
         resolve_active[0] = True
         resolve_faints_calls.append((
             read_native("wBattleMonNativeSpecies"),
@@ -3547,15 +3550,12 @@ def main():
             enemy_base_before = len(enemy_base_calls)
             active_base_before = len(active_base_calls)
 
-            try:
-                invoke("DoBattle", max_frames=256)
-            except EnemyResolveBoundary:
-                pass
-            else:
-                raise AssertionError(
-                    ("enemy cleanup did not reach ResolveFaints boundary", context)
-                )
+            invoke("DoBattle", max_frames=256)
 
+            assert enemy_resolve_boundary_calls, (
+                "enemy cleanup did not reach ResolveFaints boundary",
+                context,
+            )
             assert do_battle_calls == [True], ("DoBattle count", context, do_battle_calls)
             assert battle_turn_calls == [True], (
                 "first BattleTurn entry count", context, battle_turn_calls
