@@ -1,3 +1,24 @@
+## Latest checkpoint: native enemy failuretext -> applydamage boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_failuretext_applydamage_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues through the real `BattleCommand_failuretext` after real enemy move animation and deterministic varied damage **17**.
+- The successful-hit state remains intact, so real enemy `BattleCommand_failuretext` takes its normal no-failure return without entering `GetFailureResultText` or printing failure text.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, and damage remains **17**.
+- After real enemy `BattleCommand_failuretext` returns, the move-script loop performs a fourteenth real enemy `ReadMoveScriptByte`. It returns `applydamage` (`$0f`) and advances the enemy script pointer exactly fourteen bytes from the script start.
+- The returned `$0f` is captured at the controlled post-read stop, so enemy `BattleCommand_applydamage` does not dispatch and the player's HP is not yet reduced in this checkpoint.
+- The first CI attempt exposed only a regression-harness tuple that omitted the high zero byte of the two-byte `wCurDamage` value. No gameplay/migration source change was required.
+- Final validation: GitHub Actions CI run **#316** (`36205608272`) passed on commit `3fb756c8e1a96610d6ffaa4a855cadf217f84e49`.
+  - native enemy `failuretext -> applydamage` boundary: 6/6 cases passed on normal ROM
+  - native enemy `failuretext -> applydamage` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `e7ddc0a89baa46e9fc6617f9a7a868ca6eae9d4d`.
+- CI wiring commit: `1b6e1d18059c164194562b3e5be0b6710318d49c`.
+- Final damage-byte expectation correction: `3fb756c8e1a96610d6ffaa4a855cadf217f84e49`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_applydamage` dispatch for real, prove the validated **17** damage is applied to the player target (100 HP -> 83 HP) while preserving native identities, enemy Tackle/PP and Pressure state, then stop at the following `criticaltext` command before its body executes.
+
 ## Latest checkpoint: native enemy moveanim -> failuretext boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_moveanim_failuretext_boundary.py` and wired it into normal/debug CI.
