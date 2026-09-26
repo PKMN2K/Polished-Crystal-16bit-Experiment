@@ -525,7 +525,12 @@ def main():
                 "hp_hud", len(applydamage_hud_calls),
                 "refresh", len(applydamage_refresh_huds_calls),
             )
-        assert mem[addr("hROMBank")] == bank, label
+        if stop_flag is not None and stop_flag[0]:
+            # We intentionally stop at the entry of a farcalled routine, so
+            # the active ROM bank must be HandleBetweenTurnEffects' bank.
+            assert mem[addr("hROMBank")] == symbols["HandleBetweenTurnEffects"][0], label
+        else:
+            assert mem[addr("hROMBank")] == bank, label
         assert mem[0xFF70] & 7 == 1, label
         assert mem[0xFF4F] & 1 == 0, label
 
