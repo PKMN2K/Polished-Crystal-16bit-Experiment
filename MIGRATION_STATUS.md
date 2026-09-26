@@ -1,3 +1,24 @@
+## Latest checkpoint: native enemy posthiteffects -> endmove boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_posthiteffects_endmove_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches real `BattleCommand_posthiteffects` after real enemy `postfainteffects` has confirmed the player target remains alive at **83 HP**.
+- The command and its ordinary successful-hit control flow remain real. As on the already-validated player-side posthiteffects regression, unrelated reactive ability/item state is neutralized at the command-entry boundary so this checkpoint stays on the simple Tackle path.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, player HP remains **83**, `wDamageTaken` remains **17**, and `wAttackMissed` remains 0.
+- After real enemy `BattleCommand_posthiteffects` returns, the move-script loop performs a nineteenth real enemy `ReadMoveScriptByte`. It returns the terminal `endmove` opcode **`$ff`** and advances the enemy script pointer exactly nineteen bytes from the script start.
+- The returned `$ff` is captured at the controlled post-read stop, so enemy `BattleCommand_endmove` does not dispatch in this checkpoint.
+- The first CI attempt (#334) exposed only an incorrect harness assumption that the terminal endmove opcode was `$14`; this engine uses the original terminal `$ff` opcode. Real enemy posthiteffects itself had already passed. No gameplay/migration source code change was required.
+- Final validation: GitHub Actions CI run **#335** (`36210192058`) passed on commit `e8a2925603b3754bbcea177f6080fe9746b87b1d`.
+  - native enemy `posthiteffects -> endmove` boundary: 6/6 cases passed on normal ROM
+  - native enemy `posthiteffects -> endmove` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `2db90f08b12c8f2314da30d8d6682ec3487d1c03`.
+- CI wiring commit: `11fe1064609e55e65cb5c784373c81f918430c59`.
+- Terminal endmove opcode correction: `e8a2925603b3754bbcea177f6080fe9746b87b1d`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy terminal `BattleCommand_endmove` (`$ff`) dispatch for real, verify its move-end helper chain preserves native identity, enemy Tackle/PP, Pressure, player HP **83**, and damage bookkeeping **17**, then stop on return from the move script before the subsequent `PerformMove` cleanup tail executes.
+
 ## Latest checkpoint: native enemy postfainteffects -> posthiteffects boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_postfainteffects_posthiteffects_boundary.py` and wired it into normal/debug CI.
