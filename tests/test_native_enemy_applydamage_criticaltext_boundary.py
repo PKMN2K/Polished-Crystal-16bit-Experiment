@@ -1260,7 +1260,9 @@ def main():
             postfaint_fainted_calls.append(snapshot)
 
     def observe_target_ability(_):
-        if applydamage_active[0]:
+        if enemy_applydamage_active[0]:
+            enemy_applydamage_ability_calls.append(True)
+        elif applydamage_active[0]:
             applydamage_ability_calls.append(True)
         snapshot = (
             read_native("wBattleMonNativeSpecies"),
