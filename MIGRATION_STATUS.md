@@ -1,3 +1,21 @@
+## Latest checkpoint: native HandleFutureSight zero-counter -> following CheckFaint boundary regression (2026-09-26)
+
+- Added `tests/test_native_betweenturn_futuresight_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated between-turn path now executes the real `HandleFutureSight` body after `HandleAffectionSelfCure`.
+- `HandleFutureSight` executes its real `SetFastestTurn -> .do_it -> SwitchTurn -> .do_it` structure. Both `wPlayerFutureSightCount` and `wEnemyFutureSightCount` remain **0**, so both native `.do_it` passes take the immediate zero-counter `ret z` before any delayed-move processing.
+- Execution then reaches the following real `CheckFaint` entry, where the regression stops before that faint check executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, and `wBattleWeather` remains **0**.
+- Final validation: GitHub Actions CI run **#380** (`36253842583`) passed on commit `283570061135f77f0ad23a3a40bbb5f21d0163a3`.
+  - native `HandleFutureSight` zero-counter -> following `CheckFaint` boundary: 6/6 cases passed on normal ROM
+  - native `HandleFutureSight` zero-counter -> following `CheckFaint` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `c29abfa3d60fb48cb5d0bcb671ea92294d3e90f1`.
+- CI wiring commit: `283570061135f77f0ad23a3a40bbb5f21d0163a3`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the following real `CheckFaint -> ResolveFaints` path with both active Pokémon still at **83 HP**, verify carry remains clear, then advance to the `HandleEndturnBlockA` entry while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, and weather state.
+
 ## Latest checkpoint: native HandleAffectionSelfCure -> HandleFutureSight boundary regression (2026-09-26)
 
 - Added `tests/test_native_betweenturn_affection_futuresight_boundary.py` and wired it into normal/debug CI.
