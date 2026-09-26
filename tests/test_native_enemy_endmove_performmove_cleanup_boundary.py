@@ -2634,32 +2634,9 @@ def main():
         if len(perform_move_calls) == 2 and (mem[addr("hBattleTurn")] & 1):
             enemy_endmove_power_herb_calls.append(snapshot)
             enemy_cleanup_stop_armed[0] = True
-            # DoTurn tail-jumps here, so after this stub returns the farcall
-            # unwinds directly to PerformMove.end_protect. Replace only that
-            # cleanup entry with: ld a,1; ld [wBattleEnded],a; ret.
-            stop_bank, stop_addr = symbols["PerformMove.end_protect"]
-            stop = [
-                0x3E, 0x01,
-                0xEA, addr("wBattleEnded") & 0xff, addr("wBattleEnded") >> 8,
-                0xC9,
-            ]
-            for i, value in enumerate(stop):
-                mem[stop_bank, stop_addr + i] = value
-        else:
-            endmove_power_herb_calls.append(snapshot)
-            # Seed only the state consumed by the player's immediate cleanup.
-            # The cleanup code itself remains real.
-            cleanup_active[0] = True
-            mem[addr("wPlayerSubStatus2")] |= 1 << 3  # SUBSTATUS_IN_ABILITY
-            mem[addr("wEnemySubStatus2")] |= 1 << 3   # SUBSTATUS_IN_ABILITY
-            mem[addr("wEnemySubStatus1")] |= (1 << 2) | (1 << 5)  # Protect/Endure
-            mem[addr("wPlayerDisableCount")] = 5
-            mem[addr("wPlayerEncoreCount")] = 4
-            mem[addr("wEnemyDisableCount")] = 7
-            mem[addr("wEnemyEncoreCount")] = 6
-
-    def observe_enemy_cleanup_boundary(_):
-        if enemy_cleanup_stop_armed[0] and (mem[addr("hBattleTurn")] & 1):
+            # Capture the validated state at the end of the real terminal
+            # helper chain, immediately before DoTurn unwinds to
+            # PerformMove.end_protect.
             enemy_cleanup_boundary_calls.append((
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
@@ -2681,6 +2658,30 @@ def main():
                 len(cleanup_tilemap_calls),
                 len(resolve_faints_calls),
             ))
+            # DoTurn tail-jumps here, so after this stub returns the farcall
+            # unwinds directly to PerformMove.end_protect. Replace only that
+            # cleanup entry with a unique stop sentinel:
+            # ld a,$7e; ld [wBattleEnded],a; ret.
+            stop_bank, stop_addr = symbols["PerformMove.end_protect"]
+            stop = [
+                0x3E, 0x7E,
+                0xEA, addr("wBattleEnded") & 0xff, addr("wBattleEnded") >> 8,
+                0xC9,
+            ]
+            for i, value in enumerate(stop):
+                mem[stop_bank, stop_addr + i] = value
+        else:
+            endmove_power_herb_calls.append(snapshot)
+            # Seed only the state consumed by the player's immediate cleanup.
+            # The cleanup code itself remains real.
+            cleanup_active[0] = True
+            mem[addr("wPlayerSubStatus2")] |= 1 << 3  # SUBSTATUS_IN_ABILITY
+            mem[addr("wEnemySubStatus2")] |= 1 << 3   # SUBSTATUS_IN_ABILITY
+            mem[addr("wEnemySubStatus1")] |= (1 << 2) | (1 << 5)  # Protect/Endure
+            mem[addr("wPlayerDisableCount")] = 5
+            mem[addr("wPlayerEncoreCount")] = 4
+            mem[addr("wEnemyDisableCount")] = 7
+            mem[addr("wEnemyEncoreCount")] = 6
 
     def observe_cleanup_tick(_):
         if cleanup_active[0]:
@@ -3414,7 +3415,6 @@ def main():
         hook("DetermineMoveOrder", observe_determine_order)
         hook("BattleTurn.do_move", observe_perform_move_boundary)
         hook("PerformMove.skip_destinybond_reset", observe_enemy_move_read)
-        hook("PerformMove.end_protect", observe_enemy_cleanup_boundary)
         hook("CheckTurn", observe_check_turn)
         hook("InitializeMove", observe_initialize_move)
         hook("ReadMoveScriptByte", observe_read_script)
@@ -4960,8 +4960,8 @@ def main():
                     1, 1, 1,
                 ),
             ], (
-                "enemy DoTurn did not return to PerformMove.end_protect with "
-                "state preserved before any enemy cleanup/ResolveFaints work",
+                "enemy terminal helper chain did not preserve state immediately "
+                "before DoTurn returned to the patched cleanup boundary",
                 context, enemy_cleanup_boundary_calls
             )
             assert read_script_snapshots[5][:5] == (25, native, 0, 33, 0), (
@@ -5818,9 +5818,9 @@ def main():
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 1, (
-                "enemy endmove cleanup boundary did not stop before the "
-                "PerformMove cleanup tail", context,
+            assert mem[addr("wBattleEnded")] == 0x7E, (
+                "PerformMove.end_protect sentinel did not execute before the "
+                "enemy cleanup tail", context,
                 mem[addr("wBattleEnded")]
             )
             assert bytes(
