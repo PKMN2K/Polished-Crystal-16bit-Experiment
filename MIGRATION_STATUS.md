@@ -1,3 +1,26 @@
+## Latest checkpoint: native enemy applydamage -> criticaltext boundary regression (2026-09-25)
+
+- Added `tests/test_native_enemy_applydamage_criticaltext_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now dispatches real `BattleCommand_applydamage` after real enemy `failuretext` has returned through the successful-hit path with deterministic varied damage **17**.
+- Real enemy damage-survival handling, `ResetSubHit`, substitute checking, affection/endure checking, target held-item handling, target ability handling, `TakeDamage`, `DealDamageToOpponent`, and `SubtractHPFromUser` execute. Presentation-only HP-bar/HUD boundaries remain stubbed as in the already-validated player applydamage regression.
+- The player target's active HP falls from **100 to 83**. Real post-command `ResolveFaints` write-back also carries **83 HP** into the player party record while preserving the non-fainting battle state.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, and `wDamageTaken` records **17**.
+- After real enemy `BattleCommand_applydamage` returns, the move-script loop performs a fifteenth real enemy `ReadMoveScriptByte`. It returns `criticaltext` (`$10`) and advances the enemy script pointer exactly fifteen bytes from the script start.
+- The returned `$10` is captured at the controlled post-read stop, so enemy `BattleCommand_criticaltext` does not dispatch in this checkpoint.
+- Early CI attempts exposed only copied regression-harness expectations: the target-ability observation was initially routed to the player-side bucket, and post-applydamage cleanup expectations still assumed zero enemy-turn damage bookkeeping / 100 player HP. No gameplay/migration source change was required.
+- Final validation: GitHub Actions CI run **#321** (`36206970007`) passed on commit `11670b039271f9ad83f501a3e6c0050477c99d2d`.
+  - native enemy `applydamage -> criticaltext` boundary: 6/6 cases passed on normal ROM
+  - native enemy `applydamage -> criticaltext` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `79d10d25da94119dc06e28c1b9b040c17ab8bc2c`.
+- CI wiring commit: `f57d280b107975a81ca2be7901d905c86aa8eef4`.
+- Target-ability observer routing correction: `9d7d235e25f08e2796e831c6ccf299d2cbab53b2`.
+- Post-applydamage state expectation correction: `11670b039271f9ad83f501a3e6c0050477c99d2d`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let enemy `BattleCommand_criticaltext` dispatch for real on the validated non-critical Tackle path, prove `CheckCrit` returns non-critical and the command takes its ordinary 20-frame wait without disturbing native identity, PP, Pressure, player HP **83**, or damage bookkeeping **17**, then stop at the following `supereffectivetext` command before its body executes.
+
 ## Latest checkpoint: native enemy failuretext -> applydamage boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_failuretext_applydamage_boundary.py` and wired it into normal/debug CI.
