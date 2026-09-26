@@ -1,3 +1,21 @@
+## Latest checkpoint: native enemy ProcessEnemyFleeing -> post-check boundary regression (2026-09-26)
+
+- Added `tests/test_native_enemy_processenemyfleeing_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues through the real `ProcessEnemyFleeing` body after the second `BattleTurn.do_move` returns with `wBattleEnded = 0`.
+- At `ProcessEnemyFleeing` entry the fixture has `wEnemyFleeing = 0`. The real routine executes `ld a, [wEnemyFleeing]`, `and a`, and its immediate `ret z`.
+- `EnemyCanFlee` is not entered. The regression stops immediately after `ProcessEnemyFleeing` returns, before the following `BattleTurn` `wBattleEnded` read executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83** on both sides, `wDamageTaken` remains **17**, and `wMoveState` remains **$11**.
+- Final validation: GitHub Actions CI run **#359** (`36220733648`) passed on commit `1db389205bd15244929d94abdccce6fd2d3fdb81`.
+  - native enemy `ProcessEnemyFleeing -> post-check` boundary: 6/6 cases passed on normal ROM
+  - native enemy `ProcessEnemyFleeing -> post-check` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `af0bf99f4a74af32d8a40baeed4c0855ecaaa8ff`.
+- CI wiring commit: `1db389205bd15244929d94abdccce6fd2d3fdb81`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the following `BattleTurn` `wBattleEnded` read, `and a`, and `ret nz` execute for real with `wBattleEnded = 0`; verify the return is not taken, then stop at the `HandleBetweenTurnEffects` entry before its body executes while preserving native identities, PP, Pressure, both party HP **83**, damage bookkeeping **17**, `wMoveState = $11`, and `wEnemyFleeing = 0`.
+
 ## Latest checkpoint: native enemy post-move -> ProcessEnemyFleeing boundary regression (2026-09-26)
 
 - Added `tests/test_native_enemy_postmove_processenemyfleeing_boundary.py` and wired it into normal/debug CI.
