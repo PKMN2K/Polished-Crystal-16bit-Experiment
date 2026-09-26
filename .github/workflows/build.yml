@@ -336,6 +336,10 @@ jobs:
         name: "Test native enemy post-check to between-turn boundary (normal)"
         run: python tests/test_native_enemy_postcheck_betweenturn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-checkfaint-weather-boundary
+        name: "Test native between-turn CheckFaint to HandleWeather boundary (normal)"
+        run: python tests/test_native_betweenturn_checkfaint_weather_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -639,6 +643,10 @@ jobs:
       - id: test-native-enemy-postcheck-betweenturn-boundary-debug
         name: "Test native enemy post-check to between-turn boundary (debug)"
         run: python tests/test_native_enemy_postcheck_betweenturn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-checkfaint-weather-boundary-debug
+        name: "Test native between-turn CheckFaint to HandleWeather boundary (debug)"
+        run: python tests/test_native_betweenturn_checkfaint_weather_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
