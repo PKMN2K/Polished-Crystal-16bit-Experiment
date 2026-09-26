@@ -4206,7 +4206,7 @@ def main():
             assert enemy_failuretext_snapshots == [
                 (
                     25, native, 1, 45, 33, 0,
-                    34, 34, 33, 33, PRESSURE, 0, 0, 0, 17,
+                    34, 34, 33, 33, PRESSURE, 0, 0, 0, 0, 17,
                     *advance_script_pointer(read_script_snapshots[19], 13),
                 ),
             ], (
@@ -4217,7 +4217,7 @@ def main():
             assert enemy_failuretext_result_snapshots == [
                 (
                     25, native, 1, 45, 33, 0,
-                    34, 34, 33, 33, PRESSURE, 0, 0, 0, 17,
+                    34, 34, 33, 33, PRESSURE, 0, 0, 0, 0, 17,
                     *advance_script_pointer(read_script_snapshots[19], 13),
                 ),
             ], (
