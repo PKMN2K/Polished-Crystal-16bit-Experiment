@@ -14,7 +14,7 @@ ability/item state is neutralized at the command-entry boundary so this
 checkpoint stays on the simple successful-hit path.
 
 After posthiteffects returns, perform the nineteenth real enemy
-ReadMoveScriptByte and stop after it returns endmove ($14), before enemy
+ReadMoveScriptByte and stop after it returns endmove ($ff), before enemy
 endmove executes.
 """
 import argparse
@@ -2559,7 +2559,7 @@ def main():
             ))
             # posthiteffects has already been read and dispatched. Stop only
             # after its real successful-hit return and the following read
-            # yields endmove ($14), before endmove dispatches.
+            # yields endmove ($ff), before endmove dispatches.
             stop = [
                 0xEA,
                 addr("wBattleEnded") & 0xff,
@@ -5730,7 +5730,7 @@ def main():
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 0x14, (
+            assert mem[addr("wBattleEnded")] == 0xFF, (
                 "post-read boundary did not capture Tackle's nineteenth "
                 "endmove command byte", context,
                 mem[addr("wBattleEnded")]
