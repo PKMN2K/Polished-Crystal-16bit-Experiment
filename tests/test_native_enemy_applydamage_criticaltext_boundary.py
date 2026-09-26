@@ -5174,7 +5174,7 @@ def main():
             )
             assert resolve_faints_calls == [
                 (25, native, 0, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 17),
-                (25, native, 1, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 0),
+                (25, native, 1, 0, 0, 0, 4, 3, 7, 6, 0, 83, 0, 17),
             ], (
                 "PerformMove cleanup did not reach real ResolveFaints with "
                 "preserved native identity, HP, damage, and cleanup state",
@@ -5182,7 +5182,7 @@ def main():
             )
             assert resolve_player_writeback_calls == [
                 (25, native, 0, 0, 100, 0, 100, 34, 34),
-                (25, native, 1, 0, 100, 0, 100, 34, 34),
+                (25, native, 1, 0, 83, 0, 100, 34, 34),
             ], (
                 "real player party write-back boundary changed identity/HP/PP",
                 context, resolve_player_writeback_calls
@@ -5208,7 +5208,7 @@ def main():
             )
             assert resolve_fit_party_calls == [
                 (25, native, 0, 1, 0, 100),
-                (25, native, 1, 1, 0, 100),
+                (25, native, 1, 1, 0, 83),
             ], (
                 "ResolveFaints did not verify the player still has a fit mon",
                 context, resolve_fit_party_calls
@@ -5258,9 +5258,9 @@ def main():
             ) == bytes([0, 83]), ("enemy HP did not fall to 83", context)
             assert bytes(
                 mem[addr("wDamageTaken"):addr("wDamageTaken") + 2]
-            ) == bytes([0, 0]), (
-                "enemy PerformMove did not clear damage bookkeeping before "
-                "the DoTurn boundary", context
+            ) == bytes([0, 17]), (
+                "enemy applydamage did not preserve 17 points of damage "
+                "bookkeeping at the criticaltext boundary", context
             )
             assert read_native("wBattleMonNativeSpecies") == 25, context
             assert read_native("wEnemyMonNativeSpecies") == native, context
@@ -5276,8 +5276,9 @@ def main():
             )
             assert bytes(
                 mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
-            ) == bytes([0, 100]), (
-                "player party HP changed before ResolveFaints write-back", context
+            ) == bytes([0, 83]), (
+                "ResolveFaints did not write the enemy-inflicted damage back "
+                "to the player party record", context
             )
             assert bytes(
                 mem[addr("wOTPartyMon1HP"):addr("wOTPartyMon1HP") + 2]
