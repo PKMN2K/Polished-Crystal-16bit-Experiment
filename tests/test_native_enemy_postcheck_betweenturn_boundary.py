@@ -75,8 +75,8 @@ def main():
     post_reset_addr = do_move_addr + 14
 
     # Locate the one BattleTurn CALL to ProcessEnemyFleeing and validate the
-    # following wBattleEnded read. The controlled stop is the instruction
-    # immediately after the CALL returns.
+    # following wBattleEnded read plus its AND A / RET NZ. The controlled stop
+    # is later, at the real HandleBetweenTurnEffects entry.
     battle_turn_bank, battle_turn_addr = symbols["BattleTurn"]
     battle_turn_offset = offset("BattleTurn")
     process_enemy_flee_addr = addr("ProcessEnemyFleeing")
@@ -102,16 +102,14 @@ def main():
         ],
         "little",
     ) == addr("wBattleEnded")
+    # The post-flee check itself is native code:
+    #   and a
+    #   ret nz
+    # BattleTurn then uses a farcall to HandleBetweenTurnEffects. The entry
+    # hook below proves that farcall is reached without needing to depend on
+    # the macro's assembled byte encoding.
     assert data[battle_turn_offset + process_call_offset + 6] == 0xA7
     assert data[battle_turn_offset + process_call_offset + 7] == 0xC0
-    assert data[battle_turn_offset + process_call_offset + 8] == 0xCD
-    assert int.from_bytes(
-        data[
-            battle_turn_offset + process_call_offset + 9:
-            battle_turn_offset + process_call_offset + 11
-        ],
-        "little",
-    ) == addr("HandleBetweenTurnEffects")
 
     # ProcessEnemyFleeing starts with:
     #   ld a, [wEnemyFleeing]
