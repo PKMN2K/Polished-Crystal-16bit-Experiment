@@ -1,3 +1,22 @@
+## Latest checkpoint: native enemy DeferredSwitch -> ResetAbilityIgnorance boundary regression (2026-09-26)
+
+- Added `tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py` and wired it into normal/debug CI.
+- The validated enemy-turn path now continues through the real enemy `DeferredSwitch` call after the non-fainting enemy `ResolveFaints` path has written both player and enemy party HP to **83**.
+- With `wDeferredSwitch = 0`, real `DeferredSwitch` takes its natural no-op return at the `SWITCH_DEFERRED` test. `ForceDeferredSwitch` is not entered.
+- The regression seeds `wMoveState = $55` immediately before `DeferredSwitch`. After the real no-op return, execution reaches the following enemy `ResetAbilityIgnorance` entry with the same **$55** sentinel, proving the reset body has not yet executed.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, active and party HP remain **83** on both sides, `wDamageTaken` remains **17**, and `wBattleEnded` remains 0.
+- The controlled stop now occurs at the enemy `ResetAbilityIgnorance` entry before its first instruction executes. The earlier player-side `DeferredSwitch -> ResetAbilityIgnorance` path remains real so the battle can naturally advance to the enemy turn.
+- Final validation: GitHub Actions CI run **#352** (`36216799293`) passed on commit `cfb15d4d98a843ebc0e0338e27f461876bdc8d9b`.
+  - native enemy `DeferredSwitch -> ResetAbilityIgnorance` boundary: 6/6 cases passed on normal ROM
+  - native enemy `DeferredSwitch -> ResetAbilityIgnorance` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `151b804b0c920fc262c677f73e42e396c81a2407`.
+- CI wiring commit: `cfb15d4d98a843ebc0e0338e27f461876bdc8d9b`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** let the enemy `ResetAbilityIgnorance` routine execute for real, prove it clears both ability-ignorance bits from the seeded `wMoveState = $55` to **$11**, then stop immediately after it returns before the following post-move `wBattleEnded` check/return while proving native identity, PP, Pressure, both party HP **83**, and damage bookkeeping **17** remain intact.
+
 ## Latest checkpoint: native enemy ResolveFaints -> DeferredSwitch boundary regression (2026-09-25)
 
 - Added `tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py` and wired it into normal/debug CI.
