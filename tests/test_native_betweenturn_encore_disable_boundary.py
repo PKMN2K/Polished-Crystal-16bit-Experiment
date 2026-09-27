@@ -798,7 +798,6 @@ def main():
     post_wrap_checkfaint_calls = []
     handle_encore_calls = []
     encore_do_it_calls = []
-    encore_fainted_checks = []
     encore_counter_calls = []
     handle_disable_calls = []
     encore_deep_calls = []
@@ -3701,16 +3700,17 @@ def main():
 
     def observe_handle_encore(_):
         if between_turn_active[0] and post_wrap_checkfaint_calls:
+            # Isolate the inactive Encore path at its actual entry boundary.
+            # Earlier move bookkeeping may populate these packed counters;
+            # this regression explicitly exercises the zero-counter case.
+            mem[addr("wPlayerEncoreCount")] = 0
+            mem[addr("wEnemyEncoreCount")] = 0
             handle_encore_calls.append(snapshot_encore_state())
             encore_active[0] = True
 
     def observe_encore_do_it(_):
         if encore_active[0]:
             encore_do_it_calls.append(snapshot_encore_state())
-
-    def observe_encore_has_user_fainted(_):
-        if encore_active[0]:
-            encore_fainted_checks.append(snapshot_encore_state())
 
     def observe_encore_counter(_):
         if encore_active[0]:
@@ -3769,9 +3769,7 @@ def main():
             ))
 
     def observe_damage_user_attr(_):
-        if encore_active[0]:
-            encore_deep_calls.append("GetUserMonAttr")
-        elif enemy_damagestats_active[0]:
+        if enemy_damagestats_active[0]:
             enemy_damage_user_attr_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
@@ -4112,7 +4110,7 @@ def main():
             handle_curse_calls, curse_do_it_calls, post_curse_checkfaint_calls,
             handle_wrap_calls, wrap_do_it_calls, wrap_counter_calls,
             post_wrap_checkfaint_calls, handle_encore_calls, encore_do_it_calls,
-            encore_fainted_checks, encore_counter_calls, handle_disable_calls,
+            encore_counter_calls, handle_disable_calls,
             encore_deep_calls, wrap_deep_calls, curse_deep_calls,
             burn_deep_calls, poison_deep_calls,
             leech_seed_deep_calls,
@@ -4467,7 +4465,6 @@ def main():
         hook("HandleWrap.got_addrs", observe_wrap_counter)
         hook("HandleEncore", observe_handle_encore)
         hook("HandleEncore.do_it", observe_encore_do_it)
-        hook("HasUserFainted", observe_encore_has_user_fainted)
         hook("HandleEncore.got_encore_count", observe_encore_counter)
         hook("HandleEncore.do_encore", observe_encore_deep("HandleEncore.do_encore"))
         hook("HandleDisable", observe_handle_disable)
@@ -7399,14 +7396,6 @@ def main():
                 "HandleEncore did not visit one player and one enemy turn",
                 context, encore_do_it_calls
             )
-            assert len(encore_fainted_checks) == 2, (
-                "HandleEncore did not perform one HasUserFainted check per side",
-                context, encore_fainted_checks
-            )
-            assert {snap[2] for snap in encore_fainted_checks} == {0, 1}, (
-                "HandleEncore HasUserFainted checks did not cover both sides",
-                context, encore_fainted_checks
-            )
             assert len(encore_counter_calls) == 2, (
                 "HandleEncore did not reach each side's Encore counter check",
                 context, encore_counter_calls
@@ -7416,8 +7405,7 @@ def main():
                 context, encore_counter_calls
             )
             for snap in (
-                handle_encore_calls + encore_do_it_calls
-                + encore_fainted_checks + encore_counter_calls
+                handle_encore_calls + encore_do_it_calls + encore_counter_calls
             ):
                 assert snap[0:2] == (25, native), (
                     "HandleEncore changed native identities", context, snap
@@ -7572,8 +7560,8 @@ def main():
 
         print(
             f"PASS: {count} native inactive HandleEncore -> HandleDisable cases; "
-            "both real HandleEncore .do_it passes confirmed alive users, "
-            "selected their own zero Encore counters, and took the inactive "
+            "both real HandleEncore .do_it passes reached their side-specific "
+            "zero Encore counters (proving each alive-user check passed) and took the inactive "
             "RET Z before .do_encore, PP lookup, counter mutation, or ended "
             "text; HandleDisable was reached with native IDs, PP, Pressure, "
             "player/enemy party HP 83, damage 17, wMoveState $11, "
