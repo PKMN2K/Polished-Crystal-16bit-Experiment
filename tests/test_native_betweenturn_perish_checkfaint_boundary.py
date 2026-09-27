@@ -220,6 +220,8 @@ def main():
         data[between_turn_offset + 73:between_turn_offset + 75], "little"
     ) == addr("CheckFaint")
     assert data[between_turn_offset + 75] == 0xD8
+    post_perish_checkfaint_bank, between_turn_addr = symbols["HandleBetweenTurnEffects"]
+    post_perish_checkfaint_addr = between_turn_addr + 72
 
     # HandlePerishSong is a real two-side path:
     #   call SetFastestTurn
@@ -890,7 +892,13 @@ def main():
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
         if stop_flag is not None:
-            assert stop_flag[0], (label, "boundary was not reached")
+            assert stop_flag[0], (
+                label, "boundary was not reached",
+                "perish_entry", len(handle_perish_song_calls),
+                "perish_do_it", len(perish_do_it_calls),
+                "perish_counters", len(perish_counter_calls),
+                "post_perish", len(post_perish_checkfaint_calls),
+            )
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
@@ -3467,23 +3475,7 @@ def main():
             mem[addr("wMoveState")],
             mem[addr("wBattleWeather")],
         )
-        if perish_active[0]:
-            post_perish_checkfaint_calls.append(snapshot + (
-                mem[addr("wPlayerPerishCount")],
-                mem[addr("wEnemyPerishCount")],
-                mem[addr("wPlayerDisableCount")],
-                mem[addr("wEnemyDisableCount")],
-            ))
-            # This is the requested boundary: all earlier CheckFaint calls
-            # remained real. Make only this post-PerishSong CheckFaint return
-            # carry so HandleBetweenTurnEffects unwinds immediately.
-            mem[check_faint_bank, check_faint_addr] = 0x37  # scf
-            mem[check_faint_bank, check_faint_addr + 1] = 0xC9  # ret
-            mem[addr("wBattleEnded")] = 1
-            post_perish_checkfaint_stop_hit[0] = True
-            perish_active[0] = False
-            between_turn_active[0] = False
-        elif wrap_active[0]:
+        if wrap_active[0]:
             post_wrap_checkfaint_calls.append(snapshot)
             # Isolate the upcoming inactive Encore path at this already-stable
             # boundary, before the ninth non-fainting ResolveFaints pass.
@@ -3528,6 +3520,37 @@ def main():
             weather_active[0] = False
         else:
             between_turn_checkfaint_calls.append(snapshot)
+
+    def observe_post_perish_checkfaint_callsite(_):
+        if not perish_active[0]:
+            return
+        post_perish_checkfaint_calls.append((
+            read_native("wBattleMonNativeSpecies"),
+            read_native("wEnemyMonNativeSpecies"),
+            mem[addr("hBattleTurn")],
+            mem[addr("wBattleEnded")],
+            mem[addr("wEnemyFleeing")],
+            mem[addr("wBattleMonHP")],
+            mem[addr("wBattleMonHP") + 1],
+            mem[addr("wEnemyMonHP")],
+            mem[addr("wEnemyMonHP") + 1],
+            mem[addr("wMoveState")],
+            mem[addr("wBattleWeather")],
+            mem[addr("wPlayerPerishCount")],
+            mem[addr("wEnemyPerishCount")],
+            mem[addr("wPlayerDisableCount")],
+            mem[addr("wEnemyDisableCount")],
+        ))
+        # This hook is the unique CALL CheckFaint immediately after
+        # HandlePerishSong. All earlier CheckFaint calls remain real.
+        # Replace only the upcoming CheckFaint body with SCF/RET so its
+        # caller takes the native RET C and the battle can unwind normally.
+        mem[check_faint_bank, check_faint_addr] = 0x37  # scf
+        mem[check_faint_bank, check_faint_addr + 1] = 0xC9  # ret
+        mem[addr("wBattleEnded")] = 1
+        post_perish_checkfaint_stop_hit[0] = True
+        perish_active[0] = False
+        between_turn_active[0] = False
 
     def observe_handle_weather(_):
         if between_turn_active[0]:
@@ -4549,6 +4572,12 @@ def main():
         )
         hook("HandleBetweenTurnEffects", observe_handle_between_turn_effects)
         hook("CheckFaint", observe_between_turn_checkfaint)
+        pyboy.hook_register(
+            post_perish_checkfaint_bank,
+            post_perish_checkfaint_addr,
+            observe_post_perish_checkfaint_callsite,
+            None,
+        )
         hook("HandleWeather", observe_handle_weather)
         hook("HandleAffectionSelfCure", observe_handle_affection_self_cure)
         hook("HandleFutureSight", observe_handle_future_sight)
