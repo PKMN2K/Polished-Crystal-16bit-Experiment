@@ -1,3 +1,22 @@
+## Latest checkpoint: native inactive HandleCurse -> following CheckFaint boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_curse_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now continues past the seventh real non-fainting `CheckFaint -> ResolveFaints` pass and executes the real two-side `HandleCurse` body.
+- Both `wPlayerSubStatus1` and `wEnemySubStatus1` are explicitly cleared for the fixture. `HandleCurse` executes its native `SetFastestTurn -> .do_it -> SwitchTurn -> fall-through .do_it` structure, visiting one player side and one enemy side.
+- Both real `.do_it` passes see Curse inactive and take the native `ret z` before `PreventEndturnDamage`, curse animation, quarter-HP calculation, HP subtraction, or curse text work. The regression includes sentinels proving those deeper curse-effect paths are not entered.
+- Execution then reaches the following real `CheckFaint` entry, where the regression stops before that faint check executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, both active held-item slots remain empty, Leech Seed substatus remains clear, both active status bytes remain clear, and both Curse substatus bytes remain clear.
+- Final validation: GitHub Actions CI run **#412** (`36343052729`) passed on commit `a9ff598549523c82a9222105a8fe6fb890e1760d`.
+  - native inactive `HandleCurse -> CheckFaint` boundary: 6/6 cases passed on normal ROM
+  - native inactive `HandleCurse -> CheckFaint` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `1bd076c9cbf7c4b7bf0148e0ecc47ed62ac69b5b`.
+- CI wiring commit: `a9ff598549523c82a9222105a8fe6fb890e1760d`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the following real `CheckFaint -> ResolveFaints` pass with both active Pokémon still at **83 HP**, verify carry remains clear, then advance to the `HandleWrap` entry while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, empty held-item state, clear Leech Seed substatus, clear active status bytes, and clear Curse substatus.
+
 ## Latest checkpoint: native post-HandleBurn CheckFaint -> HandleCurse boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_postburn_checkfaint_curse_boundary.py` and wired it into normal/debug CI.
