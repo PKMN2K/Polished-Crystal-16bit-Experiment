@@ -851,10 +851,10 @@ def main():
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
             pyboy.tick(1, False, False)
-            if stop_flag is not None and stop_flag[0]:
-                break
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
+        if stop_flag is not None:
+            assert stop_flag[0], (label, "boundary was not reached")
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
