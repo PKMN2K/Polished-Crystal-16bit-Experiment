@@ -356,6 +356,10 @@ jobs:
         name: "Test native HandleFutureSight zero-counter to CheckFaint boundary (normal)"
         run: python tests/test_native_betweenturn_futuresight_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-postfuture-checkfaint-endturna-boundary
+        name: "Test native post-Future Sight CheckFaint to HandleEndturnBlockA boundary (normal)"
+        run: python tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -679,6 +683,10 @@ jobs:
       - id: test-native-betweenturn-futuresight-postcheck-boundary-debug
         name: "Test native HandleFutureSight zero-counter to CheckFaint boundary (debug)"
         run: python tests/test_native_betweenturn_futuresight_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postfuture-checkfaint-endturna-boundary-debug
+        name: "Test native post-Future Sight CheckFaint to HandleEndturnBlockA boundary (debug)"
+        run: python tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
