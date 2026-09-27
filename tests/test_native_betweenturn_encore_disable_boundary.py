@@ -854,7 +854,7 @@ def main():
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
         if stop_flag is not None and stop_flag[0]:
-            assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
+            assert regs.PC == 0xC104, (label, hex(regs.PC), "boundary sink")
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
                 label, hex(regs.PC), hex(regs.SP),
@@ -3727,7 +3727,7 @@ def main():
             encore_active[0] = False
             disable_stop_hit[0] = True
             between_turn_active[0] = False
-            regs.PC = 0xC110
+            regs.PC = 0xC104
 
     def observe_weather_deep(_):
         if weather_active[0]:
