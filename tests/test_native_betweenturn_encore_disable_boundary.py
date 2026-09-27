@@ -836,6 +836,9 @@ def main():
         bank, address = symbols[label]
         pyboy.hook_register(bank, address, callback, None)
 
+    class BoundaryStop(Exception):
+        pass
+
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
         mem[0x2000] = bank
@@ -843,19 +846,23 @@ def main():
         mem[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
-        # Controlled boundary sink used only after both real inactive
-        # HandleEncore .do_it passes return and reach HandleDisable.
-        mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
+        boundary_stopped = False
         for _ in range(max_frames):
-            pyboy.tick(1, False, False)
-            if stop_flag is not None and stop_flag[0]:
+            try:
+                pyboy.tick(1, False, False)
+            except BoundaryStop:
+                boundary_stopped = True
                 break
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
         if stop_flag is not None and stop_flag[0]:
-            assert regs.PC == 0xC104, (label, hex(regs.PC), "boundary sink")
+            assert boundary_stopped, (label, "boundary hook did not abort tick")
+            # The stop is at HandleDisable after both inactive HandleEncore
+            # .do_it passes return.
+            assert mem[addr("hROMBank")] == symbols["HandleDisable"][0], label
         else:
+            assert not boundary_stopped, label
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
                 label, hex(regs.PC), hex(regs.SP),
                 "reads", len(read_script_calls),
@@ -866,11 +873,6 @@ def main():
                 "hp_hud", len(applydamage_hud_calls),
                 "refresh", len(applydamage_refresh_huds_calls),
             )
-        if stop_flag is not None and stop_flag[0]:
-            # The stop is at HandleDisable after both inactive HandleEncore
-            # .do_it passes return.
-            assert mem[addr("hROMBank")] == symbols["HandleDisable"][0], label
-        else:
             assert mem[addr("hROMBank")] == bank, label
         assert mem[0xFF70] & 7 == 1, label
         assert mem[0xFF4F] & 1 == 0, label
@@ -3727,7 +3729,7 @@ def main():
             encore_active[0] = False
             disable_stop_hit[0] = True
             between_turn_active[0] = False
-            regs.PC = 0xC104
+            raise BoundaryStop
 
     def observe_weather_deep(_):
         if weather_active[0]:
