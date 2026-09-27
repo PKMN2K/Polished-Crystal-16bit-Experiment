@@ -1,3 +1,24 @@
+## Latest checkpoint: native inactive HandlePoison -> following CheckFaint boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_poison_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now continues past the fifth real non-fainting `CheckFaint -> ResolveFaints` pass and executes the real two-side `HandlePoison` body.
+- Both active status bytes are clear. `HandlePoison` executes its native `SetFastestTurn -> .do_it -> SwitchTurn -> fall-through .do_it` structure, visiting one player side and one enemy side.
+- Both real `.do_it` passes therefore take the native no-poison `ret z` before poison damage, Toxic-counter, animation, text, or poison-heal work. The regression explicitly verifies that the downstream poison-effect routines are not entered.
+- Execution then reaches the following real `CheckFaint` entry, where the regression stops before that faint check executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, both active held-item slots remain empty, both Leech Seed substatus bits remain clear, and both active status bytes remain clear.
+- The first CI attempt exposed a regression-harness-only duplicate PyBoy hook registration for `GetTrueUserIgnorableAbility`. The correction removed only that duplicate registration; the poison execution path and assertions were unchanged.
+- Final validation: GitHub Actions CI run **#400** (`36330677052`) passed on commit `a723d7fd2e07623d94a5b71a01eb7839881b19df`.
+  - native inactive `HandlePoison -> CheckFaint` boundary: 6/6 cases passed on normal ROM
+  - native inactive `HandlePoison -> CheckFaint` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `db2ccd657ce5098ec032258f00ca5415d3d1e169`.
+- CI wiring commit: `c806d77f164f5a1ede7c27f01a7a3e82def2fa93`.
+- Regression-harness correction: `a723d7fd2e07623d94a5b71a01eb7839881b19df`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the following real `CheckFaint -> ResolveFaints` pass with both active Pokémon still at **83 HP**, verify carry remains clear, then advance to the `HandleBurn` entry while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, empty held-item state, clear Leech Seed substatus, and clear active status bytes.
+
 ## Latest checkpoint: native post-LeechSeed CheckFaint -> HandlePoison boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_postleechseed_checkfaint_poison_boundary.py` and wired it into normal/debug CI.
