@@ -841,7 +841,7 @@ def main():
         bank, address = symbols[label]
         pyboy.hook_register(bank, address, callback, None)
 
-    class BoundaryStop(Exception):
+    class BoundaryStop(BaseException):
         pass
 
     def invoke(label, max_frames=128, stop_flag=None):
