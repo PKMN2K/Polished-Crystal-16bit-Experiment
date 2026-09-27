@@ -424,6 +424,10 @@ jobs:
         name: "Test native post-HandlePerishSong CheckFaint to HandleRoost boundary (normal)"
         run: python tests/test_native_betweenturn_postperish_checkfaint_roost_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-roost-reflect-boundary
+        name: "Test native inactive HandleRoost to HandleReflect boundary (normal)"
+        run: python tests/test_native_betweenturn_roost_reflect_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -815,6 +819,10 @@ jobs:
       - id: test-native-betweenturn-postperish-checkfaint-roost-boundary-debug
         name: "Test native post-HandlePerishSong CheckFaint to HandleRoost boundary (debug)"
         run: python tests/test_native_betweenturn_postperish_checkfaint_roost_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-roost-reflect-boundary-debug
+        name: "Test native inactive HandleRoost to HandleReflect boundary (debug)"
+        run: python tests/test_native_betweenturn_roost_reflect_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
