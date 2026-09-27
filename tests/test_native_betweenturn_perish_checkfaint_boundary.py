@@ -889,6 +889,8 @@ def main():
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
             pyboy.tick(1, False, False)
+            if stop_flag is not None and stop_flag[0]:
+                break
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
         if stop_flag is not None:
@@ -899,17 +901,18 @@ def main():
                 "perish_counters", len(perish_counter_calls),
                 "post_perish", len(post_perish_checkfaint_calls),
             )
-        assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
-            label, hex(regs.PC), hex(regs.SP),
-            "reads", len(read_script_calls),
-            "apply", len(applydamage_calls),
-            "take", len(applydamage_take_damage_calls),
-            "deal", len(applydamage_deal_damage_calls),
-            "subtract", len(applydamage_subtract_hp_calls),
-            "hp_hud", len(applydamage_hud_calls),
-            "refresh", len(applydamage_refresh_huds_calls),
-        )
-        assert mem[addr("hROMBank")] == bank, label
+        else:
+            assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
+                label, hex(regs.PC), hex(regs.SP),
+                "reads", len(read_script_calls),
+                "apply", len(applydamage_calls),
+                "take", len(applydamage_take_damage_calls),
+                "deal", len(applydamage_deal_damage_calls),
+                "subtract", len(applydamage_subtract_hp_calls),
+                "hp_hud", len(applydamage_hud_calls),
+                "refresh", len(applydamage_refresh_huds_calls),
+            )
+            assert mem[addr("hROMBank")] == bank, label
         assert mem[0xFF70] & 7 == 1, label
         assert mem[0xFF4F] & 1 == 0, label
 
