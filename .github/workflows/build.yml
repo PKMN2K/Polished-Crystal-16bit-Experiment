@@ -368,6 +368,10 @@ jobs:
         name: "Test native post-EndturnBlockA CheckFaint to HandleLeechSeed boundary (normal)"
         run: python tests/test_native_betweenturn_postendturna_checkfaint_leechseed_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-leechseed-postcheck-boundary
+        name: "Test native HandleLeechSeed inactive to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_leechseed_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -703,6 +707,10 @@ jobs:
       - id: test-native-betweenturn-postendturna-checkfaint-leechseed-boundary-debug
         name: "Test native post-EndturnBlockA CheckFaint to HandleLeechSeed boundary (debug)"
         run: python tests/test_native_betweenturn_postendturna_checkfaint_leechseed_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-leechseed-postcheck-boundary-debug
+        name: "Test native HandleLeechSeed inactive to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_leechseed_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
