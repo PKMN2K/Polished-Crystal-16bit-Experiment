@@ -1,3 +1,21 @@
+## Latest checkpoint: native post-LeechSeed CheckFaint -> HandlePoison boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_postleechseed_checkfaint_poison_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now continues past the real two-side inactive `HandleLeechSeed` body and executes the following real `CheckFaint -> ResolveFaints` pass.
+- Both active Pokémon remain alive at **83 HP**. This is the fifth real between-turn `CheckFaint -> ResolveFaints` pass in the current fixture, and it returns carry clear so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandlePoison` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, both active held-item slots remain empty, and both Leech Seed substatus bits remain clear.
+- Final validation: GitHub Actions CI run **#396** (`36329289123`) passed on commit `77c532dbb44f3c9f2df99a997533529500994d56`.
+  - native post-`HandleLeechSeed` `CheckFaint -> HandlePoison` boundary: 6/6 cases passed on normal ROM
+  - native post-`HandleLeechSeed` `CheckFaint -> HandlePoison` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `70abdd1f75cbde25c108a6679b405f99d25aafca`.
+- CI wiring commit: `77c532dbb44f3c9f2df99a997533529500994d56`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real two-side `HandlePoison` path with poison status clear for both battlers, verify both native `.do_it` passes take the no-poison `ret z` without damage, animation, or text work, then advance to the following `CheckFaint` boundary while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, empty held-item state, and clear Leech Seed substatus.
+
 ## Latest checkpoint: native HandleLeechSeed inactive -> following CheckFaint boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_leechseed_postcheck_boundary.py` and wired it into normal/debug CI.
