@@ -3171,6 +3171,8 @@ def main():
             ))
 
     def observe_resolve_faints(_):
+        if perish_stop_hit[0]:
+            return
         if between_turn_active[0]:
             between_turn_resolve_faints_calls.append((
                 read_native("wBattleMonNativeSpecies"),
