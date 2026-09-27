@@ -1,3 +1,21 @@
+## Latest checkpoint: native post-EndturnBlockA CheckFaint -> HandleLeechSeed boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_postendturna_checkfaint_leechseed_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now continues past the real two-side `HandleEndturnBlockA` body and executes the following real `CheckFaint -> ResolveFaints` pass.
+- Both active Pokémon remain alive at **83 HP**. This is the fourth real between-turn `CheckFaint -> ResolveFaints` pass in the current fixture, and it returns carry clear so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandleLeechSeed` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, and both active held-item slots remain empty.
+- Final validation: GitHub Actions CI run **#389** (`36325898769`) passed on commit `9c83fe75c90b1723bcb5a1650bd2be3f3b6ff843`.
+  - native post-`HandleEndturnBlockA` `CheckFaint -> HandleLeechSeed` boundary: 6/6 cases passed on normal ROM
+  - native post-`HandleEndturnBlockA` `CheckFaint -> HandleLeechSeed` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `954febaf70a08c33d887209b601922bc6338cddc`.
+- CI wiring commit: `9c83fe75c90b1723bcb5a1650bd2be3f3b6ff843`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real two-side `HandleLeechSeed` path with Leech Seed inactive for both battlers, verify both native `.do_it` passes take the no-seed return without HP transfer or animation/text work, then advance to the following `CheckFaint` boundary while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, and empty held-item state.
+
 ## Latest checkpoint: native HandleEndturnBlockA -> following CheckFaint boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_endturna_postcheck_boundary.py` and wired it into normal/debug CI.
