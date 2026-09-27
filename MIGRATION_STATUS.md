@@ -1,3 +1,22 @@
+## Latest checkpoint: native HandleEndturnBlockA -> following CheckFaint boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_endturna_postcheck_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now executes the real two-side `HandleEndturnBlockA` body after the post-Future Sight non-fainting `CheckFaint -> ResolveFaints` pass.
+- `HandleEndturnBlockA` executes its native `SetFastestTurn -> .do_it -> SwitchTurn -> fall-through .do_it` structure, visiting one player side and one enemy side.
+- Both real `.do_it` passes execute `HasUserFainted`, `EndturnAbilitiesA`, and `HandleLeftovers`. With the current no-residual-effect fixture (no applicable end-turn ability effect and no held item), both passes preserve battle state.
+- Execution then reaches the following real `CheckFaint` entry, where the regression stops before that faint check executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, and both held-item slots remain empty.
+- Final validation: GitHub Actions CI run **#386** (`36324157377`) passed on commit `d173142b65833e4f9ce3eee5f666d9de93f23a0f`.
+  - native `HandleEndturnBlockA -> CheckFaint` boundary: 6/6 cases passed on normal ROM
+  - native `HandleEndturnBlockA -> CheckFaint` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `ec556852baba74382494ebda3bc27267c03cfd7d`.
+- CI wiring commit: `d173142b65833e4f9ce3eee5f666d9de93f23a0f`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the following real `CheckFaint -> ResolveFaints` pass with both active Pokémon still at **83 HP**, verify carry remains clear, then advance to the `HandleLeechSeed` entry while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, and empty held-item state.
+
 ## Latest checkpoint: native post-Future Sight CheckFaint -> HandleEndturnBlockA boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py` and wired it into normal/debug CI.
