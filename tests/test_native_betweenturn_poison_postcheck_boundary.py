@@ -4176,8 +4176,11 @@ def main():
         hook("HandleLeechSeed.do_it", observe_leech_seed_do_it)
         hook("HandlePoison", observe_handle_poison)
         hook("HandlePoison.do_it", observe_poison_do_it)
+        # GetTrueUserIgnorableAbility is already hooked by the inherited
+        # full-turn fixture. The poison-only sentinels begin at the first
+        # downstream poison-effect routines to avoid double-registering that
+        # shared hook.
         for label in (
-            "GetTrueUserIgnorableAbility",
             "DoPoisonBurnDamage",
             "IncrementToxic",
             "DoPoisonBurnDamageAnim",
