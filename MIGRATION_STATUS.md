@@ -1,3 +1,21 @@
+## Latest checkpoint: native post-Future Sight CheckFaint -> HandleEndturnBlockA boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py` and wired it into normal/debug CI.
+- The validated early `HandleBetweenTurnEffects` path now continues past zero-counter `HandleFutureSight` and executes the following real `CheckFaint -> ResolveFaints` pass.
+- Both active Pokémon remain alive at **83 HP**. This is the third real between-turn `CheckFaint -> ResolveFaints` pass in the current fixture, and it returns carry clear so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandleEndturnBlockA` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, and `wBattleWeather` remains **0**.
+- Final validation: GitHub Actions CI run **#383** (`36291020086`) passed on commit `ac8c053a261a27bc19405fa1da5b2bf231f500ce`.
+  - native post-Future Sight `CheckFaint -> HandleEndturnBlockA` boundary: 6/6 cases passed on normal ROM
+  - native post-Future Sight `CheckFaint -> HandleEndturnBlockA` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `ad23a23071e23b7ddb713bbe13c292613954bb71`.
+- CI wiring commit: `ac8c053a261a27bc19405fa1da5b2bf231f500ce`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real `HandleEndturnBlockA` two-side path on this no-residual-effect fixture, verify both sides preserve the same battle state, then advance to the following `CheckFaint` boundary while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, and weather state.
+
 ## Latest checkpoint: native HandleFutureSight zero-counter -> following CheckFaint boundary regression (2026-09-26)
 
 - Added `tests/test_native_betweenturn_futuresight_postcheck_boundary.py` and wired it into normal/debug CI.
