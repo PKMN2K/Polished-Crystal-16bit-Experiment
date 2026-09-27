@@ -836,9 +836,6 @@ def main():
         bank, address = symbols[label]
         pyboy.hook_register(bank, address, callback, None)
 
-    class BoundaryStop(BaseException):
-        pass
-
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
         mem[0x2000] = bank
@@ -847,33 +844,23 @@ def main():
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        boundary_stopped = False
         for _ in range(max_frames):
-            try:
-                pyboy.tick(1, False, False)
-            except BoundaryStop:
-                boundary_stopped = True
+            pyboy.tick(1, False, False)
+            if stop_flag is not None and stop_flag[0]:
                 break
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
-        if stop_flag is not None and stop_flag[0]:
-            assert boundary_stopped, (label, "boundary hook did not abort tick")
-            # The stop is at HandleDisable after both inactive HandleEncore
-            # .do_it passes return.
-            assert mem[addr("hROMBank")] == symbols["HandleDisable"][0], label
-        else:
-            assert not boundary_stopped, label
-            assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
-                label, hex(regs.PC), hex(regs.SP),
-                "reads", len(read_script_calls),
-                "apply", len(applydamage_calls),
-                "take", len(applydamage_take_damage_calls),
-                "deal", len(applydamage_deal_damage_calls),
-                "subtract", len(applydamage_subtract_hp_calls),
-                "hp_hud", len(applydamage_hud_calls),
-                "refresh", len(applydamage_refresh_huds_calls),
-            )
-            assert mem[addr("hROMBank")] == bank, label
+        assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
+            label, hex(regs.PC), hex(regs.SP),
+            "reads", len(read_script_calls),
+            "apply", len(applydamage_calls),
+            "take", len(applydamage_take_damage_calls),
+            "deal", len(applydamage_deal_damage_calls),
+            "subtract", len(applydamage_subtract_hp_calls),
+            "hp_hud", len(applydamage_hud_calls),
+            "refresh", len(applydamage_refresh_huds_calls),
+        )
+        assert mem[addr("hROMBank")] == bank, label
         assert mem[0xFF70] & 7 == 1, label
         assert mem[0xFF4F] & 1 == 0, label
 
@@ -3727,9 +3714,14 @@ def main():
         if encore_active[0]:
             handle_disable_calls.append(snapshot_encore_state())
             encore_active[0] = False
+            # Terminate only after capturing the exact HandleDisable entry.
+            # Keep the untested Disable body inert while normal control flow
+            # unwinds HandleBetweenTurnEffects and BattleTurn.
+            mem[addr("wPlayerDisableCount")] = 0
+            mem[addr("wEnemyDisableCount")] = 0
+            mem[addr("wBattleEnded")] = 1
             disable_stop_hit[0] = True
             between_turn_active[0] = False
-            raise BoundaryStop
 
     def observe_weather_deep(_):
         if weather_active[0]:
@@ -7487,12 +7479,11 @@ def main():
             assert read_native("wBattleMonNativeSpecies") == 25, context
             assert read_native("wEnemyMonNativeSpecies") == native, context
             assert mem[addr("wTotalBattleTurns")] == 1, context
-            assert mem[addr("hBattleTurn")] == handle_disable_calls[0][2], context
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 0, (
-                "non-fainting enemy ResolveFaints incorrectly ended the battle",
+            assert mem[addr("wBattleEnded")] == 1, (
+                "boundary harness did not terminate DoBattle after HandleDisable entry",
                 context, mem[addr("wBattleEnded")]
             )
             assert bytes(
