@@ -400,6 +400,10 @@ jobs:
         name: "Test native post-HandleCurse CheckFaint to HandleWrap boundary (normal)"
         run: python tests/test_native_betweenturn_postcurse_checkfaint_wrap_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-wrap-postcheck-boundary
+        name: "Test native inactive HandleWrap to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_wrap_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -767,6 +771,10 @@ jobs:
       - id: test-native-betweenturn-postcurse-checkfaint-wrap-boundary-debug
         name: "Test native post-HandleCurse CheckFaint to HandleWrap boundary (debug)"
         run: python tests/test_native_betweenturn_postcurse_checkfaint_wrap_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-wrap-postcheck-boundary-debug
+        name: "Test native inactive HandleWrap to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_wrap_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
