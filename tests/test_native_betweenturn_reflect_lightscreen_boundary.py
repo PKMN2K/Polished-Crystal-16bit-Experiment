@@ -7851,7 +7851,11 @@ def main():
                 assert snap[31:33] == (0, 0), (
                     "HandleReflect changed clear Roost substatus", context, snap
                 )
-                assert snap[35:37] == (0, 0), (
+                assert snap[33:37] == roost_do_it_calls[-1][33:37], (
+                    "HandleReflect changed battler types",
+                    context, snap, roost_do_it_calls[-1]
+                )
+                assert snap[37:39] == (0, 0), (
                     "HandleReflect did not see zero screen bytes", context, snap
                 )
             assert len(reflect_counter_calls) == 2, (
@@ -7872,7 +7876,7 @@ def main():
                     "inactive Reflect counter was not zero",
                     context, hex(screen_addr), screen_value
                 )
-                assert snap[35:37] == (0, 0), (
+                assert snap[37:39] == (0, 0), (
                     "screen bytes changed before zero-counter return", context, snap
                 )
             assert not reflect_deep_calls, (
@@ -7890,11 +7894,11 @@ def main():
                 "native identities changed before HandleLightScreen",
                 context, lightscreen
             )
-            assert lightscreen[3:35] == reflect_do_it_calls[-1][3:35], (
+            assert lightscreen[3:37] == reflect_do_it_calls[-1][3:37], (
                 "battle/type state changed before HandleLightScreen",
                 context, lightscreen, reflect_do_it_calls[-1]
             )
-            assert lightscreen[35:37] == (0, 0), (
+            assert lightscreen[37:39] == (0, 0), (
                 "screen bytes changed before HandleLightScreen",
                 context, lightscreen
             )
