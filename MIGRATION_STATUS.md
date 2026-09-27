@@ -1,3 +1,21 @@
+## Latest checkpoint: native post-HandleCurse CheckFaint -> HandleWrap boundary regression (2026-09-27)
+
+- Added `tests/test_native_betweenturn_postcurse_checkfaint_wrap_boundary.py` and wired it into normal/debug CI.
+- The validated `HandleBetweenTurnEffects` path now continues through the real two-side inactive `HandleCurse` body and executes the following real `CheckFaint -> ResolveFaints` pass.
+- Both active Pokémon remain alive at **83 HP**. This is the eighth real between-turn `CheckFaint -> ResolveFaints` pass in the current fixture, and it returns carry clear so the immediate `ret c` is not taken.
+- Execution then reaches the real `HandleWrap` entry, where the regression stops before its body executes.
+- Native player identity 25 and all six enemy native-identity cases remain intact. Player move 45 stays distinct from enemy Tackle 33; player active/party PP remains 34/34, enemy active/OT-party Tackle PP remains 33/33, the player target keeps Pressure, both active and party HP remain **83**, `wDamageTaken` remains **17**, `wMoveState` remains **$11**, `wBattleEnded` remains **0**, `wEnemyFleeing` remains **0**, both Future Sight counters remain **0**, `wBattleWeather` remains **0**, both active held-item slots remain empty, Leech Seed substatus remains clear, both active status bytes remain clear, and both Curse substatus bytes remain clear.
+- Final validation: GitHub Actions CI run **#415** (`36343729378`) passed on commit `e1255feef3ff127c5a8bd490502d8f36e54c5b11`.
+  - native post-`HandleCurse` `CheckFaint -> HandleWrap` boundary: 6/6 cases passed on normal ROM
+  - native post-`HandleCurse` `CheckFaint -> HandleWrap` boundary: 6/6 cases passed on debug ROM
+  - all configured normal, faithful, VC, debug, debug-faithful, and debug VC build variants completed successfully
+  - no CI step failed
+- Regression commit: `d47df0638008926245c5a930827062c9ca758737`.
+- CI wiring commit: `e1255feef3ff127c5a8bd490502d8f36e54c5b11`.
+- This checkpoint changes tests/CI only; no gameplay/migration source code was required.
+
+**Next recommended step:** execute the real two-side `HandleWrap` path with both wrap counters explicitly zero, verify each side follows the inactive/no-wrap return without trapping animation, residual HP damage, release/damage text, or wrap-counter mutation, then advance to the following `CheckFaint` boundary while preserving native identities, PP, Pressure, HP, damage bookkeeping, `wMoveState`, `wBattleEnded`, `wEnemyFleeing`, Future Sight counters, weather state, empty held-item state, clear Leech Seed substatus, clear active status bytes, and clear Curse substatus.
+
 ## Latest checkpoint: native inactive HandleCurse -> following CheckFaint boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_curse_postcheck_boundary.py` and wired it into normal/debug CI.
