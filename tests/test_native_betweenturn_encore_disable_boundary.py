@@ -3433,6 +3433,10 @@ def main():
         )
         if wrap_active[0]:
             post_wrap_checkfaint_calls.append(snapshot)
+            # Isolate the upcoming inactive Encore path at this already-stable
+            # boundary, before the ninth non-fainting ResolveFaints pass.
+            mem[addr("wPlayerEncoreCount")] = 0
+            mem[addr("wEnemyEncoreCount")] = 0
             # Let this ninth between-turn CheckFaint execute through the real
             # non-fainting ResolveFaints path.
             wrap_active[0] = False
@@ -3700,11 +3704,6 @@ def main():
 
     def observe_handle_encore(_):
         if between_turn_active[0] and post_wrap_checkfaint_calls:
-            # Isolate the inactive Encore path at its actual entry boundary.
-            # Earlier move bookkeeping may populate these packed counters;
-            # this regression explicitly exercises the zero-counter case.
-            mem[addr("wPlayerEncoreCount")] = 0
-            mem[addr("wEnemyEncoreCount")] = 0
             handle_encore_calls.append(snapshot_encore_state())
             encore_active[0] = True
 
