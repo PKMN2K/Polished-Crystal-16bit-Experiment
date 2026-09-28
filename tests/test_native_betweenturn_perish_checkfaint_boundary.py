@@ -886,6 +886,10 @@ def main():
         mem[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
+        # Controlled sink for the exact post-PerishSong CheckFaint callsite.
+        # Stopping here avoids mutating CheckFaint or relying on DoBattle to
+        # unwind after the boundary, which can hang the debug ROM harness.
+        mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
             pyboy.tick(1, False, False)
@@ -901,6 +905,8 @@ def main():
                 "perish_counters", len(perish_counter_calls),
                 "post_perish", len(post_perish_checkfaint_calls),
             )
+            assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
+            assert mem[addr("hROMBank")] == post_perish_checkfaint_bank, label
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
                 label, hex(regs.PC), hex(regs.SP),
@@ -3546,14 +3552,12 @@ def main():
         ))
         # This hook is the unique CALL CheckFaint immediately after
         # HandlePerishSong. All earlier CheckFaint calls remain real.
-        # Replace only the upcoming CheckFaint body with SCF/RET so its
-        # caller takes the native RET C and the battle can unwind normally.
-        mem[check_faint_bank, check_faint_addr] = 0x37  # scf
-        mem[check_faint_bank, check_faint_addr + 1] = 0xC9  # ret
-        mem[addr("wBattleEnded")] = 1
+        # Stop directly at this boundary instead of patching CheckFaint and
+        # depending on the entire battle engine to unwind afterward.
         post_perish_checkfaint_stop_hit[0] = True
         perish_active[0] = False
         between_turn_active[0] = False
+        regs.PC = 0xC110
 
     def observe_handle_weather(_):
         if between_turn_active[0]:
@@ -7755,8 +7759,8 @@ def main():
             assert mem[addr("wBattlePlayerAction")] == 0, context
             assert mem[addr("wPlayerSwitchTarget")] == 0, context
             assert mem[addr("wEnemySwitchTarget")] == 0, context
-            assert mem[addr("wBattleEnded")] == 1, (
-                "boundary harness did not terminate DoBattle after post-PerishSong CheckFaint",
+            assert mem[addr("wBattleEnded")] == 0, (
+                "post-PerishSong boundary stop mutated wBattleEnded",
                 context, mem[addr("wBattleEnded")]
             )
             assert bytes(
@@ -7824,16 +7828,11 @@ def main():
             count += 1
 
         print(
-            f"PASS: {count} native inactive HandleDisable -> HandlePerishSong cases; "
-            "both real HandleDisable .do_it passes reached their side-specific "
-            "zero Disable counters (proving each alive-user check passed) and took the inactive "
-            "RET Z in EndturnEncoreDisable before decrement, ended-text, or textbox work; "
-            "HandlePerishSong was reached with native IDs, PP, Pressure, "
-            "player/enemy party HP 83, damage 17, wMoveState $11, "
-            "wBattleEnded=0, wEnemyFleeing=0, Future Sight counters 0/0, "
-            "weather 0, empty held items, zero Leech Seed/Curse substatus, "
-            "clear active status bytes, zero wrap/Encore counters, and zero "
-            "Disable counters preserved"
+            f"PASS: {count} native inactive HandlePerishSong -> CheckFaint cases; "
+            "both real HandlePerishSong .do_it passes observed zero Perish "
+            "counters, preserved native battle state, and reached the exact "
+            "following CheckFaint callsite without mutating CheckFaint or "
+            "wBattleEnded"
         )
     finally:
         pyboy.stop(save=False)
