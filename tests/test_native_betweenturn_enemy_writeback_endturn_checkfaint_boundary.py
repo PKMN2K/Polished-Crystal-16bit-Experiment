@@ -816,7 +816,7 @@ def main():
     enemy_cleanup_boundary_calls = []
     enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
-    endturn_enemy_writeback_stop_hit = [False]
+    endturn_final_checkfaint_stop_hit = [False]
     endturn_writeback_armed = [False]
     endturn_enemy_writeback_calls = []
     process_enemy_fleeing_active = [False]
@@ -3323,6 +3323,15 @@ def main():
             ))
 
     def observe_cleanup_tilemap(_):
+        if endturn_writeback_armed[0]:
+            # Reaching this presentation-only boundary proves the final
+            # .endturn_loop CheckFaint -> ResolveFaints pass returned
+            # normally after the real enemy party writeback.
+            endturn_final_checkfaint_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            between_turn_active[0] = False
+            regs.PC = 0xC110
+            return
         if cleanup_active[0]:
             cleanup_tilemap_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -3443,15 +3452,10 @@ def main():
                 return_addr,
             ))
             # Poison stored HP at entry so the real ROM0 routine must replace
-            # it. Redirect only its verified return address to the sink; the
-            # routine body itself still executes unmodified.
+            # it. Leave its verified return address untouched so execution
+            # continues into the real final .endturn_loop CheckFaint.
             mem[addr("wOTPartyMon1HP")] = 0xA5
             mem[addr("wOTPartyMon1HP") + 1] = 0x5A
-            mem[sp] = 0x10
-            mem[sp + 1] = 0xC1
-            endturn_enemy_writeback_stop_hit[0] = True
-            endturn_writeback_armed[0] = False
-            between_turn_active[0] = False
         if resolve_active[0]:
             resolve_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -4346,7 +4350,7 @@ def main():
         posthiteffects_active[0] = False
         enemy_posthiteffects_active[0] = False
         enemy_resolve_stop_armed[0] = False
-        endturn_enemy_writeback_stop_hit[0] = False
+        endturn_final_checkfaint_stop_hit[0] = False
         endturn_writeback_armed[0] = False
         endturn_enemy_writeback_calls.clear()
         process_enemy_fleeing_active[0] = False
@@ -5084,11 +5088,12 @@ def main():
 
             invoke(
                 "DoBattle", max_frames=256,
-                stop_flag=endturn_enemy_writeback_stop_hit
+                stop_flag=endturn_final_checkfaint_stop_hit
             )
 
-            assert endturn_enemy_writeback_stop_hit[0], (
-                "real end-turn enemy writeback entry was not reached",
+            assert endturn_final_checkfaint_stop_hit[0], (
+                "real final end-turn CheckFaint did not return to the "
+                "LoadTileMapToTempTileMap boundary",
                 context,
             )
             assert enemy_resolve_boundary_calls, (
@@ -7430,13 +7435,15 @@ def main():
             )
             assert between_turn_checkfaint_calls == [
                 (25, native, 1, 0, 0, 0, 83, 0, 83, 0x11, 0),
+                (25, native, 1, 0, 0, 0, 83, 0, 83, 0x11, 0),
             ], (
-                "HandleBetweenTurnEffects did not enter its first CheckFaint "
-                "with preserved non-fainting state",
+                "HandleBetweenTurnEffects did not enter both its first and "
+                "final .endturn_loop CheckFaint calls with preserved "
+                "non-fainting state",
                 context, between_turn_checkfaint_calls
             )
-            assert len(between_turn_resolve_faints_calls) == 11, (
-                "expected eleven real between-turn CheckFaint -> ResolveFaints passes",
+            assert len(between_turn_resolve_faints_calls) == 12, (
+                "expected twelve real between-turn CheckFaint -> ResolveFaints passes",
                 context, between_turn_resolve_faints_calls
             )
             for snap in between_turn_resolve_faints_calls:
@@ -8657,8 +8664,8 @@ def main():
 
             # Both real writebacks have now run in their assembled end-turn
             # sequence. Their entry hooks seeded HP sentinels; the enemy
-            # routine's verified return address was redirected to the sink
-            # only after proving it normally returns to .endturn_loop CheckFaint.
+            # routine returned normally to .endturn_loop CheckFaint, whose
+            # real ResolveFaints pass then reached the tilemap boundary.
             assert bytes(
                 mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
             ) == bytes([0, 83]), (
@@ -8803,10 +8810,10 @@ def main():
 
         print(
             f"PASS: {count} native enemy party writeback -> endturn-loop "
-            "CheckFaint cases; both real end-turn ROM0 party writebacks "
-            "replaced their seeded HP sentinels with 83 in sequence, native "
-            "state stayed intact, and the assembled operation after "
-            "UpdateEnemyMonInParty is CheckFaint"
+            "CheckFaint -> tilemap cases; both real end-turn ROM0 party "
+            "writebacks replaced their seeded HP sentinels with 83 in "
+            "sequence, native state stayed intact, and the real final "
+            "CheckFaint/ResolveFaints pass returned normally"
         )
 
     finally:
