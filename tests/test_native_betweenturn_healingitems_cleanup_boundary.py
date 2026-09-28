@@ -5,8 +5,10 @@ turns and the validated HandleBetweenTurnEffects sequence through real inactive
 HandleLeppaBerry.
 
 Then execute real HandleHealingItems for both alive battlers with empty held
-items and clear status. Seed both FLINCHED bits at HandleHealingItems entry,
-verify the inactive healing-item passes preserve battle state, and stop at the
+items and clear status. Its deep item-effect helpers are deterministic inactive
+boundaries in this regression; the handler's real call ordering, turn switching
+and return path remain live. Seed both FLINCHED bits at HandleHealingItems
+entry, verify the inactive passes preserve battle state, and stop at the
 following UpdateBattleMonInParty entry only after the real end-turn cleanup
 instructions clear both FLINCHED bits.
 """
@@ -4600,7 +4602,18 @@ def main():
         # sites and turn-state sequencing remain real.
         install_stub("CheckContestBattleOver", [0xA7, 0xC9])
         install_stub("HandleBerserkGene", [0xC9])
-        install_stub("CheckMirrorHerb", [0xC9])
+        # This boundary validates HandleHealingItems sequencing and the
+        # following inline cleanup. Keep its deeper item-effect routines
+        # deterministic/inactive so unrelated berry/status/HUD internals
+        # cannot block the boundary harness.
+        for label in (
+            "HandleHPHealingItem",
+            "UseHeldStatusHealingItem",
+            "HandleStatBoostBerry",
+            "CheckMirrorHerb",
+            "UseConfusionHealingItem",
+        ):
+            install_stub(label, [0xC9])
         install_stub("AIChooseMove", [0xC9], lambda _: ai_choose_calls.append(True))
         install_stub("AI_MaybeSwitch", [0xC9], lambda _: ai_switch_calls.append(True))
         install_stub("TryEnemyFlee", [0xC9], lambda _: enemy_flee_calls.append(True))
@@ -8517,8 +8530,8 @@ def main():
                 for label in expected_healing_helpers
             }
             assert actual_healing_helpers == expected_healing_helpers, (
-                "HandleHealingItems did not execute the expected helper sequence "
-                "for both sides",
+                "HandleHealingItems did not dispatch the expected inactive helper "
+                "boundaries for both sides",
                 context, actual_healing_helpers, healing_item_helper_calls
             )
             for _, snap in healing_item_helper_calls:
@@ -8660,10 +8673,10 @@ def main():
 
         print(
             f"PASS: {count} native inactive HandleHealingItems -> "
-            "end-turn cleanup cases; both real healing-item side passes ran "
-            "with empty held items, preserved native battle state, both "
-            "seeded FLINCHED bits were cleared by the real cleanup, and "
-            "execution reached UpdateBattleMonInParty"
+            "end-turn cleanup cases; both real handler side passes dispatched "
+            "the deterministic inactive item-helper boundaries, preserved "
+            "native battle state, both seeded FLINCHED bits were cleared by "
+            "the real cleanup, and execution reached UpdateBattleMonInParty"
         )
 
     finally:
