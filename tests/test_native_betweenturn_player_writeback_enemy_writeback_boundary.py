@@ -6,9 +6,10 @@ HandleLeppaBerry and real HandleHealingItems control flow.
 
 After the real post-item FLINCHED cleanup reaches UpdateBattleMonInParty, seed
 the player's party HP with a sentinel, execute the real player party writeback,
-and stop exactly at UpdateEnemyMonInParty. Verify the real player writeback
-restores party HP from the active battle record while native identities and the
-validated end-turn state remain intact.
+and stop at the HandleBetweenTurnEffects callsite immediately before
+UpdateEnemyMonInParty. Verify the real player writeback restores party HP from
+the active battle record while native identities and the validated end-turn
+state remain intact.
 """
 import argparse
 from pathlib import Path
@@ -221,6 +222,30 @@ def main():
     assert data[between_turn_offset + 75] == 0xD8
     post_perish_checkfaint_bank, between_turn_addr = symbols["HandleBetweenTurnEffects"]
     post_perish_checkfaint_addr = between_turn_addr + 72
+
+    # Locate the exact consecutive end-turn party writeback calls:
+    #   call UpdateBattleMonInParty
+    #   call UpdateEnemyMonInParty
+    # The controlled stop is installed on the second CALL opcode, so the
+    # first home routine must return normally before the boundary is reached.
+    writeback_pair_offsets = []
+    for i in range(0, 192 - 5):
+        if (
+            data[between_turn_offset + i] == 0xCD
+            and int.from_bytes(
+                data[between_turn_offset + i + 1:between_turn_offset + i + 3],
+                "little",
+            ) == addr("UpdateBattleMonInParty")
+            and data[between_turn_offset + i + 3] == 0xCD
+            and int.from_bytes(
+                data[between_turn_offset + i + 4:between_turn_offset + i + 6],
+                "little",
+            ) == addr("UpdateEnemyMonInParty")
+        ):
+            writeback_pair_offsets.append(i)
+    assert len(writeback_pair_offsets) == 1, writeback_pair_offsets
+    player_writeback_call_offset = writeback_pair_offsets[0]
+    post_player_writeback_addr = between_turn_addr + player_writeback_call_offset + 3
 
     # HandlePerishSong is a real two-side path:
     #   call SetFastestTurn
@@ -935,7 +960,7 @@ def main():
         # Controlled boundary sink used only after real inactive
         # HandleHealingItems completes both side passes, the explicit
         # FLINCHED-bit cleanup runs, real UpdateBattleMonInParty executes,
-        # and execution reaches UpdateEnemyMonInParty.
+        # and execution reaches the following UpdateEnemyMonInParty callsite.
         mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
@@ -946,7 +971,7 @@ def main():
                 break
         if stop_flag is not None:
             assert stop_flag[0], (
-                label, "post-cleanup player-to-enemy writeback boundary was not reached",
+                label, "post-cleanup player-to-enemy writeback callsite was not reached",
                 "mist_entry", len(handle_mist_calls),
                 "mist_do_it", len(mist_do_it_calls),
                 "mist_counter", len(mist_counter_calls),
@@ -963,9 +988,8 @@ def main():
                 "cleanup_enemy_writeback", len(cleanup_enemy_writeback_calls),
             )
             assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
-            # Both party-writeback routines are fixed-ROM0 home routines, so
-            # crossing from the player writeback to the enemy writeback does
-            # not bank-switch. The active bank remains HandleBetweenTurnEffects.
+            # The stop is on the banked HandleBetweenTurnEffects callsite,
+            # immediately before the fixed-ROM0 enemy writeback call.
             assert mem[addr("hROMBank")] == symbols["HandleBetweenTurnEffects"][0], label
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
@@ -3382,14 +3406,15 @@ def main():
                 mem[addr("wPartyMon1PP")],
             ))
 
-    def observe_resolve_enemy_writeback(_):
+    def observe_post_player_writeback(_):
         if cleanup_player_writeback_active[0]:
             cleanup_enemy_writeback_calls.append(snapshot_player_writeback_state())
             cleanup_player_writeback_active[0] = False
             enemy_writeback_stop_hit[0] = True
             between_turn_active[0] = False
             regs.PC = 0xC110
-            return
+
+    def observe_resolve_enemy_writeback(_):
         if resolve_active[0]:
             resolve_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -4877,6 +4902,12 @@ def main():
         hook("ResolveFaints", observe_resolve_faints)
         hook("UpdateBattleMonInParty", observe_resolve_player_writeback)
         hook("UpdateEnemyMonInParty", observe_resolve_enemy_writeback)
+        pyboy.hook_register(
+            post_perish_checkfaint_bank,
+            post_player_writeback_addr,
+            observe_post_player_writeback,
+            None,
+        )
         hook("HasEnemyFainted", observe_resolve_enemy_fainted)
         hook("CheckPlayerPartyForFitPkmn", observe_resolve_fit_party)
         hook("FaintUserPokemon", observe_resolve_faint_animation)
@@ -8594,7 +8625,8 @@ def main():
                 context, cleanup_writeback
             )
             assert len(cleanup_enemy_writeback_calls) == 1, (
-                "real UpdateBattleMonInParty did not reach UpdateEnemyMonInParty",
+                "real UpdateBattleMonInParty did not return to the "
+                "UpdateEnemyMonInParty callsite",
                 context, cleanup_enemy_writeback_calls
             )
             cleanup_enemy_writeback = cleanup_enemy_writeback_calls[0]
@@ -8728,7 +8760,7 @@ def main():
             f"PASS: {count} native post-cleanup player -> enemy party writeback "
             "cases; real UpdateBattleMonInParty replaced the seeded player "
             "party HP sentinel with active HP 83, preserved native/end-turn "
-            "state, and execution reached UpdateEnemyMonInParty"
+            "state, and execution reached the UpdateEnemyMonInParty callsite"
         )
 
     finally:
