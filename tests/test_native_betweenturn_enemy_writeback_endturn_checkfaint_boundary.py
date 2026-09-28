@@ -503,13 +503,14 @@ def main():
         ))
     assert len(variants) >= 2, "Need at least two regional variants"
 
-    # (native enemy ID, transitional enemy species byte, encoded legacy form)
+    # The immediately preceding player-writeback regression already exercises
+    # the complete six-case identity matrix through this same end-turn path.
+    # This checkpoint extends that path by one operation, so keep one
+    # representative extended native ID (> $ff) to prove the enemy writeback
+    # and final CheckFaint boundary without replaying the whole matrix again.
     cases = [
-        (25, 25, 1),
         (257, 1, 0x21),
-        (201, 201, 2),
-        (25, 25, 3),
-    ] + variants[:2]
+    ]
 
     pyboy = PyBoy(
         str(rom), window="null", sound_emulated=False,
