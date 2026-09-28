@@ -444,6 +444,10 @@ jobs:
         name: "Test native inactive HandleMist to HandleTrickRoom boundary (normal)"
         run: python tests/test_native_betweenturn_mist_trickroom_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-trickroom-endturnb-boundary
+        name: "Test native inactive HandleTrickRoom to HandleEndturnBlockB boundary (normal)"
+        run: python tests/test_native_betweenturn_trickroom_endturnb_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -855,6 +859,10 @@ jobs:
       - id: test-native-betweenturn-mist-trickroom-boundary-debug
         name: "Test native inactive HandleMist to HandleTrickRoom boundary (debug)"
         run: python tests/test_native_betweenturn_mist_trickroom_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-trickroom-endturnb-boundary-debug
+        name: "Test native inactive HandleTrickRoom to HandleEndturnBlockB boundary (debug)"
+        run: python tests/test_native_betweenturn_trickroom_endturnb_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
