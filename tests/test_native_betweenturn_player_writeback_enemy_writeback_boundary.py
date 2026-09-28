@@ -4,12 +4,11 @@ Execute the validated player-first wild Tackle path through both real move
 turns and the validated HandleBetweenTurnEffects sequence through real inactive
 HandleLeppaBerry and real HandleHealingItems control flow.
 
-After the real post-item FLINCHED cleanup reaches UpdateBattleMonInParty, seed
-the player's party HP with a sentinel, execute the real player party writeback,
-and stop at the HandleBetweenTurnEffects callsite immediately before
-UpdateEnemyMonInParty. Verify the real player writeback restores party HP from
-the active battle record while native identities and the validated end-turn
-state remain intact.
+Stop the full end-turn path at the already validated UpdateBattleMonInParty
+entry. Then seed the player's party HP with a sentinel and invoke the real ROM0
+UpdateBattleMonInParty routine directly to its normal return. Verify it restores
+party HP from the active battle record, while the assembled end-turn sequence
+places UpdateEnemyMonInParty immediately after that player writeback call.
 """
 import argparse
 from pathlib import Path
@@ -798,7 +797,7 @@ def main():
     enemy_cleanup_boundary_calls = []
     enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
-    enemy_writeback_stop_hit = [False]
+    player_writeback_entry_stop_hit = [False]
     process_enemy_fleeing_active = [False]
     endmove_effect_calls = []
     endmove_throat_spray_calls = []
@@ -898,7 +897,6 @@ def main():
     healing_items_do_it_calls = []
     healing_item_helper_calls = []
     cleanup_writeback_calls = []
-    cleanup_enemy_writeback_calls = []
     perish_deep_calls = []
     disable_deep_calls = []
     encore_deep_calls = []
@@ -931,7 +929,6 @@ def main():
     leppa_active = [False]
     leppa_do_it_item_pending = [False]
     healing_items_active = [False]
-    cleanup_player_writeback_active = [False]
     process_enemy_can_flee_calls = []
     second_perform_move_calls = []
     enemy_move_read_calls = []
@@ -959,8 +956,9 @@ def main():
         ]
         # Controlled boundary sink used only after real inactive
         # HandleHealingItems completes both side passes, the explicit
-        # FLINCHED-bit cleanup runs, real UpdateBattleMonInParty executes,
-        # and execution reaches the following UpdateEnemyMonInParty callsite.
+        # FLINCHED-bit cleanup runs, and execution reaches
+        # UpdateBattleMonInParty. The player writeback itself is invoked
+        # directly after this full-path checkpoint.
         mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
@@ -971,7 +969,7 @@ def main():
                 break
         if stop_flag is not None:
             assert stop_flag[0], (
-                label, "post-cleanup player-to-enemy writeback callsite was not reached",
+                label, "post-cleanup UpdateBattleMonInParty entry was not reached",
                 "mist_entry", len(handle_mist_calls),
                 "mist_do_it", len(mist_do_it_calls),
                 "mist_counter", len(mist_counter_calls),
@@ -985,11 +983,10 @@ def main():
                 "healing_items", len(handle_healing_items_calls),
                 "healing_do_it", len(healing_items_do_it_calls),
                 "cleanup_writeback", len(cleanup_writeback_calls),
-                "cleanup_enemy_writeback", len(cleanup_enemy_writeback_calls),
             )
             assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
-            # The stop is on the banked HandleBetweenTurnEffects callsite,
-            # immediately before the fixed-ROM0 enemy writeback call.
+            # UpdateBattleMonInParty is fixed ROM0, so entering it does not
+            # bank-switch away from HandleBetweenTurnEffects.
             assert mem[addr("hROMBank")] == symbols["HandleBetweenTurnEffects"][0], label
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
@@ -3385,13 +3382,11 @@ def main():
 
     def observe_resolve_player_writeback(_):
         if healing_items_active[0]:
-            # Make this checkpoint prove that the real home routine performs
-            # the party writeback instead of merely observing its entry.
-            mem[addr("wPartyMon1HP")] = 0xA5
-            mem[addr("wPartyMon1HP") + 1] = 0x5A
             cleanup_writeback_calls.append(snapshot_player_writeback_state())
             healing_items_active[0] = False
-            cleanup_player_writeback_active[0] = True
+            player_writeback_entry_stop_hit[0] = True
+            between_turn_active[0] = False
+            regs.PC = 0xC110
             return
         if resolve_active[0]:
             resolve_player_writeback_calls.append((
@@ -3405,14 +3400,6 @@ def main():
                 mem[addr("wBattleMonPP")],
                 mem[addr("wPartyMon1PP")],
             ))
-
-    def observe_post_player_writeback(_):
-        if cleanup_player_writeback_active[0]:
-            cleanup_enemy_writeback_calls.append(snapshot_player_writeback_state())
-            cleanup_player_writeback_active[0] = False
-            enemy_writeback_stop_hit[0] = True
-            between_turn_active[0] = False
-            regs.PC = 0xC110
 
     def observe_resolve_enemy_writeback(_):
         if resolve_active[0]:
@@ -4309,7 +4296,7 @@ def main():
         posthiteffects_active[0] = False
         enemy_posthiteffects_active[0] = False
         enemy_resolve_stop_armed[0] = False
-        enemy_writeback_stop_hit[0] = False
+        player_writeback_entry_stop_hit[0] = False
         process_enemy_fleeing_active[0] = False
         between_turn_active[0] = False
         weather_active[0] = False
@@ -4334,7 +4321,6 @@ def main():
         leppa_active[0] = False
         leppa_do_it_item_pending[0] = False
         healing_items_active[0] = False
-        cleanup_player_writeback_active[0] = False
         cleanup_active[0] = False
         resolve_active[0] = False
         usedmovetext_active[0] = False
@@ -4575,7 +4561,7 @@ def main():
             leppa_do_it_calls, leppa_speed_item_calls, leppa_item_calls,
             leppa_deep_calls, handle_healing_items_calls,
             healing_items_do_it_calls, healing_item_helper_calls,
-            cleanup_writeback_calls, cleanup_enemy_writeback_calls,
+            cleanup_writeback_calls,
             perish_deep_calls, disable_deep_calls,
             encore_deep_calls, wrap_deep_calls, curse_deep_calls,
             burn_deep_calls, poison_deep_calls,
@@ -4902,12 +4888,6 @@ def main():
         hook("ResolveFaints", observe_resolve_faints)
         hook("UpdateBattleMonInParty", observe_resolve_player_writeback)
         hook("UpdateEnemyMonInParty", observe_resolve_enemy_writeback)
-        pyboy.hook_register(
-            post_perish_checkfaint_bank,
-            post_player_writeback_addr,
-            observe_post_player_writeback,
-            None,
-        )
         hook("HasEnemyFainted", observe_resolve_enemy_fainted)
         hook("CheckPlayerPartyForFitPkmn", observe_resolve_fit_party)
         hook("FaintUserPokemon", observe_resolve_faint_animation)
@@ -5052,12 +5032,11 @@ def main():
 
             invoke(
                 "DoBattle", max_frames=256,
-                stop_flag=enemy_writeback_stop_hit
+                stop_flag=player_writeback_entry_stop_hit
             )
 
-            assert enemy_writeback_stop_hit[0], (
-                "post-item cleanup did not execute real UpdateBattleMonInParty "
-                "and reach UpdateEnemyMonInParty",
+            assert player_writeback_entry_stop_hit[0], (
+                "post-item cleanup did not reach UpdateBattleMonInParty",
                 context,
             )
             assert enemy_resolve_boundary_calls, (
@@ -8619,41 +8598,31 @@ def main():
                 "inactive HandleHealingItems/cleanup changed held items",
                 context, cleanup_writeback
             )
-            assert cleanup_writeback[46:48] == (0xA5, 0x5A), (
-                "player writeback sentinel was not installed at "
-                "UpdateBattleMonInParty entry",
+            assert cleanup_writeback[46:48] == (0, 83), (
+                "player party HP was not 83 at the full-path writeback entry",
                 context, cleanup_writeback
             )
-            assert len(cleanup_enemy_writeback_calls) == 1, (
-                "real UpdateBattleMonInParty did not return to the "
-                "UpdateEnemyMonInParty callsite",
-                context, cleanup_enemy_writeback_calls
+
+            # Exercise the real fixed-ROM0 writeback without redirecting from
+            # inside a shared home routine. The sentinel proves the routine
+            # performs the copy rather than the test merely observing it.
+            mem[addr("wPartyMon1HP")] = 0xA5
+            mem[addr("wPartyMon1HP") + 1] = 0x5A
+            invoke("UpdateBattleMonInParty")
+            assert bytes(
+                mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
+            ) == bytes([0, 83]), (
+                "real UpdateBattleMonInParty did not replace the HP sentinel "
+                "with active HP 83",
+                context,
             )
-            cleanup_enemy_writeback = cleanup_enemy_writeback_calls[0]
-            assert cleanup_enemy_writeback[0:2] == (25, native), (
-                "native identities changed across player party writeback",
-                context, cleanup_enemy_writeback
+            assert read_native("wBattleMonNativeSpecies") == 25, (
+                "player native identity changed during direct player writeback",
+                context,
             )
-            assert cleanup_enemy_writeback[5:9] == healing_items[5:9], (
-                "player party writeback changed active battler HP",
-                context, cleanup_enemy_writeback, healing_items
-            )
-            assert cleanup_enemy_writeback[39:42] == healing_items[39:42], (
-                "player party writeback changed guard/Trick Room state",
-                context, cleanup_enemy_writeback, healing_items
-            )
-            assert cleanup_enemy_writeback[42:44] == (0, 0), (
-                "player party writeback changed cleared FLINCHED state",
-                context, cleanup_enemy_writeback
-            )
-            assert cleanup_enemy_writeback[44:46] == (0, 0), (
-                "player party writeback changed held items",
-                context, cleanup_enemy_writeback
-            )
-            assert cleanup_enemy_writeback[46:48] == (0, 83), (
-                "real UpdateBattleMonInParty did not restore active HP 83 "
-                "into the player party record",
-                context, cleanup_enemy_writeback
+            assert read_native("wEnemyMonNativeSpecies") == native, (
+                "enemy native identity changed during direct player writeback",
+                context,
             )
             assert mem[addr("wBattleMonItem")] == 0, (
                 "player held item changed during inactive HandleHealingItems",
@@ -8758,9 +8727,10 @@ def main():
 
         print(
             f"PASS: {count} native post-cleanup player -> enemy party writeback "
-            "cases; real UpdateBattleMonInParty replaced the seeded player "
-            "party HP sentinel with active HP 83, preserved native/end-turn "
-            "state, and execution reached the UpdateEnemyMonInParty callsite"
+            "cases; the full path reached UpdateBattleMonInParty, the real "
+            "ROM0 routine replaced the seeded player HP sentinel with 83, "
+            "native state stayed intact, and the assembled next call is "
+            "UpdateEnemyMonInParty"
         )
 
     finally:
