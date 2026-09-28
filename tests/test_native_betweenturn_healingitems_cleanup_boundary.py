@@ -959,7 +959,10 @@ def main():
                 "cleanup_writeback", len(cleanup_writeback_calls),
             )
             assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
-            assert mem[addr("hROMBank")] == symbols["UpdateBattleMonInParty"][0], label
+            # UpdateBattleMonInParty is a fixed-ROM0 home routine, so
+            # entering it does not bank-switch. The active bank must remain
+            # the HandleBetweenTurnEffects bank that called this cleanup path.
+            assert mem[addr("hROMBank")] == symbols["HandleBetweenTurnEffects"][0], label
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
                 label, hex(regs.PC), hex(regs.SP),
