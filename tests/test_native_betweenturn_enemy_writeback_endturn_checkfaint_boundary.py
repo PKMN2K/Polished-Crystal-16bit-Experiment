@@ -815,7 +815,9 @@ def main():
     enemy_cleanup_boundary_calls = []
     enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
-    player_writeback_entry_stop_hit = [False]
+    endturn_loop_checkfaint_stop_hit = [False]
+    endturn_writeback_armed = [False]
+    endturn_enemy_writeback_calls = []
     process_enemy_fleeing_active = [False]
     endmove_effect_calls = []
     endmove_throat_spray_calls = []
@@ -972,11 +974,9 @@ def main():
         mem[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
-        # Controlled boundary sink used only after real inactive
-        # HandleHealingItems completes both side passes, the explicit
-        # FLINCHED-bit cleanup runs, and execution reaches
-        # UpdateBattleMonInParty. The player writeback itself is invoked
-        # directly after this full-path checkpoint.
+        # Controlled boundary sink used after the real end-turn player and
+        # enemy party writebacks complete and execution reaches the assembled
+        # .endturn_loop CheckFaint call site.
         mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         for _ in range(max_frames):
@@ -987,7 +987,7 @@ def main():
                 break
         if stop_flag is not None:
             assert stop_flag[0], (
-                label, "post-cleanup UpdateBattleMonInParty entry was not reached",
+                label, "end-turn writebacks did not reach .endturn_loop CheckFaint",
                 "mist_entry", len(handle_mist_calls),
                 "mist_do_it", len(mist_do_it_calls),
                 "mist_counter", len(mist_counter_calls),
@@ -3402,9 +3402,9 @@ def main():
         if healing_items_active[0]:
             cleanup_writeback_calls.append(snapshot_player_writeback_state())
             healing_items_active[0] = False
-            player_writeback_entry_stop_hit[0] = True
-            between_turn_active[0] = False
-            regs.PC = 0xC110
+            mem[addr("wPartyMon1HP")] = 0xA5
+            mem[addr("wPartyMon1HP") + 1] = 0x5A
+            endturn_writeback_armed[0] = True
             return
         if resolve_active[0]:
             resolve_player_writeback_calls.append((
@@ -3420,6 +3420,18 @@ def main():
             ))
 
     def observe_resolve_enemy_writeback(_):
+        if endturn_writeback_armed[0] and not resolve_active[0]:
+            endturn_enemy_writeback_calls.append((
+                read_native("wBattleMonNativeSpecies"),
+                read_native("wEnemyMonNativeSpecies"),
+                mem[addr("hBattleTurn")],
+                mem[addr("wEnemyMonHP")],
+                mem[addr("wEnemyMonHP") + 1],
+                mem[addr("wOTPartyMon1HP")],
+                mem[addr("wOTPartyMon1HP") + 1],
+            ))
+            mem[addr("wOTPartyMon1HP")] = 0xA5
+            mem[addr("wOTPartyMon1HP") + 1] = 0x5A
         if resolve_active[0]:
             resolve_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -3432,6 +3444,13 @@ def main():
                 mem[addr("wOTPartyMon1Species")],
                 mem[addr("wOTPartyMon1Form")],
             ))
+
+    def observe_endturn_loop_checkfaint(_):
+        if endturn_writeback_armed[0]:
+            endturn_loop_checkfaint_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            between_turn_active[0] = False
+            regs.PC = 0xC110
 
     def observe_resolve_enemy_fainted(_):
         if resolve_active[0]:
@@ -4314,7 +4333,9 @@ def main():
         posthiteffects_active[0] = False
         enemy_posthiteffects_active[0] = False
         enemy_resolve_stop_armed[0] = False
-        player_writeback_entry_stop_hit[0] = False
+        endturn_loop_checkfaint_stop_hit[0] = False
+        endturn_writeback_armed[0] = False
+        endturn_enemy_writeback_calls.clear()
         process_enemy_fleeing_active[0] = False
         between_turn_active[0] = False
         weather_active[0] = False
@@ -4906,6 +4927,12 @@ def main():
         hook("ResolveFaints", observe_resolve_faints)
         hook("UpdateBattleMonInParty", observe_resolve_player_writeback)
         hook("UpdateEnemyMonInParty", observe_resolve_enemy_writeback)
+        pyboy.hook_register(
+            symbols["HandleBetweenTurnEffects"][0],
+            endturn_loop_checkfaint_addr,
+            observe_endturn_loop_checkfaint,
+            None,
+        )
         hook("HasEnemyFainted", observe_resolve_enemy_fainted)
         hook("CheckPlayerPartyForFitPkmn", observe_resolve_fit_party)
         hook("FaintUserPokemon", observe_resolve_faint_animation)
@@ -5050,11 +5077,12 @@ def main():
 
             invoke(
                 "DoBattle", max_frames=256,
-                stop_flag=player_writeback_entry_stop_hit
+                stop_flag=endturn_loop_checkfaint_stop_hit
             )
 
-            assert player_writeback_entry_stop_hit[0], (
-                "post-item cleanup did not reach UpdateBattleMonInParty",
+            assert endturn_loop_checkfaint_stop_hit[0], (
+                "real player/enemy end-turn writebacks did not reach "
+                ".endturn_loop CheckFaint",
                 context,
             )
             assert enemy_resolve_boundary_calls, (
@@ -8621,36 +8649,34 @@ def main():
                 context, cleanup_writeback
             )
 
-            # Exercise both real fixed-ROM0 writebacks without redirecting
-            # from inside shared home routines. The sentinels prove each
-            # routine performs its own persistent-party copy.
-            mem[addr("wPartyMon1HP")] = 0xA5
-            mem[addr("wPartyMon1HP") + 1] = 0x5A
-            invoke("UpdateBattleMonInParty")
+            # Both real writebacks have now run in their assembled end-turn
+            # sequence. Their entry hooks seeded HP sentinels; reaching the
+            # following CheckFaint proves each routine returned normally.
             assert bytes(
                 mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
             ) == bytes([0, 83]), (
-                "real UpdateBattleMonInParty did not replace the player HP "
-                "sentinel with active HP 83",
+                "real end-turn UpdateBattleMonInParty did not replace the "
+                "player HP sentinel with active HP 83",
                 context,
             )
-
-            mem[addr("wOTPartyMon1HP")] = 0xA5
-            mem[addr("wOTPartyMon1HP") + 1] = 0x5A
-            invoke("UpdateEnemyMonInParty")
+            assert len(endturn_enemy_writeback_calls) == 1, (
+                "real end-turn UpdateEnemyMonInParty entry was not reached "
+                "exactly once",
+                context, endturn_enemy_writeback_calls,
+            )
             assert bytes(
                 mem[addr("wOTPartyMon1HP"):addr("wOTPartyMon1HP") + 2]
             ) == bytes([0, 83]), (
-                "real UpdateEnemyMonInParty did not replace the enemy HP "
-                "sentinel with active enemy HP 83",
+                "real end-turn UpdateEnemyMonInParty did not replace the "
+                "enemy HP sentinel with active enemy HP 83",
                 context,
             )
             assert read_native("wBattleMonNativeSpecies") == 25, (
-                "player native identity changed across direct party writebacks",
+                "player native identity changed across end-turn party writebacks",
                 context,
             )
             assert read_native("wEnemyMonNativeSpecies") == native, (
-                "enemy native identity changed across direct party writebacks",
+                "enemy native identity changed across end-turn party writebacks",
                 context,
             )
             assert (
@@ -8765,9 +8791,10 @@ def main():
 
         print(
             f"PASS: {count} native enemy party writeback -> endturn-loop "
-            "CheckFaint cases; both real ROM0 party writebacks replaced their "
-            "seeded HP sentinels with 83, native state stayed intact, and the "
-            "assembled operation after UpdateEnemyMonInParty is CheckFaint"
+            "CheckFaint cases; both real end-turn ROM0 party writebacks "
+            "replaced their seeded HP sentinels with 83 in sequence, native "
+            "state stayed intact, and the assembled operation after "
+            "UpdateEnemyMonInParty is CheckFaint"
         )
 
     finally:
