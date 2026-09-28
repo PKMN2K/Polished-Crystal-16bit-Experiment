@@ -866,6 +866,7 @@ def main():
     post_endturn_b_checkfaint_calls = []
     handle_leppa_berry_calls = []
     leppa_do_it_calls = []
+    leppa_speed_item_calls = []
     leppa_item_calls = []
     leppa_deep_calls = []
     handle_healing_items_calls = []
@@ -899,6 +900,7 @@ def main():
     trickroom_active = [False]
     endturn_block_b_active = [False]
     leppa_active = [False]
+    leppa_do_it_item_pending = [False]
     process_enemy_can_flee_calls = []
     second_perform_move_calls = []
     enemy_move_read_calls = []
@@ -2320,7 +2322,14 @@ def main():
 
     def observe_user_item_after_unnerve(_):
         if leppa_active[0]:
-            leppa_item_calls.append(snapshot_mist_state())
+            if leppa_do_it_item_pending[0]:
+                leppa_item_calls.append(snapshot_mist_state())
+                leppa_do_it_item_pending[0] = False
+            else:
+                # SetFastestTurn -> GetSpeed also queries each battler's item.
+                # Keep those ordering lookups separate from the direct
+                # HandleLeppaBerry.do_it held-item checks.
+                leppa_speed_item_calls.append(snapshot_mist_state())
         elif enemy_critical_active[0]:
             enemy_user_item_after_unnerve_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -3755,6 +3764,7 @@ def main():
     def observe_leppa_do_it(_):
         if leppa_active[0]:
             leppa_do_it_calls.append(snapshot_mist_state())
+            leppa_do_it_item_pending[0] = True
 
     def observe_leppa_deep(label):
         def callback(_):
@@ -4242,6 +4252,7 @@ def main():
         trickroom_active[0] = False
         endturn_block_b_active[0] = False
         leppa_active[0] = False
+        leppa_do_it_item_pending[0] = False
         cleanup_active[0] = False
         resolve_active[0] = False
         usedmovetext_active[0] = False
@@ -4479,8 +4490,8 @@ def main():
             handle_endturn_block_b_calls, endturn_block_b_do_it_calls,
             endturn_abilities_b_calls, endturn_status_orb_calls,
             post_endturn_b_checkfaint_calls, handle_leppa_berry_calls,
-            leppa_do_it_calls, leppa_item_calls, leppa_deep_calls,
-            handle_healing_items_calls,
+            leppa_do_it_calls, leppa_speed_item_calls, leppa_item_calls,
+            leppa_deep_calls, handle_healing_items_calls,
             perish_deep_calls, disable_deep_calls,
             encore_deep_calls, wrap_deep_calls, curse_deep_calls,
             burn_deep_calls, poison_deep_calls,
@@ -8356,15 +8367,27 @@ def main():
                 "HandleLeppaBerry did not visit both battle turns",
                 context, leppa_do_it_calls
             )
+            assert len(leppa_speed_item_calls) == 2, (
+                "SetFastestTurn did not perform both held-item speed lookups",
+                context, leppa_speed_item_calls
+            )
+            assert {snap[2] for snap in leppa_speed_item_calls} == {0, 1}, (
+                "SetFastestTurn did not inspect both battlers' speed items",
+                context, leppa_speed_item_calls
+            )
             assert len(leppa_item_calls) == 2, (
-                "HandleLeppaBerry did not query each side's held item",
+                "HandleLeppaBerry .do_it did not query each side's held item",
                 context, leppa_item_calls
             )
             assert {snap[2] for snap in leppa_item_calls} == {0, 1}, (
-                "HandleLeppaBerry did not query one player and one enemy item",
+                "HandleLeppaBerry .do_it did not query one player and one enemy item",
                 context, leppa_item_calls
             )
-            for snap in leppa_do_it_calls + leppa_item_calls:
+            assert not leppa_do_it_item_pending[0], (
+                "HandleLeppaBerry .do_it ended with an unmatched item lookup",
+                context
+            )
+            for snap in leppa_do_it_calls + leppa_speed_item_calls + leppa_item_calls:
                 assert snap[0:2] == (25, native), (
                     "HandleLeppaBerry changed native identities", context, snap
                 )
