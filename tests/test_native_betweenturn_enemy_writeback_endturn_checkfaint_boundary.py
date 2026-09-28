@@ -815,7 +815,7 @@ def main():
     enemy_cleanup_boundary_calls = []
     enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
-    endturn_loop_checkfaint_stop_hit = [False]
+    endturn_enemy_writeback_stop_hit = [False]
     endturn_writeback_armed = [False]
     endturn_enemy_writeback_calls = []
     process_enemy_fleeing_active = [False]
@@ -987,7 +987,7 @@ def main():
                 break
         if stop_flag is not None:
             assert stop_flag[0], (
-                label, "end-turn writebacks did not reach .endturn_loop CheckFaint",
+                label, "requested end-turn boundary was not reached",
                 "mist_entry", len(handle_mist_calls),
                 "mist_do_it", len(mist_do_it_calls),
                 "mist_counter", len(mist_counter_calls),
@@ -3421,6 +3421,16 @@ def main():
 
     def observe_resolve_enemy_writeback(_):
         if endturn_writeback_armed[0] and not resolve_active[0]:
+            # The CALL immediately preceding .endturn_loop must have pushed
+            # the CheckFaint call-site address as this routine's return.
+            sp = regs.SP
+            return_addr = mem[sp] | (mem[sp + 1] << 8)
+            assert return_addr == endturn_loop_checkfaint_addr, (
+                "end-turn UpdateEnemyMonInParty return address is not "
+                ".endturn_loop CheckFaint",
+                current_case[0], hex(return_addr),
+                hex(endturn_loop_checkfaint_addr),
+            )
             endturn_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
@@ -3429,9 +3439,18 @@ def main():
                 mem[addr("wEnemyMonHP") + 1],
                 mem[addr("wOTPartyMon1HP")],
                 mem[addr("wOTPartyMon1HP") + 1],
+                return_addr,
             ))
+            # Poison stored HP at entry so the real ROM0 routine must replace
+            # it. Redirect only its verified return address to the sink; the
+            # routine body itself still executes unmodified.
             mem[addr("wOTPartyMon1HP")] = 0xA5
             mem[addr("wOTPartyMon1HP") + 1] = 0x5A
+            mem[sp] = 0x10
+            mem[sp + 1] = 0xC1
+            endturn_enemy_writeback_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            between_turn_active[0] = False
         if resolve_active[0]:
             resolve_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -3444,13 +3463,6 @@ def main():
                 mem[addr("wOTPartyMon1Species")],
                 mem[addr("wOTPartyMon1Form")],
             ))
-
-    def observe_endturn_loop_checkfaint(_):
-        if endturn_writeback_armed[0]:
-            endturn_loop_checkfaint_stop_hit[0] = True
-            endturn_writeback_armed[0] = False
-            between_turn_active[0] = False
-            regs.PC = 0xC110
 
     def observe_resolve_enemy_fainted(_):
         if resolve_active[0]:
@@ -4333,7 +4345,7 @@ def main():
         posthiteffects_active[0] = False
         enemy_posthiteffects_active[0] = False
         enemy_resolve_stop_armed[0] = False
-        endturn_loop_checkfaint_stop_hit[0] = False
+        endturn_enemy_writeback_stop_hit[0] = False
         endturn_writeback_armed[0] = False
         endturn_enemy_writeback_calls.clear()
         process_enemy_fleeing_active[0] = False
@@ -4927,12 +4939,6 @@ def main():
         hook("ResolveFaints", observe_resolve_faints)
         hook("UpdateBattleMonInParty", observe_resolve_player_writeback)
         hook("UpdateEnemyMonInParty", observe_resolve_enemy_writeback)
-        pyboy.hook_register(
-            symbols["HandleBetweenTurnEffects"][0],
-            endturn_loop_checkfaint_addr,
-            observe_endturn_loop_checkfaint,
-            None,
-        )
         hook("HasEnemyFainted", observe_resolve_enemy_fainted)
         hook("CheckPlayerPartyForFitPkmn", observe_resolve_fit_party)
         hook("FaintUserPokemon", observe_resolve_faint_animation)
@@ -5077,12 +5083,11 @@ def main():
 
             invoke(
                 "DoBattle", max_frames=256,
-                stop_flag=endturn_loop_checkfaint_stop_hit
+                stop_flag=endturn_enemy_writeback_stop_hit
             )
 
-            assert endturn_loop_checkfaint_stop_hit[0], (
-                "real player/enemy end-turn writebacks did not reach "
-                ".endturn_loop CheckFaint",
+            assert endturn_enemy_writeback_stop_hit[0], (
+                "real end-turn enemy writeback entry was not reached",
                 context,
             )
             assert enemy_resolve_boundary_calls, (
@@ -8650,8 +8655,9 @@ def main():
             )
 
             # Both real writebacks have now run in their assembled end-turn
-            # sequence. Their entry hooks seeded HP sentinels; reaching the
-            # following CheckFaint proves each routine returned normally.
+            # sequence. Their entry hooks seeded HP sentinels; the enemy
+            # routine's verified return address was redirected to the sink
+            # only after proving it normally returns to .endturn_loop CheckFaint.
             assert bytes(
                 mem[addr("wPartyMon1HP"):addr("wPartyMon1HP") + 2]
             ) == bytes([0, 83]), (
@@ -8662,6 +8668,11 @@ def main():
             assert len(endturn_enemy_writeback_calls) == 1, (
                 "real end-turn UpdateEnemyMonInParty entry was not reached "
                 "exactly once",
+                context, endturn_enemy_writeback_calls,
+            )
+            assert endturn_enemy_writeback_calls[0][7] == endturn_loop_checkfaint_addr, (
+                "enemy writeback did not originate from the final end-turn "
+                "CheckFaint boundary",
                 context, endturn_enemy_writeback_calls,
             )
             assert bytes(
