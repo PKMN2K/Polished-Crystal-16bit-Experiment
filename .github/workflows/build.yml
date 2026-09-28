@@ -464,6 +464,10 @@ jobs:
         name: "Test native inactive HandleHealingItems to end-turn cleanup boundary (normal)"
         run: python tests/test_native_betweenturn_healingitems_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-betweenturn-player-writeback-enemy-writeback-boundary
+        name: "Test native player to enemy end-turn party writeback boundary (normal)"
+        run: python tests/test_native_betweenturn_player_writeback_enemy_writeback_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -895,6 +899,10 @@ jobs:
       - id: test-native-betweenturn-healingitems-cleanup-boundary-debug
         name: "Test native inactive HandleHealingItems to end-turn cleanup boundary (debug)"
         run: python tests/test_native_betweenturn_healingitems_cleanup_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-player-writeback-enemy-writeback-boundary-debug
+        name: "Test native player to enemy end-turn party writeback boundary (debug)"
+        run: python tests/test_native_betweenturn_player_writeback_enemy_writeback_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
