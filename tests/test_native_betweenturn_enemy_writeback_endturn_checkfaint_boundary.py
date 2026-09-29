@@ -1006,9 +1006,10 @@ def main():
                 "cleanup_writeback", len(cleanup_writeback_calls),
             )
             assert regs.PC == 0xC110, (label, hex(regs.PC), "boundary sink")
-            # UpdateBattleMonInParty is fixed ROM0, so entering it does not
-            # bank-switch away from HandleBetweenTurnEffects.
-            assert mem[addr("hROMBank")] == symbols["HandleBetweenTurnEffects"][0], label
+            # The current stop is after HandleBetweenTurnEffects has returned
+            # through its farcall and BattleTurn has re-entered .loop, so the
+            # original BattleTurn ROM bank must have been restored.
+            assert mem[addr("hROMBank")] == symbols["BattleTurn"][0], label
         else:
             assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
                 label, hex(regs.PC), hex(regs.SP),
