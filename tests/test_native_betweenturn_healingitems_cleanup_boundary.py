@@ -937,7 +937,20 @@ def main():
         # FLINCHED-bit cleanup runs, and execution reaches UpdateBattleMonInParty.
         mem[0xC110:0xC112] = [0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        for _ in range(max_frames):
+        for frame in range(max_frames):
+            if stop_flag is not None:
+                print(
+                    "TRACE healing-cleanup",
+                    "frame", frame,
+                    "pc", hex(regs.PC),
+                    "sp", hex(regs.SP),
+                    "rombank", hex(mem[addr("hROMBank")]),
+                    "turn", mem[addr("hBattleTurn")],
+                    "healing", len(handle_healing_items_calls),
+                    "healing_do_it", len(healing_items_do_it_calls),
+                    "cleanup", len(cleanup_writeback_calls),
+                    flush=True,
+                )
             pyboy.tick(1, False, False)
             if stop_flag is not None and stop_flag[0]:
                 break
