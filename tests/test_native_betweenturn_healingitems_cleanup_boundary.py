@@ -3635,6 +3635,7 @@ def main():
             # non-fainting ResolveFaints path.
             wrap_active[0] = False
         elif curse_active[0]:
+            trace_red_gyarados_curse("post-HandleCurse CheckFaint")
             post_curse_checkfaint_calls.append(snapshot)
             # Let this eighth between-turn CheckFaint execute through the real
             # non-fainting ResolveFaints path.
@@ -4046,18 +4047,37 @@ def main():
             mem[addr("wEnemySubStatus1")],
         )
 
+    def trace_red_gyarados_curse(label):
+        if current_case[0] == variants[0]:
+            print(
+                "TRACE red-gyarados-curse",
+                label,
+                "pc", hex(regs.PC),
+                "sp", hex(regs.SP),
+                "rombank", hex(mem[addr("hROMBank")]),
+                "turn", mem[addr("hBattleTurn")],
+                "player_sub1", hex(mem[addr("wPlayerSubStatus1")]),
+                "enemy_sub1", hex(mem[addr("wEnemySubStatus1")]),
+                "curse_do_it", len(curse_do_it_calls),
+                "post_curse_check", len(post_curse_checkfaint_calls),
+                flush=True,
+            )
+
     def observe_handle_curse(_):
         if between_turn_active[0] and post_burn_checkfaint_calls:
+            trace_red_gyarados_curse("HandleCurse")
             handle_curse_calls.append(snapshot_curse_state())
             curse_active[0] = True
 
     def observe_curse_do_it(_):
         if curse_active[0]:
+            trace_red_gyarados_curse("HandleCurse.do_it")
             curse_do_it_calls.append(snapshot_curse_state())
 
     def observe_curse_deep(label):
         def callback(_):
             if curse_active[0]:
+                trace_red_gyarados_curse(label)
                 curse_deep_calls.append(label)
         return callback
 
@@ -4069,6 +4089,7 @@ def main():
 
     def observe_handle_wrap(_):
         if between_turn_active[0] and post_curse_checkfaint_calls:
+            trace_red_gyarados_curse("HandleWrap")
             handle_wrap_calls.append(snapshot_wrap_state())
             wrap_active[0] = True
 
