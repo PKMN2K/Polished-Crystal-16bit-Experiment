@@ -818,6 +818,7 @@ def main():
     enemy_resolve_stop_armed = [False]
     endturn_final_checkfaint_stop_hit = [False]
     endturn_writeback_armed = [False]
+    endturn_direct_enemy_writeback_seen = [False]
     endturn_enemy_writeback_calls = []
     process_enemy_fleeing_active = [False]
     endmove_effect_calls = []
@@ -3431,31 +3432,35 @@ def main():
 
     def observe_resolve_enemy_writeback(_):
         if endturn_writeback_armed[0] and not resolve_active[0]:
-            # The CALL immediately preceding .endturn_loop must have pushed
-            # the CheckFaint call-site address as this routine's return.
+            # This hook is reached twice after the checkpoint: first by the
+            # explicit end-turn writeback, then again inside the following
+            # CheckFaint -> ResolveFaints pass. Only the first call is the
+            # boundary being proved here.
             sp = regs.SP
             return_addr = mem[sp] | (mem[sp + 1] << 8)
-            assert return_addr == endturn_loop_checkfaint_addr, (
-                "end-turn UpdateEnemyMonInParty return address is not "
-                ".endturn_loop CheckFaint",
-                current_case[0], hex(return_addr),
-                hex(endturn_loop_checkfaint_addr),
-            )
-            endturn_enemy_writeback_calls.append((
-                read_native("wBattleMonNativeSpecies"),
-                read_native("wEnemyMonNativeSpecies"),
-                mem[addr("hBattleTurn")],
-                mem[addr("wEnemyMonHP")],
-                mem[addr("wEnemyMonHP") + 1],
-                mem[addr("wOTPartyMon1HP")],
-                mem[addr("wOTPartyMon1HP") + 1],
-                return_addr,
-            ))
-            # Poison stored HP at entry so the real ROM0 routine must replace
-            # it. Leave its verified return address untouched so execution
-            # continues into the real final .endturn_loop CheckFaint.
-            mem[addr("wOTPartyMon1HP")] = 0xA5
-            mem[addr("wOTPartyMon1HP") + 1] = 0x5A
+            if not endturn_direct_enemy_writeback_seen[0]:
+                assert return_addr == endturn_loop_checkfaint_addr, (
+                    "direct end-turn UpdateEnemyMonInParty return address is "
+                    "not .endturn_loop CheckFaint",
+                    current_case[0], hex(return_addr),
+                    hex(endturn_loop_checkfaint_addr),
+                )
+                endturn_direct_enemy_writeback_seen[0] = True
+                endturn_enemy_writeback_calls.append((
+                    read_native("wBattleMonNativeSpecies"),
+                    read_native("wEnemyMonNativeSpecies"),
+                    mem[addr("hBattleTurn")],
+                    mem[addr("wEnemyMonHP")],
+                    mem[addr("wEnemyMonHP") + 1],
+                    mem[addr("wOTPartyMon1HP")],
+                    mem[addr("wOTPartyMon1HP") + 1],
+                    return_addr,
+                ))
+                # Poison stored HP at entry so the real ROM0 routine must
+                # replace it. Leave its verified return address untouched so
+                # execution continues into the real final CheckFaint.
+                mem[addr("wOTPartyMon1HP")] = 0xA5
+                mem[addr("wOTPartyMon1HP") + 1] = 0x5A
         if resolve_active[0]:
             resolve_enemy_writeback_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -4352,6 +4357,7 @@ def main():
         enemy_resolve_stop_armed[0] = False
         endturn_final_checkfaint_stop_hit[0] = False
         endturn_writeback_armed[0] = False
+        endturn_direct_enemy_writeback_seen[0] = False
         endturn_enemy_writeback_calls.clear()
         process_enemy_fleeing_active[0] = False
         between_turn_active[0] = False
@@ -7435,7 +7441,7 @@ def main():
             )
             assert between_turn_checkfaint_calls == [
                 (25, native, 1, 0, 0, 0, 83, 0, 83, 0x11, 0),
-                (25, native, 1, 0, 0, 0, 83, 0, 83, 0x11, 0),
+                (25, native, 0, 0, 0, 0, 83, 0, 83, 0x11, 0),
             ], (
                 "HandleBetweenTurnEffects did not enter both its first and "
                 "final .endturn_loop CheckFaint calls with preserved "
