@@ -652,20 +652,47 @@ GetTrueUserPartySpeciesAndForm::
 	jp DecodeBattlePartySpeciesAndForm
 
 BattlePartyRootsMatch::
-; z if the true user and opponent have the same root species (forms ignored).
+; z if the true user and opponent have the same native root species.
+; Compare the 16-bit identities directly instead of round-tripping through
+; Polished's transitional species/form encoding, which cannot represent roots
+; above $01ff.
 	push hl
 	push de
 	push bc
-	call GetTrueUserPartySpeciesAndForm
-	ld d, b
-	ld e, c
-	call GetOpponentPartySpeciesAndForm
+
+	ld a, MON_SPECIES
+	call TrueUserPartyAttr
+	ld de, MON_FORM - MON_SPECIES
+	ldh a, [hBattleTurn]
+	and a
+	jr nz, .true_user_legacy
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	jr .got_true_user
+.true_user_legacy
+	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+.got_true_user
+	call GetRootSpeciesFromNativeIDBC
+	push bc
+
+	ld a, MON_SPECIES
+	call OpponentPartyAttr
+	ld de, MON_FORM - MON_SPECIES
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .opponent_legacy
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	jr .got_opponent
+.opponent_legacy
+	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+.got_opponent
+	call GetRootSpeciesFromNativeIDBC
+
+	pop de
 	ld a, c
 	cp e
 	jr nz, .done
 	ld a, b
-	xor d
-	and EXTSPECIES_MASK
+	cp d
 .done
 	jp PopBCDEHL
 
