@@ -983,6 +983,9 @@ PrepareBattlePictureIdentity:
 	ld a, BANK(NativeVariantIdentityTable)
 	call GetFarByte
 	pop bc
+	push af
+	call GetRootSpeciesFromNativeIDBC
+	pop af
 	call .pack_legacy_root
 	jr c, .invalid
 	jr .publish
