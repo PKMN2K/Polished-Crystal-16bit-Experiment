@@ -4993,7 +4993,17 @@ def main():
         hook("SetFastestTurn", observe_set_fastest_turn)
         hook("GetSpeed", observe_get_speed)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        # Observe immediately after the real nested Future Sight call. The
+        # entry CALL hook was replayed without advancing into its callee;
+        # this point still precedes held-item selection and effect decoding.
+        item_bank, item_addr = symbols["GetUserItem"]
+        item_offset = offset("GetUserItem")
+        assert data[item_offset] == 0xCD, "GetUserItem must start with CALL"
+        assert int.from_bytes(
+            data[item_offset + 1:item_offset + 3], "little"
+        ) == addr("GetFutureSightUser")
+        assert data[item_offset + 3] == 0x28, "Expected post-call JR Z"
+        pyboy.hook_register(item_bank, item_addr + 3, observe_user_item, None)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)
