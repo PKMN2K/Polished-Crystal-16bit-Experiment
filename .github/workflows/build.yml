@@ -462,8 +462,8 @@ jobs:
 
       - id: test-native-betweenturn-healingitems-cleanup-boundary
         name: "Test native inactive HandleHealingItems to end-turn cleanup boundary (normal)"
-        timeout-minutes: 5
-        run: python tests/test_native_betweenturn_healingitems_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+        timeout-minutes: 6
+        run: timeout --signal=TERM --kill-after=10s 300s python tests/test_native_betweenturn_healingitems_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-betweenturn-player-writeback-enemy-writeback-boundary
         name: "Test native player to enemy end-turn party writeback boundary (normal)"
