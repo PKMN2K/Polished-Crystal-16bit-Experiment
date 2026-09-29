@@ -2153,6 +2153,8 @@ def main():
             ))
 
     def observe_user_ability(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("GetTrueUserIgnorableAbility")
         snapshot = (
             read_native("wBattleMonNativeSpecies"),
             read_native("wEnemyMonNativeSpecies"),
@@ -4117,7 +4119,13 @@ def main():
 
     def observe_wrap_do_it(_):
         if wrap_active[0]:
+            if current_case[0] == variants[0]:
+                trace_red_gyarados_curse("HandleWrap.do_it")
             wrap_do_it_calls.append(snapshot_wrap_state())
+
+    def observe_wrap_has_user_fainted(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("HasUserFainted")
 
     def observe_wrap_counter(_):
         if wrap_active[0]:
@@ -4993,6 +5001,7 @@ def main():
         hook("HandleCurse.do_it", observe_curse_do_it)
         hook("HandleWrap", observe_handle_wrap)
         hook("HandleWrap.do_it", observe_wrap_do_it)
+        hook("HasUserFainted", observe_wrap_has_user_fainted)
         hook("HandleWrap.got_addrs", observe_wrap_counter)
         hook("HandleEncore", observe_handle_encore)
         hook("HandleEncore.do_it", observe_encore_do_it)
