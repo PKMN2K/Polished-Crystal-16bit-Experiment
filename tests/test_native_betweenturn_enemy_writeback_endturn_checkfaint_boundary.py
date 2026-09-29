@@ -23,7 +23,9 @@ PRESSURE = 43
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("rom", type=Path)
-    rom = ap.parse_args().rom
+    ap.add_argument("--next-turn-menu", action="store_true")
+    options = ap.parse_args()
+    rom = options.rom
 
     symbols = {}
     for line in rom.with_suffix(".sym").read_text().splitlines():
@@ -1072,6 +1074,17 @@ def main():
         battle_turn_calls.append(True)
         battle_turn_shadows.append(read_native("wEnemyMonNativeSpecies"))
         if endturn_writeback_armed[0] and len(battle_turn_calls) == 2:
+            if options.next_turn_menu:
+                # Seed stale per-turn state before the real loop resets it.
+                for label in (
+                    "wBattlePlayerAction", "wPlayerSwitchTarget",
+                    "wEnemySwitchTarget", "wEnemyUsingItem",
+                    "wCurDamage",
+                ):
+                    mem[addr(label)] = 0xA5
+                mem[addr("wCurDamage") + 1] = 0x5A
+                between_turn_active[0] = False
+                return
             # The final non-fainting HandleBetweenTurnEffects tail returned,
             # BattleTurn observed wBattleEnded = 0, and its jmp .loop reached
             # the next-turn entry. Stop before the turn counter increments.
@@ -1090,6 +1103,14 @@ def main():
             mem[addr("wPlayerTurnsTaken")],
             mem[addr("wEnemyTurnsTaken")],
         ))
+        if (
+            options.next_turn_menu and endturn_writeback_armed[0]
+            and len(battle_turn_calls) == 2
+        ):
+            endturn_battleturn_loop_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            regs.PC = 0xC110
+            return
         # Deterministic Fight action. BattleMenu returns carry clear via its
         # stub, so BattleTurn proceeds into real ParsePlayerAction.
         mem[addr("wBattlePlayerAction")] = 0
@@ -5113,6 +5134,43 @@ def main():
                 stop_flag=endturn_battleturn_loop_stop_hit
             )
 
+            if options.next_turn_menu:
+                assert endturn_battleturn_loop_stop_hit[0], (
+                    "second action menu was not reached", context,
+                )
+                assert battle_turn_shadows == [native, native], context
+                assert battle_menu_snapshots == [
+                    (25, native, 0, 1, 1, 1),
+                    (25, native, 0, 2, 2, 2),
+                ], ("second-turn identities/counters", context, battle_menu_snapshots)
+                assert endturn_tail_tilemap_calls == [
+                    (25, native, 0, 0, 0, 83, 0, 83),
+                ], ("end-turn tail", context, endturn_tail_tilemap_calls)
+                assert endturn_direct_enemy_writeback_seen[0], context
+                for label in (
+                    "wBattleMonHP", "wEnemyMonHP",
+                    "wPartyMon1HP", "wOTPartyMon1HP",
+                ):
+                    assert tuple(mem[addr(label):addr(label) + 2]) == (0, 83), (
+                        "HP changed before second menu", context, label,
+                    )
+                for label in (
+                    "wBattlePlayerAction", "wPlayerSwitchTarget",
+                    "wEnemySwitchTarget", "wEnemyUsingItem",
+                    "wCurDamage", "wBattleEnded",
+                ):
+                    assert mem[addr(label)] == 0, (
+                        "stale per-turn state survived", context, label,
+                    )
+                assert mem[addr("wCurDamage") + 1] == 0, context
+                assert read_native("wBattleMonNativeSpecies") == 25, context
+                assert read_native("wEnemyMonNativeSpecies") == native, context
+                assert len(parse_action_calls) == 1, context
+                assert perform_move_calls == [True, True], context
+                assert not legacy_calls, ("legacy base-data path", context)
+                count += 1
+                continue
+
             assert endturn_battleturn_loop_stop_hit[0], (
                 "HandleBetweenTurnEffects did not return through its final "
                 "non-fainting tail to the next BattleTurn loop",
@@ -8848,6 +8906,15 @@ def main():
             )
 
             count += 1
+
+        if options.next_turn_menu:
+            print(
+                f"PASS: {count} native full-turn -> second action-menu cases; "
+                "native identities and active/party HP survived, both turn "
+                "counters advanced, stale action/switch/item/damage state "
+                "was cleared, and no second move was executed"
+            )
+            return
 
         print(
             f"PASS: {count} native enemy party writeback -> endturn-loop "
