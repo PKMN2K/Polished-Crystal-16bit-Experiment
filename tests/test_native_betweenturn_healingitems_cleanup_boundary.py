@@ -3361,6 +3361,8 @@ def main():
 
     def observe_resolve_faints(_):
         if between_turn_active[0]:
+            if wrap_active[0] and current_case[0] == variants[0]:
+                trace_red_gyarados_curse("post-HandleWrap ResolveFaints")
             between_turn_resolve_faints_calls.append((
                 read_native("wBattleMonNativeSpecies"),
                 read_native("wEnemyMonNativeSpecies"),
@@ -3640,6 +3642,8 @@ def main():
             # non-fainting ResolveFaints path.
             perish_active[0] = False
         elif wrap_active[0]:
+            if current_case[0] == variants[0]:
+                trace_red_gyarados_curse("post-HandleWrap CheckFaint")
             post_wrap_checkfaint_calls.append(snapshot)
             # Isolate the upcoming inactive Encore path at this already-stable
             # boundary, before the ninth non-fainting ResolveFaints pass.
@@ -4145,6 +4149,8 @@ def main():
 
     def observe_handle_encore(_):
         if between_turn_active[0] and post_wrap_checkfaint_calls:
+            if current_case[0] == variants[0]:
+                trace_red_gyarados_curse("HandleEncore")
             handle_encore_calls.append(snapshot_encore_state())
             encore_active[0] = True
 
