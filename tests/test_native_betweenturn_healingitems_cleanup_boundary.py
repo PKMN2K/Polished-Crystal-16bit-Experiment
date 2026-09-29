@@ -4156,6 +4156,8 @@ def main():
 
     def observe_encore_do_it(_):
         if encore_active[0]:
+            if current_case[0] == variants[0]:
+                trace_red_gyarados_curse("HandleEncore.do_it")
             encore_do_it_calls.append(snapshot_encore_state())
 
     def observe_encore_counter(_):
@@ -4176,6 +4178,8 @@ def main():
 
     def observe_handle_disable(_):
         if encore_active[0]:
+            if current_case[0] == variants[0]:
+                trace_red_gyarados_curse("HandleDisable")
             # Isolate the inactive Disable path at its real entry boundary.
             mem[addr("wPlayerDisableCount")] = 0
             mem[addr("wEnemyDisableCount")] = 0
