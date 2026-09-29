@@ -925,6 +925,22 @@ def main():
         bank, address = symbols[label]
         pyboy.hook_register(bank, address, callback, None)
 
+    def trace_red_gyarados_picture(label):
+        def callback(_):
+            if current_case[0] == variants[0]:
+                print(
+                    "TRACE red-gyarados-picture",
+                    label,
+                    "pc", hex(regs.PC),
+                    "sp", hex(regs.SP),
+                    "rombank", hex(mem[addr("hROMBank")]),
+                    "cur_species", mem[addr("wCurPartySpecies")],
+                    "cur_form", mem[addr("wCurForm")],
+                    "turn", mem[addr("hBattleTurn")],
+                    flush=True,
+                )
+        return callback
+
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
         mem[0x2000] = bank
@@ -4993,6 +5009,21 @@ def main():
             lambda _: enemy_base_calls.append(True),
         )
         hook("GetBaseData", lambda _: legacy_calls.append(True))
+
+        # Temporary native-variant renderer tracing. The fifth matrix case is
+        # RED_GYARADOS; the first four roots complete normally, so trace only
+        # this case to identify the exact picture-projection boundary where the
+        # deep battle harness stops making progress.
+        for label in (
+            "PreparePlayerBattlePictureIdentity",
+            "PrepareEnemyBattlePictureIdentity",
+            "PrepareBattlePictureIdentity.variant",
+            "GetNativeVariantIdentityPointer",
+            "GetRootSpeciesFromNativeIDBC",
+            "PrepareBattlePictureIdentity.pack_legacy_root",
+            "PrepareBattlePictureIdentity.publish",
+        ):
+            hook(label, trace_red_gyarados_picture(label))
 
         count = 0
         for native, species, form in cases:
