@@ -484,6 +484,7 @@ def main():
     base_len = base_end - base_start
 
     current_case = [None]
+    fatal_hook_error = [None]
     intro_calls = []
     do_battle_calls = []
     wild_fixture_calls = []
@@ -988,6 +989,8 @@ def main():
                     flush=True,
                 )
             pyboy.tick(1, False, False)
+            if fatal_hook_error[0] is not None:
+                raise AssertionError(fatal_hook_error[0])
             if stop_flag is not None and stop_flag[0]:
                 break
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
@@ -2438,12 +2441,15 @@ def main():
                     red_gyarados_encore_user_item_repeat[0] += 1
                 else:
                     red_gyarados_encore_user_item_repeat[:] = [1, signature]
-                if red_gyarados_encore_user_item_repeat[0] >= 64:
-                    raise AssertionError((
+                if (
+                    red_gyarados_encore_user_item_repeat[0] >= 64
+                    and fatal_hook_error[0] is None
+                ):
+                    fatal_hook_error[0] = (
                         "Red Gyarados Encore is looping at GetUserItem",
                         "repeat_count", red_gyarados_encore_user_item_repeat[0],
                         "pc_sp_a_b_c_d_e_hl_bank_turn_curitem_stack", signature,
-                    ))
+                    )
             trace_red_gyarados_curse(phase + "GetUserItem")
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
