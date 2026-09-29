@@ -983,13 +983,15 @@ PrepareBattlePictureIdentity:
 	ld a, BANK(NativeVariantIdentityTable)
 	call GetFarByte
 	pop bc
-	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	call .pack_legacy_root
+	jr c, .invalid
 	jr .publish
 .root
 	; Keep cosmetic overlays only when they resolve to the same native root.
 	push bc
 	ld a, e
-	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	call .pack_legacy_root
+	jr c, .invalid_pop_root
 	push bc
 	call GetSpeciesAndFormIndex
 	inc bc
@@ -1008,7 +1010,8 @@ PrepareBattlePictureIdentity:
 	ld b, h
 	ld c, l
 	ld a, PLAIN_FORM
-	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	call .pack_legacy_root
+	jr c, .invalid
 .publish
 	ld a, c
 	ld [wCurPartySpecies], a
@@ -1016,9 +1019,36 @@ PrepareBattlePictureIdentity:
 	ld [wCurForm], a
 	and a
 	jp PopBCDEHL
+
+.invalid_pop_root
+	pop hl
 .invalid
 	scf
 	jp PopBCDEHL
+
+.pack_legacy_root
+; Project a resolved native root into the renderer's transitional species/form
+; globals. Carry marks a root above $01ff so it cannot be silently truncated.
+; in: bc = one-based native root species, a = raw/visual form
+; out: a = c = root species byte, b = encoded form, carry on unrepresentable
+	ld d, a
+	ld a, b
+	cp 2
+	jr nc, .unrepresentable
+	assert MON_EXTSPECIES_F == 5
+	add a
+	add a
+	add a
+	add a
+	add a
+	or d
+	ld b, a
+	ld a, c
+	and a
+	ret
+.unrepresentable
+	scf
+	ret
 
 GetBaseDataFromActiveBattleNativeSpecies::
 ; Load base data from the native identity shadow of the active battler.
