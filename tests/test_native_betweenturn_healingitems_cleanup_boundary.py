@@ -2450,6 +2450,12 @@ def main():
                         "repeat_count", red_gyarados_encore_user_item_repeat[0],
                         "pc_sp_a_b_c_d_e_hl_bank_turn_curitem_stack", signature,
                     )
+                    # Leave the hooked ROM loop so tick can return and the
+                    # outer driver can raise this failure outside PyBoy's
+                    # exception-swallowing hook dispatcher.
+                    print("FATAL", fatal_hook_error[0], flush=True)
+                    regs.PC = 0xC110
+                    return
             trace_red_gyarados_curse(phase + "GetUserItem")
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
