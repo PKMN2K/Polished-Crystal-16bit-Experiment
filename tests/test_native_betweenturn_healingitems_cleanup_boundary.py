@@ -1971,6 +1971,12 @@ def main():
         elif postfainteffects_active[0]:
             postfaint_fainted_calls.append(snapshot)
 
+    def observe_speed_ability_path(label):
+        def callback(_):
+            if wrap_active[0] and current_case[0] == variants[0]:
+                trace_red_gyarados_curse(label)
+        return callback
+
     def observe_target_ability(_):
         if wrap_active[0] and current_case[0] == variants[0]:
             trace_red_gyarados_curse("GetOpponentIgnorableAbility")
@@ -4896,6 +4902,9 @@ def main():
         hook("BattleCommand_hastarget", observe_hastarget)
         hook("HasOpponentFainted", observe_target_fainted)
         hook("GetOpponentIgnorableAbility", observe_target_ability)
+        for label in ("GetOpponentAbility", "GetUserAbility", "_GetIgnorableAbility", "BattleRandom"):
+            if label in symbols:
+                hook(label, observe_speed_ability_path(label))
         hook("GetTrueUserIgnorableAbility", observe_user_ability)
         hook("BattleCommand_checkhit", observe_checkhit)
         hook("DoStatChangeMod", observe_stat_change_mod)
