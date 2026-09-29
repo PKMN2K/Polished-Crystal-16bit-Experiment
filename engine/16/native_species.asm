@@ -984,7 +984,7 @@ PrepareBattlePictureIdentity:
 	call GetFarByte
 	pop bc
 	push af
-	call GetRootSpeciesFromNativeIDBC
+	farcall GetRootSpeciesFromNativeIDBC
 	pop af
 	call .pack_legacy_root
 	jr c, .invalid
