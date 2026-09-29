@@ -1973,13 +1973,15 @@ def main():
 
     def observe_speed_ability_path(label):
         def callback(_):
-            if wrap_active[0] and current_case[0] == variants[0]:
-                trace_red_gyarados_curse(label)
+            if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+                phase = "Encore " if encore_active[0] else ""
+                trace_red_gyarados_curse(phase + label)
         return callback
 
     def observe_target_ability(_):
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("GetOpponentIgnorableAbility")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "GetOpponentIgnorableAbility")
         if enemy_applydamage_active[0]:
             enemy_applydamage_ability_calls.append(True)
         elif applydamage_active[0]:
@@ -2153,8 +2155,9 @@ def main():
             ))
 
     def observe_user_ability(_):
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("GetTrueUserIgnorableAbility")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "GetTrueUserIgnorableAbility")
         snapshot = (
             read_native("wBattleMonNativeSpecies"),
             read_native("wEnemyMonNativeSpecies"),
@@ -2391,8 +2394,9 @@ def main():
             ))
 
     def observe_user_item_after_unnerve(_):
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("GetUserItemAfterUnnerve")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "GetUserItemAfterUnnerve")
         if leppa_active[0]:
             if leppa_do_it_item_pending[0]:
                 leppa_item_calls.append(snapshot_mist_state())
@@ -2419,8 +2423,9 @@ def main():
             ))
 
     def observe_user_item(_):
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("GetUserItem")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "GetUserItem")
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -4084,12 +4089,14 @@ def main():
     def observe_set_fastest_turn(_):
         if weather_active[0]:
             weather_deep_calls.append(True)
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("SetFastestTurn")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "SetFastestTurn")
 
     def observe_get_speed(_):
-        if wrap_active[0] and current_case[0] == variants[0]:
-            trace_red_gyarados_curse("GetSpeed")
+        if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
+            phase = "Encore " if encore_active[0] else ""
+            trace_red_gyarados_curse(phase + "GetSpeed")
 
     def observe_handle_curse(_):
         if between_turn_active[0] and post_burn_checkfaint_calls:
