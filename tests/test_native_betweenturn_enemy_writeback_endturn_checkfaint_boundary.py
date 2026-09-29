@@ -816,10 +816,11 @@ def main():
     enemy_cleanup_boundary_calls = []
     enemy_resolve_boundary_calls = []
     enemy_resolve_stop_armed = [False]
-    endturn_final_checkfaint_stop_hit = [False]
+    endturn_battleturn_loop_stop_hit = [False]
     endturn_writeback_armed = [False]
     endturn_direct_enemy_writeback_seen = [False]
     endturn_enemy_writeback_calls = []
+    endturn_tail_tilemap_calls = []
     process_enemy_fleeing_active = [False]
     endmove_effect_calls = []
     endmove_throat_spray_calls = []
@@ -1069,6 +1070,14 @@ def main():
     def observe_battle_turn(_):
         battle_turn_calls.append(True)
         battle_turn_shadows.append(read_native("wEnemyMonNativeSpecies"))
+        if endturn_writeback_armed[0] and len(battle_turn_calls) == 2:
+            # The final non-fainting HandleBetweenTurnEffects tail returned,
+            # BattleTurn observed wBattleEnded = 0, and its jmp .loop reached
+            # the next-turn entry. Stop before the turn counter increments.
+            endturn_battleturn_loop_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            between_turn_active[0] = False
+            regs.PC = 0xC110
 
     def observe_battle_menu(_):
         battle_menu_calls.append(True)
@@ -3325,13 +3334,18 @@ def main():
 
     def observe_cleanup_tilemap(_):
         if endturn_writeback_armed[0]:
-            # Reaching this presentation-only boundary proves the final
-            # .endturn_loop CheckFaint -> ResolveFaints pass returned
-            # normally after the real enemy party writeback.
-            endturn_final_checkfaint_stop_hit[0] = True
-            endturn_writeback_armed[0] = False
-            between_turn_active[0] = False
-            regs.PC = 0xC110
+            # Record the presentation boundary but let the real non-fainting
+            # tail continue through HasPlayerFainted/HasEnemyFainted and RET Z.
+            endturn_tail_tilemap_calls.append((
+                read_native("wBattleMonNativeSpecies"),
+                read_native("wEnemyMonNativeSpecies"),
+                mem[addr("hBattleTurn")],
+                mem[addr("wBattleEnded")],
+                mem[addr("wBattleMonHP")],
+                mem[addr("wBattleMonHP") + 1],
+                mem[addr("wEnemyMonHP")],
+                mem[addr("wEnemyMonHP") + 1],
+            ))
             return
         if cleanup_active[0]:
             cleanup_tilemap_calls.append((
@@ -4355,10 +4369,11 @@ def main():
         posthiteffects_active[0] = False
         enemy_posthiteffects_active[0] = False
         enemy_resolve_stop_armed[0] = False
-        endturn_final_checkfaint_stop_hit[0] = False
+        endturn_battleturn_loop_stop_hit[0] = False
         endturn_writeback_armed[0] = False
         endturn_direct_enemy_writeback_seen[0] = False
         endturn_enemy_writeback_calls.clear()
+        endturn_tail_tilemap_calls.clear()
         process_enemy_fleeing_active[0] = False
         between_turn_active[0] = False
         weather_active[0] = False
@@ -5094,24 +5109,43 @@ def main():
 
             invoke(
                 "DoBattle", max_frames=256,
-                stop_flag=endturn_final_checkfaint_stop_hit
+                stop_flag=endturn_battleturn_loop_stop_hit
             )
 
-            assert endturn_final_checkfaint_stop_hit[0], (
-                "real final end-turn CheckFaint did not return to the "
-                "LoadTileMapToTempTileMap boundary",
+            assert endturn_battleturn_loop_stop_hit[0], (
+                "HandleBetweenTurnEffects did not return through its final "
+                "non-fainting tail to the next BattleTurn loop",
                 context,
+            )
+            assert endturn_tail_tilemap_calls == [
+                (25, native, 0, 0, 0, 83, 0, 83),
+            ], (
+                "final CheckFaint did not reach the tilemap boundary with "
+                "preserved native non-fainting state",
+                context, endturn_tail_tilemap_calls,
             )
             assert enemy_resolve_boundary_calls, (
                 "enemy cleanup did not reach ResolveFaints boundary",
                 context,
             )
             assert do_battle_calls == [True], ("DoBattle count", context, do_battle_calls)
-            assert battle_turn_calls == [True], (
-                "first BattleTurn entry count", context, battle_turn_calls
+            assert battle_turn_calls == [True, True], (
+                "BattleTurn did not re-enter its loop after the completed "
+                "between-turn tail",
+                context, battle_turn_calls,
             )
-            assert battle_turn_shadows == [native], (
-                "enemy shadow at BattleTurn entry", context, battle_turn_shadows
+            assert battle_turn_shadows == [native, native], (
+                "enemy shadow changed before next BattleTurn loop",
+                context, battle_turn_shadows,
+            )
+            assert mem[addr("wTotalBattleTurns")] == 1, (
+                "next BattleTurn loop executed past its entry stop",
+                context, mem[addr("wTotalBattleTurns")],
+            )
+            assert mem[addr("wBattleEnded")] == 0, (
+                "post-between-turn BattleTurn check did not preserve "
+                "wBattleEnded = 0",
+                context, mem[addr("wBattleEnded")],
             )
             assert read_native("wEnemyMonNativeSpecies") == native, (
                 "enemy shadow changed during DoBattle setup", context,
