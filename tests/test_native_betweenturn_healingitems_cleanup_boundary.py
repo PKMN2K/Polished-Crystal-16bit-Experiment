@@ -1972,6 +1972,8 @@ def main():
             postfaint_fainted_calls.append(snapshot)
 
     def observe_target_ability(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("GetOpponentIgnorableAbility")
         if enemy_applydamage_active[0]:
             enemy_applydamage_ability_calls.append(True)
         elif applydamage_active[0]:
@@ -2409,6 +2411,8 @@ def main():
             ))
 
     def observe_user_item(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("GetUserItem")
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
