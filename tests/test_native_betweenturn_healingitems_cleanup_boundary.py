@@ -2381,6 +2381,8 @@ def main():
             ))
 
     def observe_user_item_after_unnerve(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("GetUserItemAfterUnnerve")
         if leppa_active[0]:
             if leppa_do_it_item_pending[0]:
                 leppa_item_calls.append(snapshot_mist_state())
@@ -4063,6 +4065,14 @@ def main():
                 flush=True,
             )
 
+    def observe_set_fastest_turn(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("SetFastestTurn")
+
+    def observe_get_speed(_):
+        if wrap_active[0] and current_case[0] == variants[0]:
+            trace_red_gyarados_curse("GetSpeed")
+
     def observe_handle_curse(_):
         if between_turn_active[0] and post_burn_checkfaint_calls:
             trace_red_gyarados_curse("HandleCurse")
@@ -4889,6 +4899,8 @@ def main():
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
         hook("GetFutureSightUser", observe_future_sight)
+        hook("SetFastestTurn", observe_set_fastest_turn)
+        hook("GetSpeed", observe_get_speed)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
