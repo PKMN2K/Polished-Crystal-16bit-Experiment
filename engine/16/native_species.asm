@@ -219,18 +219,6 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	ld a, c
 	ret
 
-LoadLegacySpeciesFromNativeWord::
-; Read a native species word and resolve it to Polished's transitional runtime
-; representation with no form. Intended for curated species-order lists.
-; in: hl = native species word
-; out: a = c = root species byte, b = encoded form, hl = next word
-	ld a, [hli]
-	ld c, a
-	ld a, [hli]
-	ld b, a
-	xor a
-	jp GetLegacySpeciesAndFormFromNativeIDBC
-
 IsOpponentActiveNativeSpeciesBC::
 ; Compare the current move user's opponent with a one-based native species ID.
 ; hBattleTurn selects which active shadow is the opponent.
