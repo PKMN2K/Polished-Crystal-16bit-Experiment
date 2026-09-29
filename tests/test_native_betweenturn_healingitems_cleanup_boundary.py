@@ -485,6 +485,7 @@ def main():
 
     current_case = [None]
     fatal_hook_error = [None]
+    encore_future_sight_entries = [0]
     intro_calls = []
     do_battle_calls = []
     wild_fixture_calls = []
@@ -2363,6 +2364,8 @@ def main():
             ))
 
     def observe_future_sight(_):
+        if encore_active[0]:
+            encore_future_sight_entries[0] += 1
         if enemy_damagestats_active[0]:
             enemy_damagestats_future_sight_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -2449,6 +2452,23 @@ def main():
                         "Red Gyarados Encore is looping at GetUserItem",
                         "repeat_count", red_gyarados_encore_user_item_repeat[0],
                         "pc_sp_a_b_c_d_e_hl_bank_turn_curitem_stack", signature,
+                        # PyBoy restores the hooked instruction before this
+                        # callback. Compare it with the unmodified ROM bytes
+                        # to distinguish a ROM loop from a poisoned hook.
+                        "restored_item_bytes", tuple(
+                            mem[symbols["GetUserItem"][0], regs.PC + i]
+                            for i in range(8)
+                        ),
+                        "pristine_item_bytes", tuple(
+                            rom.read_bytes()[
+                                symbols["GetUserItem"][0] * 0x4000
+                                + regs.PC - 0x4000:
+                                symbols["GetUserItem"][0] * 0x4000
+                                + regs.PC - 0x4000 + 8
+                            ]
+                        ),
+                        "future_sight_target", symbols["GetFutureSightUser"],
+                        "encore_future_sight_entries", encore_future_sight_entries[0],
                     )
                     # Leave the hooked ROM loop so tick can return and the
                     # outer driver can raise this failure outside PyBoy's
