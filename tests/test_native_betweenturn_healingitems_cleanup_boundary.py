@@ -2422,9 +2422,28 @@ def main():
                 mem[addr("wBattleMonItem")],
             ))
 
+    red_gyarados_encore_user_item_repeat = [0, None]
+
     def observe_user_item(_):
         if (wrap_active[0] or encore_active[0]) and current_case[0] == variants[0]:
             phase = "Encore " if encore_active[0] else ""
+            if encore_active[0]:
+                signature = (
+                    regs.PC, regs.SP, regs.A, regs.B, regs.C, regs.D, regs.E,
+                    regs.HL, mem[addr("hROMBank")], mem[addr("hBattleTurn")],
+                    mem[addr("wCurItem")],
+                    tuple(mem[regs.SP:regs.SP + 8]),
+                )
+                if signature == red_gyarados_encore_user_item_repeat[1]:
+                    red_gyarados_encore_user_item_repeat[0] += 1
+                else:
+                    red_gyarados_encore_user_item_repeat[:] = [1, signature]
+                if red_gyarados_encore_user_item_repeat[0] >= 64:
+                    raise AssertionError((
+                        "Red Gyarados Encore is looping at GetUserItem",
+                        "repeat_count", red_gyarados_encore_user_item_repeat[0],
+                        "pc_sp_a_b_c_d_e_hl_bank_turn_curitem_stack", signature,
+                    ))
             trace_red_gyarados_curse(phase + "GetUserItem")
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
