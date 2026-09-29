@@ -757,9 +757,24 @@ DecodeNativeBoxIdentity::
 	and a
 	jr z, .invalid
 .decode
+	; Keep the native box ID authoritative. The decoded temporary box structure
+	; is still transitional, so explicitly reject a root above $01ff instead of
+	; truncating its high byte through EXTSPECIES.
 	ld a, [wEncodedTempMonForm]
 	and FORM_MASK
-	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld e, a
+	call GetRootSpeciesFromNativeIDBC
+	ld a, b
+	cp 2
+	jr nc, .invalid
+	assert MON_EXTSPECIES_F == 5
+	add a
+	add a
+	add a
+	add a
+	add a
+	or e
+	ld b, a
 	ld a, c
 	ld [wEncodedTempMonSpecies], a
 	ld a, [wEncodedTempMonForm]
