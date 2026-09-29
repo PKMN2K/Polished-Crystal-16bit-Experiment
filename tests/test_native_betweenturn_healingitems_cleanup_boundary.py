@@ -4066,6 +4066,8 @@ def main():
             )
 
     def observe_set_fastest_turn(_):
+        if weather_active[0]:
+            weather_deep_calls.append(True)
         if wrap_active[0] and current_case[0] == variants[0]:
             trace_red_gyarados_curse("SetFastestTurn")
 
@@ -5051,7 +5053,6 @@ def main():
         ):
             hook(label, observe_leech_seed_deep(label))
         hook("GetWeatherAfterCloudNine", observe_weather_deep)
-        hook("SetFastestTurn", observe_weather_deep)
         hook("SendInUserPkmn", observe_sendin)
         hook(
             "GetBaseDataFromActiveBattleNativeSpecies",
