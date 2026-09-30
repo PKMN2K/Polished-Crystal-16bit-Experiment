@@ -72,6 +72,11 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
 
+      - id: test-native-mewtwo-stale-form
+        name: "Test native Mewtwo stale-form repair (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_mewtwo_stale_form.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-item-form-guard
         name: "Test held-item native form guard (normal)"
         timeout-minutes: 2
@@ -590,6 +595,11 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-mewtwo-stale-form-debug
+        name: "Test native Mewtwo stale-form repair (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_mewtwo_stale_form.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-item-form-guard-debug
         name: "Test held-item native form guard (debug)"

@@ -486,6 +486,14 @@ UpdateMewtwoForm:
 	ret nz
 	ld bc, MON_FORM - MON_SPECIES
 	add hl, bc
+	; The decoded native identity passed the Mewtwo guard. Repair presentation
+	; species/form bits before the legacy item writer tests EXTSPECIES.
+	ld a, [hl]
+	and ~SPECIESFORM_MASK
+	ld b, a
+	ld a, [wCurForm]
+	or b
+	ld [hl], a
 	call _UpdateMewtwoForm
 	farjp RefreshPartyIdentityAfterFormChange
 
