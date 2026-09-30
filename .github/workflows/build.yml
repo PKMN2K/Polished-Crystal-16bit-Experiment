@@ -72,6 +72,11 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
 
+      - id: test-native-hatchling-frontpic
+        name: "Test native hatchling frontpic identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -600,6 +605,11 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-hatchling-frontpic-debug
+        name: "Test native hatchling frontpic identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"

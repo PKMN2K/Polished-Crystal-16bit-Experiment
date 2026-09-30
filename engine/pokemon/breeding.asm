@@ -644,11 +644,9 @@ GetEggFrontpic:
 
 GetHatchlingFrontpic:
 	push de
-	ld a, MON_FORM
+	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
-	ld [wCurForm], a
-	ld a, [wCurPartySpecies]
-	ld [wCurSpecies], a
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	call GetBaseData
 	pop de
 	farjp PrepareAnimatedFrontpic
@@ -938,4 +936,3 @@ DayCareMonCompatibilityText:
 .SlightCompatibility:
 	; It shows interest in @ .
 	text_farend _BreedShowsInterestText
-
