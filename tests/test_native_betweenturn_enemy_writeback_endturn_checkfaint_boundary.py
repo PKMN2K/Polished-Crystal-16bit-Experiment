@@ -23,7 +23,9 @@ PRESSURE = 43
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("rom", type=Path)
-    ap.add_argument("--next-turn-menu", action="store_true")
+    turn_gate = ap.add_mutually_exclusive_group()
+    turn_gate.add_argument("--next-turn-menu", action="store_true")
+    turn_gate.add_argument("--next-turn-move", action="store_true")
     options = ap.parse_args()
     rom = options.rom
 
@@ -1074,7 +1076,7 @@ def main():
         battle_turn_calls.append(True)
         battle_turn_shadows.append(read_native("wEnemyMonNativeSpecies"))
         if endturn_writeback_armed[0] and len(battle_turn_calls) == 2:
-            if options.next_turn_menu:
+            if options.next_turn_menu or options.next_turn_move:
                 # Seed stale per-turn state before the real loop resets it.
                 for label in (
                     "wBattlePlayerAction", "wPlayerSwitchTarget",
@@ -1176,6 +1178,13 @@ def main():
             mem[addr("wCurPlayerMove")],
         )
         perform_move_snapshots.append(snapshot)
+        if options.next_turn_move and len(perform_move_calls) == 3:
+            # Move selection and ordering for turn two are real. Stop before
+            # its first PerformMove so this gate cannot run a third attack.
+            endturn_battleturn_loop_stop_hit[0] = True
+            endturn_writeback_armed[0] = False
+            regs.PC = 0xC110
+            return
         if len(perform_move_calls) == 2:
             second_perform_move_calls.append((
                 read_native("wBattleMonNativeSpecies"),
@@ -5134,9 +5143,9 @@ def main():
                 stop_flag=endturn_battleturn_loop_stop_hit
             )
 
-            if options.next_turn_menu:
+            if options.next_turn_menu or options.next_turn_move:
                 assert endturn_battleturn_loop_stop_hit[0], (
-                    "second action menu was not reached", context,
+                    "second-turn boundary was not reached", context,
                 )
                 assert battle_turn_shadows == [native, native], context
                 assert battle_menu_snapshots == [
@@ -5165,8 +5174,23 @@ def main():
                 assert mem[addr("wCurDamage") + 1] == 0, context
                 assert read_native("wBattleMonNativeSpecies") == 25, context
                 assert read_native("wEnemyMonNativeSpecies") == native, context
-                assert len(parse_action_calls) == 1, context
-                assert perform_move_calls == [True, True], context
+                if options.next_turn_move:
+                    assert len(parse_action_calls) == 2, context
+                    assert len(move_selection_calls) == 2, context
+                    assert len(parse_enemy_calls) == 2, context
+                    assert len(determine_order_calls) == 2, context
+                    assert perform_move_calls == [True, True, True], context
+                    assert perform_move_snapshots[-1] == (
+                        25, native, 0, 33,
+                    ), ("second-turn move identity", context, perform_move_snapshots)
+                    assert mem[addr("wEnemyGoesFirst")] == 0, context
+                    assert mem[addr("hBattleTurn")] == 0, context
+                    assert mem[addr("wCurEnemyMove")] == 33, context
+                    assert mem[addr("wCurMoveNum")] == 0, context
+                    assert mem[addr("wCurEnemyMoveNum")] == 0, context
+                else:
+                    assert len(parse_action_calls) == 1, context
+                    assert perform_move_calls == [True, True], context
                 assert not legacy_calls, ("legacy base-data path", context)
                 count += 1
                 continue
@@ -8906,6 +8930,15 @@ def main():
             )
 
             count += 1
+
+        if options.next_turn_move:
+            print(
+                f"PASS: {count} native full-turn -> second-turn move-dispatch "
+                "cases; real player/enemy selection and ordering preserved "
+                "native identities and HP, selected player-first Tackle, "
+                "and stopped before executing the next attack"
+            )
+            return
 
         if options.next_turn_menu:
             print(

@@ -487,6 +487,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --next-turn-menu
 
+      - id: test-native-second-turn-move-dispatch
+        name: "Test native second-turn move selection and dispatch (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -932,6 +937,11 @@ jobs:
         name: "Test native full turn to second action menu (debug)"
         timeout-minutes: 2
         run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --next-turn-menu
+
+      - id: test-native-second-turn-move-dispatch-debug
+        name: "Test native second-turn move selection and dispatch (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
