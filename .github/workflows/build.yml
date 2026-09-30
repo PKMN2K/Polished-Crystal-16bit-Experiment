@@ -92,6 +92,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_reveal_palette_identity.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-hatchling-palette-dispatch
+        name: "Test native hatchling palette dispatch identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_dispatch.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -640,6 +645,11 @@ jobs:
         name: "Test native hatchling BG/palette reveal identity (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_reveal_palette_identity.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-palette-dispatch-debug
+        name: "Test native hatchling palette dispatch identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_dispatch.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
