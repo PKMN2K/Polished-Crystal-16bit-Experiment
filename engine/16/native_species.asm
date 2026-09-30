@@ -812,6 +812,10 @@ DecodeNativeBoxIdentity::
 	ld a, b
 	cp 1
 	jr nz, .decode
+	ld a, c
+	and a
+	jr z, .invalid
+.decode
 	; Validate that the native root fits the transitional temp structure before
 	; decoding its authoritative mechanical form. Keep the stored word intact.
 	push bc
