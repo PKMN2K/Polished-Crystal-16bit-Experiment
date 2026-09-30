@@ -56,7 +56,9 @@ def main():
                                   "IsNativeSpeciesInListBC")}
     for name, entries in calls.items():
         bank, address = symbols[name]
-        pyboy.hook_register(bank, address, lambda _, e=entries: e.append(True), None)
+        pyboy.hook_register(bank, address, lambda _, e=entries: e.append(
+            (regs.B, regs.C, regs.HL, mem[regs.HL], mem[regs.HL + 1])
+        ), None)
 
     def invoke(label):
         bank, target = symbols[label]
@@ -105,7 +107,8 @@ def main():
                                 entries.clear()
                             immune = enabled and ability in (15, 65)  # Insomnia/Vital Spirit
                             expected = battle_type == 4 and not immune and native in lists[time]
-                            assert invoke("CheckSleepingTreeMon") == expected, context
+                            actual = invoke("CheckSleepingTreeMon")
+                            assert actual == expected, (context, actual, expected, calls)
                             assert bytes(mem[record:record + stride]) == before, context
                             assert [mem[addr(label)] for label in protected] == globals_before, context
                             assert bytes(mem[base_start:base_start + base_size]) == bytes([0x5A] * base_size), context
