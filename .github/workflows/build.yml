@@ -72,6 +72,11 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
 
+      - id: test-native-magikarp-length
+        name: "Test native Magikarp length guard (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_magikarp_length_guard.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-animation-substitutions
         name: "Test native species animation substitutions (normal)"
         timeout-minutes: 2
@@ -555,6 +560,11 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-magikarp-length-debug
+        name: "Test native Magikarp length guard (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_magikarp_length_guard.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-animation-substitutions-debug
         name: "Test native species animation substitutions (debug)"

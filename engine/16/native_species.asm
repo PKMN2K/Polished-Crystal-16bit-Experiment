@@ -240,6 +240,25 @@ IsOpponentActiveNativeSpeciesBC::
 	pop hl
 	ret
 
+IsGeneratedWildMagikarp::
+; The wild generator completed OT slot 1 before checking its length. Compare
+; the full native identity rather than the encounter's low species byte.
+; out: Z only for native MAGIKARP; preserves bc/de/hl and all identity fields
+	push hl
+	push de
+	push bc
+	ld hl, wOTPartyMon1Species
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	ld a, b
+	and a
+	jr nz, .done
+	ld a, c
+	cp LOW(MAGIKARP)
+	assert !HIGH(MAGIKARP)
+.done
+	jp PopBCDEHL
+
 IsActiveBattleNativeSpeciesInAnimationList::
 ; Animation substitution's four lists share one ROM bank. Keep the bank
 ; setup in this shared helper instead of growing the battle-command bank.

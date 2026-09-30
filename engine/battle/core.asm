@@ -6258,8 +6258,7 @@ INCLUDE "engine/battle/random_wild_forms.asm"
 CheckValidMagikarpLength:
 ; Return carry if the Magikarp length is invalid for the current area
 
-	ld a, [wTempEnemyMonSpecies]
-	cp MAGIKARP
+	farcall IsGeneratedWildMagikarp
 	jr nz, .okay
 
 ; Get Magikarp's length
