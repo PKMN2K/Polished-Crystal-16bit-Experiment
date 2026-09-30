@@ -72,6 +72,13 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
 
+      - id: test-native-animation-substitutions
+        name: "Test native species animation substitutions (normal)"
+        timeout-minutes: 2
+        run: |
+          python tests/test_active_native_species_list.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+          python tests/test_native_animation_substitution.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-species-lists
         name: "Test bank-aware species lists and native Tower eligibility (normal)"
         timeout-minutes: 2
@@ -548,6 +555,13 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-animation-substitutions-debug
+        name: "Test native species animation substitutions (debug)"
+        timeout-minutes: 2
+        run: |
+          python tests/test_active_native_species_list.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+          python tests/test_native_animation_substitution.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-species-lists-debug
         name: "Test bank-aware species lists and native Tower eligibility (debug)"

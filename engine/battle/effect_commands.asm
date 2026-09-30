@@ -6770,7 +6770,7 @@ CheckBattleAnimSubstitution:
 	ld hl, HardenUsers
 	; fallthrough
 .check_species_list
-	farcall IsActiveBattleNativeSpeciesInList
+	farcall IsActiveBattleNativeSpeciesInAnimationList
 	ret nc
 	ld a, e
 	ld [wFXAnimIDLo], a

@@ -50,6 +50,7 @@ def main():
         memory[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
+        regs.A = 0  # RAM list; no ROM bank is required
         regs.HL = list_addr
         regs.DE = 0x5678
         regs.SP, regs.PC = 0xC0FF, 0xC100
