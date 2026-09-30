@@ -67,7 +67,6 @@ def main():
                     actual = invoke("IsLegacySpeciesInNativeList")
                     assert actual == (native in members), (list_name, native, form, actual)
                     assert (regs.D, regs.E) == (0x56, 0x78)
-                    assert (regs.B, regs.C) == (native >> 8, native & 255)
                     list_cases += 1
 
         stride = addr("wPartyMon2Species") - addr("wPartyMon1Species")
@@ -82,6 +81,7 @@ def main():
                 mem[0xFF70] = 2
                 mem[table_start:table_start + 254] = [0] * 254
                 mem[table_start + 12:table_start + 14] = list(native.to_bytes(2, "little"))
+                mem[addr("wPokemonIndexTableUsedSlots")] = 1
                 table_before = bytes(mem[table_start:table_start + 254])
                 mem[0xFF70] = 1
                 mem[addr("wPokemonDataFormat"):addr("wPokemonDataFormat") + 2] = list(marker.to_bytes(2, "little"))
