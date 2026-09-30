@@ -52,11 +52,11 @@ def main():
         ]
         regs.A = 0  # RAM list; no ROM bank is required
         regs.HL = list_addr
-        regs.DE = 0x5678
+        regs.D, regs.E = 0x56, 0x78
         regs.SP, regs.PC = 0xC0FF, 0xC100
         pyboy.tick(4, False, False)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF)
-        assert regs.DE == 0x5678
+        assert (regs.D, regs.E) == (0x56, 0x78)
         assert memory[addr("hROMBank")] == bank
         assert memory[0xFF70] & 7 == 1
         return bool(regs.F & 0x10)
