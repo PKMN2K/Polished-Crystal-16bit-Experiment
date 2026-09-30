@@ -6213,18 +6213,24 @@ CheckSleepingTreeMon:
 	cp BATTLETYPE_TREE
 	jr nz, .NotSleeping
 
-; Nor if the Pokémon has Insomnia/Vital Spirit
-	ld hl, wEnemyMonPersonality ; ability is properly updated at this point, so OK to check
-	ld a, [wTempEnemyMonSpecies]
-	ld c, a
-	call GetAbility
+; Use the completed wild record: active enemy state is published on send-in.
+; Neither stale active personality nor compact encounter globals are identity
+; sources here. Opponent records retain their legacy layout for now.
+	ld hl, wOTPartyMon1Species
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	push bc
+	ld hl, wOTPartyMon1Personality
+	farcall GetAbilityFromNativeIDBC
 	ld a, b
+	pop bc
 	cp INSOMNIA
 	jr z, .NotSleeping
 	cp VITAL_SPIRIT
 	jr z, .NotSleeping
 
 ; Get list for the time of day
+	push bc
 	ld hl, AsleepTreeMons
 	ld a, [wTimeOfDay]
 	ld b, 0
@@ -6232,13 +6238,10 @@ CheckSleepingTreeMon:
 	add hl, bc
 	ld c, [hl]
 	add hl, bc
+	pop bc
 
 .Check:
-	ld a, [wTempEnemyMonSpecies]
-	ld c, a
-	ld a, [wTempEnemyMonForm]
-	ld b, a
-	farcall IsLegacySpeciesInNativeList
+	farcall IsNativeSpeciesInListBC
 ; If it's a match, the opponent is asleep
 	ret c
 

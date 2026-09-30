@@ -279,6 +279,31 @@ IsActiveBattleNativeSpeciesInList::
 	pop de
 	ret
 
+IsNativeSpeciesInListBC::
+; Test a one-based native identity against a zero-terminated native word list.
+; in: bc = native species ID, hl = list; out: carry if found; preserves bc/de
+	push de
+.loop
+	ld a, [hli]
+	ld e, a
+	ld a, [hli]
+	ld d, a
+	or e
+	jr z, .not_found
+	ld a, e
+	cp c
+	jr nz, .loop
+	ld a, d
+	cp b
+	jr nz, .loop
+	scf
+	pop de
+	ret
+.not_found
+	and a
+	pop de
+	ret
+
 IsLegacySpeciesInNativeList::
 ; Test a transitional species/form pair against a zero-terminated native-ID
 ; word list.
