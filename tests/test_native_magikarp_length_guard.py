@@ -43,7 +43,7 @@ def main():
         mem[0xC100:0xC106] = [0xF3, 0xCD, a & 255, a >> 8, 0x18, 0xFE]
         regs.SP, regs.PC = 0xC0FF, 0xC100
         p.tick(2, False, False)
-        assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (label, hex(regs.PC), hex(regs.SP), b, hex(a), mem[addr('hROMBank')], calls, sorted((v[1], k) for k, v in syms.items() if v[0] == b and v[1] <= regs.PC)[-5:], list(mem[regs.SP:0xC0FF]), {k: syms[k] for k in ('CalcMagikarpLength', 'RandomRange', 'GetNativeSpeciesIDFromLegacyPokemonDataStruct', 'GetNativeSpeciesIndexFromLegacyForm', 'GetSpeciesAndFormIndex', 'PopBCDEHL')}, (species, form, gender), hex(regs.HL), (regs.B, regs.C))
+        assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (label, hex(regs.PC), hex(regs.SP))
         assert mem[addr('hROMBank')] == b
         return bool(regs.F & 0x10), bool(regs.F & 0x80)
     try:

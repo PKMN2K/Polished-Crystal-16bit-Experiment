@@ -249,7 +249,7 @@ IsGeneratedWildMagikarp::
 	push bc
 	ld hl, wOTPartyMon1Species
 	ld de, MON_FORM - MON_SPECIES
-	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
+	farcall GetNativeSpeciesIDFromLegacyPokemonDataStruct
 	ld a, b
 	and a
 	jr nz, .done
