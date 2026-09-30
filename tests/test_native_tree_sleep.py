@@ -123,6 +123,7 @@ def main():
         values = (0x01FF, 0x0200, 0x1200, 0xFFFF)
         mem[0xC280:0xC28A] = list(b"".join(n.to_bytes(2, "little") for n in (*values, 0)))
         for native in (*values, 0, 0x0100, 0x0201, 0xFF00):
+            regs.A = 0  # the list is in RAM; no ROM bank is required
             regs.B, regs.C = native >> 8, native & 255
             regs.D, regs.E, regs.HL = 0x56, 0x78, 0xC280
             assert invoke("IsNativeSpeciesInListBC") == (native in values), hex(native)

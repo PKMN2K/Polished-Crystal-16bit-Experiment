@@ -6241,6 +6241,7 @@ CheckSleepingTreeMon:
 	pop bc
 
 .Check:
+	ld a, BANK(AsleepTreeMons)
 	farcall IsNativeSpeciesInListBC
 ; If it's a match, the opponent is asleep
 	ret c
