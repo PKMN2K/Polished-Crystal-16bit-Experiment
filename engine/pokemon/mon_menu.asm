@@ -476,6 +476,14 @@ UpdateMewtwoForm:
 	call GetPartyParamLocationAndValue
 	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	pop de
+	; Other species have no item-driven form edit here. Keep their authoritative
+	; native ID rather than remapping a possibly stale presentation form.
+	ld a, c
+	cp MEWTWO
+	ret nz
+	ld a, b
+	and EXTSPECIES_MASK
+	ret nz
 	ld bc, MON_FORM - MON_SPECIES
 	add hl, bc
 	call _UpdateMewtwoForm
@@ -1697,3 +1705,4 @@ String_PowAcc:
 
 Text_CantForgetHM:
 	text_farend _MoveCantForgetHMText
+
