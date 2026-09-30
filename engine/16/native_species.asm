@@ -847,7 +847,18 @@ RefreshPartyIdentityAfterFormChange::
 	ld a, [wCurPartyMon]
 	call GetPartyLocation
 	ld de, MON_FORM - MON_SPECIES
-	call GetLegacySpeciesAndFormFromPokemonDataStruct
+	; This is an intentional form edit, not ordinary identity decoding. Resolve
+	; the old native ID to its root, then apply the newly written form byte.
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	push hl
+	add hl, de
+	ld a, [hl]
+	and FORM_MASK
+	push af
+	farcall GetRootSpeciesFromNativeIDBC
+	pop af
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	pop hl
 	push hl
 	farcall GetTransientIDFromLegacySpeciesAndForm
 	pop hl
