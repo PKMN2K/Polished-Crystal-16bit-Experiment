@@ -765,8 +765,13 @@ EggHatch_AnimationSequence:
 	call Hatch_UpdateFrontpicBGMapCenter
 	call Hatch_ShellFragmentLoop
 	call WaitSFX
-	ld a, [wJumptableIndex]
-	ld [wCurPartySpecies], a
+	; GetEggFrontpic leaves the selected party mon's raw form byte in
+	; wCurForm. Re-decode the authoritative party identity before the
+	; hatchling reveal so native mechanical forms and extended roots animate
+	; with the same identity used to prepare the hatchling frontpic.
+	ld a, MON_SPECIES
+	call GetPartyParamLocationAndValue
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	hlcoord 6, 3
 	lb de, $0, ANIM_MON_HATCH
 	farcall AnimateFrontpic
