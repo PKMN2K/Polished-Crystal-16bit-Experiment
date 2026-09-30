@@ -812,35 +812,18 @@ DecodeNativeBoxIdentity::
 	ld a, b
 	cp 1
 	jr nz, .decode
-	ld a, c
-	and a
-	jr z, .invalid
-.decode
-	; Keep the native box ID authoritative. The decoded temporary box structure
-	; is still transitional, so explicitly reject a root above $01ff instead of
-	; truncating its high byte through EXTSPECIES.
-	ld a, [wEncodedTempMonForm]
-	and FORM_MASK
-	ld e, a
-	push de ; root resolution uses de for mechanical variants
+	; Validate that the native root fits the transitional temp structure before
+	; decoding its authoritative mechanical form. Keep the stored word intact.
+	push bc
 	farcall GetRootSpeciesFromNativeIDBC
-	pop de
 	ld a, b
 	cp 2
+	pop bc
 	jr nc, .invalid
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or e
-	ld b, a
-	ld a, c
-	ld [wEncodedTempMonSpecies], a
 	ld a, [wEncodedTempMonForm]
-	and ~SPECIESFORM_MASK
-	or b
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld [wEncodedTempMonSpecies], a
+	ld a, b
 	ld [wEncodedTempMonForm], a
 	and a
 	ret
