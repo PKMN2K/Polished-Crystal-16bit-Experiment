@@ -693,7 +693,7 @@ BattlePartyRootsMatch::
 .true_user_legacy
 	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
 .got_true_user
-	call GetRootSpeciesFromNativeIDBC
+	farcall GetRootSpeciesFromNativeIDBC
 	push bc
 
 	ld a, MON_SPECIES
@@ -707,7 +707,7 @@ BattlePartyRootsMatch::
 .opponent_legacy
 	call GetNativeSpeciesIDFromLegacyPokemonDataStruct
 .got_opponent
-	call GetRootSpeciesFromNativeIDBC
+	farcall GetRootSpeciesFromNativeIDBC
 
 	pop de
 	ld a, c
@@ -797,7 +797,9 @@ DecodeNativeBoxIdentity::
 	ld a, [wEncodedTempMonForm]
 	and FORM_MASK
 	ld e, a
-	call GetRootSpeciesFromNativeIDBC
+	push de ; root resolution uses de for mechanical variants
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
 	ld a, b
 	cp 2
 	jr nc, .invalid
