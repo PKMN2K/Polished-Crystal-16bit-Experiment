@@ -197,15 +197,38 @@ GetPokedexFlagIndex::
 	ret
 
 GetLegacySpeciesAndFormFromNativeIDBC::
-; Resolve a native species ID and raw form to Polished's transitional runtime
-; representation.
+; Resolve an authoritative native identity at a transitional runtime boundary.
+; Mechanical variants supply their canonical form; root species keep cosmetic
+; forms. The native root supplies EXTSPECIES, never a stale presentation byte.
 ; in: bc = one-based native species ID, a = raw form
-; out: a = c = root species byte, b = encoded form
+; out: a = c = root species byte, b = encoded form; preserves hl/de
 	push hl
+	push de
+	push af
+	ld a, b
+	cp HIGH(NUM_SPECIES)
+	jr c, .root
+	jr nz, .variant
+	ld a, c
+	cp LOW(NUM_SPECIES) + 1
+	jr c, .root
+.variant
+	push bc
+	call GetNativeVariantIdentityPointer
+	ld de, 4
+	add hl, de
+	ld a, BANK(NativeVariantIdentityTable)
+	call GetFarByte
+	pop bc
+	ld e, a
+	pop af
+	and ~SPECIESFORM_MASK
+	or e
 	push af
 	call GetRootSpeciesFromNativeIDBC
+.root
 	pop af
-	pop hl
+	and ~EXTSPECIES_MASK
 	ld e, a
 	ld a, b
 	assert MON_EXTSPECIES_F == 5
@@ -217,6 +240,8 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	or e
 	ld b, a
 	ld a, c
+	pop de
+	pop hl
 	ret
 
 IsOpponentActiveNativeSpeciesBC::
