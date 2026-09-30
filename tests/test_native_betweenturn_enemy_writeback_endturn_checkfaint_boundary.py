@@ -978,6 +978,7 @@ def main():
             mem[addr("wBattleMonPP")], mem[addr("wEnemyMonPP")],
             mem[addr("wPartyMon1PP")], mem[addr("wOTPartyMon1PP")],
             word("wCurDamage"), mem[addr("wBattleEnded")],
+            mem[addr("wPlayerAbility")], mem[addr("wEnemyAbility")],
         )
 
     def turn_callback(label, callback):
@@ -5217,6 +5218,14 @@ def main():
                 ], ("second-turn dispatch", context, perform_move_snapshots)
                 def events(label):
                     return [s for s in second_turn_events if s[0] == label]
+                dispatch = events("BattleTurn.do_move")
+                # The first end-turn fixture leaves Pressure on BOTH sides.
+                # Each second-turn attack must consume two PP without any
+                # fixture reset: player 34 -> 32, enemy 33 -> 31.
+                assert [(s[3], s[8:12], s[14:16]) for s in dispatch] == [
+                    (0, (34, 33, 34, 33), (PRESSURE, PRESSURE)),
+                    (1, (32, 33, 32, 33), (PRESSURE, PRESSURE)),
+                ], ("second-turn PP/Pressure before attacks", context, dispatch)
                 damage = events("BattleCommand_applydamage")
                 assert [(s[3], s[4], s[5], s[12]) for s in damage] == [
                     (0, 83, 83, 17), (1, 83, 66, 17),
@@ -5247,7 +5256,7 @@ def main():
                         tuple(mem[addr(label):addr(label) + 2]),
                     )
                 for label, expected in (
-                    ("wBattleMonPP", 33), ("wPartyMon1PP", 33),
+                    ("wBattleMonPP", 32), ("wPartyMon1PP", 32),
                     ("wEnemyMonPP", 31), ("wOTPartyMon1PP", 31),
                 ):
                     assert mem[addr(label)] == expected, (
@@ -9055,7 +9064,8 @@ def main():
             print(
                 f"PASS: {count} native two-full-turn cases; four real attacks "
                 "preserved native identities, second-turn HP fell from 83 to "
-                "66 on both sides, player/enemy PP carried to 33/31, active "
+                "66 on both sides, player/enemy PP carried to 32/31 with "
+                "Pressure on both sides, active "
                 "and party records agreed after cleanup, and execution "
                 "stopped before turn three"
             )
