@@ -127,6 +127,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_real_stats.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-hatchling-core-integration
+        name: "Test native core HatchEggs integration (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_core_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -710,6 +715,11 @@ jobs:
         name: "Test native hatchling real stat calculation (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_real_stats.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-core-integration-debug
+        name: "Test native core HatchEggs integration (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_core_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
