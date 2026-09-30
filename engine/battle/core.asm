@@ -6158,6 +6158,7 @@ ApplyLegendaryDVs:
 	ld a, [wCurForm]
 	ld b, a
 	ld hl, LegendaryMons
+	ld a, BANK(LegendaryMons)
 	farcall IsLegacySpeciesInNativeList
 	pop hl
 	jr nc, .done
@@ -7478,6 +7479,7 @@ _GetNewBaseExp:
 	ld b, a
 	ld hl, LegendaryMons
 	push bc
+	ld a, BANK(LegendaryMons)
 	farcall IsLegacySpeciesInNativeList
 	pop bc
 	ld a, 10 ; legendary: *10/20 -> *0.5

@@ -72,6 +72,11 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
 
+      - id: test-native-species-lists
+        name: "Test bank-aware species lists and native Tower eligibility (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_species_lists.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-tree-sleep
         name: "Test native tree-encounter sleep (normal)"
         timeout-minutes: 2
@@ -543,6 +548,11 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-species-lists-debug
+        name: "Test bank-aware species lists and native Tower eligibility (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_species_lists.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-tree-sleep-debug
         name: "Test native tree-encounter sleep (debug)"

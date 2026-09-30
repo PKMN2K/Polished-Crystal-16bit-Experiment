@@ -317,34 +317,17 @@ IsNativeSpeciesInListBC::
 IsLegacySpeciesInNativeList::
 ; Test a transitional species/form pair against a zero-terminated native-ID
 ; word list.
-; in: c = legacy species, b = form, hl = native-ID list
+; in: c = legacy species, b = form, a:hl = native-ID list
 ; out: carry set if found
 	push de
+	push af
 	push hl
 	call GetSpeciesAndFormIndex
 	inc bc
 	pop hl
-.loop
-	ld e, [hl]
-	inc hl
-	ld d, [hl]
-	inc hl
-	ld a, d
-	or e
-	jr z, .not_found
-	ld a, e
-	cp c
-	jr nz, .loop
-	ld a, d
-	cp b
-	jr nz, .loop
-	scf
+	pop af
 	pop de
-	ret
-.not_found
-	and a
-	pop de
-	ret
+	jp IsNativeSpeciesInListBC
 
 GetTransientIDFromLegacySpeciesAndForm::
 ; Convert a compact Polished species/form pair at a ROM ingestion boundary.
