@@ -137,6 +137,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_save_roundtrip.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-hatchling-multi-slot-integration
+        name: "Test native multi-slot HatchEggs integration (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_multi_slot_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -730,6 +735,11 @@ jobs:
         name: "Test native hatchling primary save round trip (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_save_roundtrip.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-multi-slot-integration-debug
+        name: "Test native multi-slot HatchEggs integration (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_multi_slot_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
