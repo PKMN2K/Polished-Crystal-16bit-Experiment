@@ -759,6 +759,12 @@ EggHatch_AnimationSequence:
 	ld [wGlobalAnimXOffset], a
 	call ClearSprites
 	call Hatch_InitShellFragments
+	; GetEggFrontpic leaves the selected party mon's raw form byte in
+	; wCurForm. Restore the authoritative party identity before the hatchling
+	; BG/palette reveal as well as before its later animation.
+	ld a, MON_SPECIES
+	call GetPartyParamLocationAndValue
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	hlcoord 6, 3
 	lb bc, HIGH(vBGMap0), $00 ; Hatchling tiles start at c
 	ld a, [wJumptableIndex]
