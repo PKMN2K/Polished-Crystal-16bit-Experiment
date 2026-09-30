@@ -632,8 +632,10 @@ InheritMove:
 
 GetEggFrontpic:
 	push de
-	ld a, MON_FORM
-	call GetPartyParamLocationAndValue
+	; Egg has one generic picture/base-data identity. Do not inherit the
+	; hatchling record's raw form or extension bit: EGG is $ff, so carrying
+	; EXTSPECIES here could reinterpret this lookup as species $01ff.
+	ld a, PLAIN_FORM
 	ld [wCurForm], a
 	ld a, EGG
 	ld [wCurPartySpecies], a

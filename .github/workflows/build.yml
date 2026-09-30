@@ -77,6 +77,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-egg-frontpic-identity
+        name: "Test generic Egg frontpic identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_egg_frontpic_identity.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-hatchling-animation-identity
         name: "Test native hatchling reveal animation identity (normal)"
         timeout-minutes: 2
@@ -620,6 +625,11 @@ jobs:
         name: "Test native hatchling frontpic identity (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-egg-frontpic-identity-debug
+        name: "Test generic Egg frontpic identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_egg_frontpic_identity.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-hatchling-animation-identity-debug
         name: "Test native hatchling reveal animation identity (debug)"
