@@ -97,7 +97,8 @@ def main():
         if hl is not None:
             regs.HL = hl
         if de is not None:
-            regs.DE = de
+            regs.D = (de >> 8) & 0xFF
+            regs.E = de & 0xFF
         regs.SP = 0xC0FF
         regs.PC = 0xC100
         pyboy.tick(10, False, False)
