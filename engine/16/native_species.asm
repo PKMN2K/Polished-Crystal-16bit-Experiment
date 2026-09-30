@@ -314,6 +314,13 @@ IsNativeSpeciesInListBC::
 	and a
 	ret
 
+IsNativeSpeciesBannedFromBattleTowerBC::
+; in: bc = one-based native ID; out: carry if listed in UberMons
+; Keep list setup out of the nearly full party-menu ROM bank.
+	ld hl, UberMons
+	ld a, BANK(UberMons)
+	jp IsNativeSpeciesInListBC
+
 IsLegacySpeciesInNativeList::
 ; Test a transitional species/form pair against a zero-terminated native-ID
 ; word list.

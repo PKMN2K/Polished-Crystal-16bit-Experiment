@@ -401,9 +401,7 @@ BT_CheckEnterState:
 	call GetPartyLocation
 	ld de, MON_FORM - MON_SPECIES
 	farcall GetNativeSpeciesIDFromPokemonDataStruct
-	ld hl, UberMons
-	ld a, BANK(UberMons)
-	farcall IsNativeSpeciesInListBC
+	farcall IsNativeSpeciesBannedFromBattleTowerBC
 	jr c, .banned
 	pop af
 
