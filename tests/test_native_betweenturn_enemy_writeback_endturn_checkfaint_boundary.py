@@ -26,6 +26,7 @@ def main():
     turn_gate = ap.add_mutually_exclusive_group()
     turn_gate.add_argument("--next-turn-menu", action="store_true")
     turn_gate.add_argument("--next-turn-move", action="store_true")
+    turn_gate.add_argument("--two-full-turns", action="store_true")
     options = ap.parse_args()
     rom = options.rom
 
@@ -963,16 +964,59 @@ def main():
     enemy_base_calls = []
     legacy_calls = []
 
+    second_turn_active = [False]
+    second_turn_events = []
+
+    def second_turn_snapshot(label):
+        def word(name):
+            return int.from_bytes(bytes(mem[addr(name):addr(name) + 2]), "big")
+        return (
+            label, read_native("wBattleMonNativeSpecies"),
+            read_native("wEnemyMonNativeSpecies"), mem[addr("hBattleTurn")],
+            word("wBattleMonHP"), word("wEnemyMonHP"),
+            word("wPartyMon1HP"), word("wOTPartyMon1HP"),
+            mem[addr("wBattleMonPP")], mem[addr("wEnemyMonPP")],
+            mem[addr("wPartyMon1PP")], mem[addr("wOTPartyMon1PP")],
+            word("wCurDamage"), mem[addr("wBattleEnded")],
+        )
+
+    def turn_callback(label, callback):
+        # The inherited first-turn observers deliberately inject sentinels.
+        # Turn two retains the same ROM and deterministic input/presentation
+        # stubs, but uses observation-only callbacks for combat and cleanup.
+        controls = {
+            "BattleTurn", "BattleMenu", "ParsePlayerAction",
+            "MoveSelectionScreen", "ParseEnemyAction", "DetermineMoveOrder",
+            "BattleTurn.do_move", "GetBaseData",
+            "GetBaseDataFromActiveBattleNativeSpecies",
+            "GetBaseDataFromEnemyBattleNativeSpecies",
+        }
+        observed = {
+            "BattleTurn.do_move", "BattleCommand_doturn",
+            "BattleCommand_applydamage", "BattleCommand_criticaltext",
+            "BattleCommand_posthiteffects", "HandleBetweenTurnEffects",
+            "UpdateBattleMonInParty", "UpdateEnemyMonInParty",
+            "LoadTileMapToTempTileMap",
+        }
+        def observe(context):
+            if second_turn_active[0]:
+                if label in observed:
+                    second_turn_events.append(second_turn_snapshot(label))
+                if label not in controls:
+                    return
+            callback(context)
+        return observe
+
     def install_stub(label, opcodes, callback=None):
         bank, address = symbols[label]
         for i, value in enumerate(opcodes):
             mem[bank, address + i] = value
         if callback is not None:
-            pyboy.hook_register(bank, address, callback, None)
+            pyboy.hook_register(bank, address, turn_callback(label, callback), None)
 
     def hook(label, callback):
         bank, address = symbols[label]
-        pyboy.hook_register(bank, address, callback, None)
+        pyboy.hook_register(bank, address, turn_callback(label, callback), None)
 
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
@@ -1075,8 +1119,12 @@ def main():
     def observe_battle_turn(_):
         battle_turn_calls.append(True)
         battle_turn_shadows.append(read_native("wEnemyMonNativeSpecies"))
+        if options.two_full_turns and len(battle_turn_calls) == 3:
+            endturn_battleturn_loop_stop_hit[0] = True
+            regs.PC = 0xC110
+            return
         if endturn_writeback_armed[0] and len(battle_turn_calls) == 2:
-            if options.next_turn_menu or options.next_turn_move:
+            if options.next_turn_menu or options.next_turn_move or options.two_full_turns:
                 # Seed stale per-turn state before the real loop resets it.
                 for label in (
                     "wBattlePlayerAction", "wPlayerSwitchTarget",
@@ -1086,6 +1134,9 @@ def main():
                     mem[addr(label)] = 0xA5
                 mem[addr("wCurDamage") + 1] = 0x5A
                 between_turn_active[0] = False
+                if options.two_full_turns:
+                    second_turn_active[0] = True
+                    endturn_writeback_armed[0] = False
                 return
             # The final non-fainting HandleBetweenTurnEffects tail returned,
             # BattleTurn observed wBattleEnded = 0, and its jmp .loop reached
@@ -1148,6 +1199,9 @@ def main():
         # distinct later so hBattleTurn=1 must select this enemy-side Tackle.
         mem[addr("wCurEnemyMoveNum")] = 0
         mem[addr("wCurEnemyMove")] = 33
+        if second_turn_active[0]:
+            # Carry the first turn's consumed PP into the second attack.
+            return
         # Seed the ordinary enemy PP path only. doturn/BattleConsumePP remain
         # real and must decrement both active and OT-party slot 0 from 35.
         mem[addr("wEnemyMonPP")] = 35
@@ -4403,6 +4457,8 @@ def main():
         endturn_battleturn_loop_stop_hit[0] = False
         endturn_writeback_armed[0] = False
         endturn_direct_enemy_writeback_seen[0] = False
+        second_turn_active[0] = False
+        second_turn_events.clear()
         endturn_enemy_writeback_calls.clear()
         endturn_tail_tilemap_calls.clear()
         process_enemy_fleeing_active[0] = False
@@ -5005,13 +5061,14 @@ def main():
         hook("ForceDeferredSwitch", observe_force_deferred_switch)
         hook("ResetAbilityIgnorance", observe_reset_ability_ignorance)
         pyboy.hook_register(
-            do_move_bank, post_reset_addr, observe_post_reset, None
+            do_move_bank, post_reset_addr,
+            turn_callback("post_reset", observe_post_reset), None
         )
         hook("ProcessEnemyFleeing", observe_process_enemy_fleeing)
         hook("EnemyCanFlee", observe_process_enemy_can_flee)
         pyboy.hook_register(
             battle_turn_bank, post_process_flee_addr,
-            observe_process_enemy_flee_return, None
+            turn_callback("post_flee", observe_process_enemy_flee_return), None
         )
         hook("HandleBetweenTurnEffects", observe_handle_between_turn_effects)
         hook("CheckFaint", observe_between_turn_checkfaint)
@@ -5142,6 +5199,69 @@ def main():
                 "DoBattle", max_frames=256,
                 stop_flag=endturn_battleturn_loop_stop_hit
             )
+
+            if options.two_full_turns:
+                assert endturn_battleturn_loop_stop_hit[0], context
+                assert battle_turn_shadows == [native, native, native], context
+                assert battle_menu_snapshots == [
+                    (25, native, 0, 1, 1, 1),
+                    (25, native, 0, 2, 2, 2),
+                ], ("two-turn menus/counters", context, battle_menu_snapshots)
+                assert len(parse_action_calls) == 2, context
+                assert len(move_selection_calls) == 2, context
+                assert len(parse_enemy_calls) == 2, context
+                assert len(determine_order_calls) == 2, context
+                assert perform_move_calls == [True] * 4, context
+                assert perform_move_snapshots[-2:] == [
+                    (25, native, 0, 33), (25, native, 1, 33),
+                ], ("second-turn dispatch", context, perform_move_snapshots)
+                def events(label):
+                    return [s for s in second_turn_events if s[0] == label]
+                damage = events("BattleCommand_applydamage")
+                assert [(s[3], s[4], s[5], s[12]) for s in damage] == [
+                    (0, 83, 83, 17), (1, 83, 66, 17),
+                ], ("second-turn damage", context, damage)
+                applied = events("BattleCommand_criticaltext")
+                assert [(s[3], s[4], s[5]) for s in applied] == [
+                    (0, 83, 66), (1, 66, 66),
+                ], ("second-turn HP subtraction", context, applied)
+                assert len(events("BattleCommand_doturn")) == 2, context
+                assert len(events("BattleCommand_posthiteffects")) == 2, context
+                assert len(events("HandleBetweenTurnEffects")) == 1, context
+                assert events("UpdateBattleMonInParty"), context
+                assert events("UpdateEnemyMonInParty"), context
+                assert events("LoadTileMapToTempTileMap"), context
+                for snapshot in second_turn_events:
+                    assert snapshot[1:3] == (25, native), (
+                        "second-turn native identity", context, snapshot,
+                    )
+                    assert snapshot[13] == 0, (
+                        "second-turn battle ended", context, snapshot,
+                    )
+                for label in (
+                    "wBattleMonHP", "wEnemyMonHP",
+                    "wPartyMon1HP", "wOTPartyMon1HP",
+                ):
+                    assert tuple(mem[addr(label):addr(label) + 2]) == (0, 66), (
+                        "second-turn active/party HP", context, label,
+                        tuple(mem[addr(label):addr(label) + 2]),
+                    )
+                for label, expected in (
+                    ("wBattleMonPP", 33), ("wPartyMon1PP", 33),
+                    ("wEnemyMonPP", 31), ("wOTPartyMon1PP", 31),
+                ):
+                    assert mem[addr(label)] == expected, (
+                        "second-turn persistent PP", context, label, mem[addr(label)],
+                    )
+                assert mem[addr("wTotalBattleTurns")] == 2, context
+                assert mem[addr("wPlayerTurnsTaken")] == 2, context
+                assert mem[addr("wEnemyTurnsTaken")] == 2, context
+                assert mem[addr("wBattleEnded")] == 0, context
+                assert read_native("wBattleMonNativeSpecies") == 25, context
+                assert read_native("wEnemyMonNativeSpecies") == native, context
+                assert not legacy_calls, ("legacy base-data path", context)
+                count += 1
+                continue
 
             if options.next_turn_menu or options.next_turn_move:
                 assert endturn_battleturn_loop_stop_hit[0], (
@@ -8930,6 +9050,16 @@ def main():
             )
 
             count += 1
+
+        if options.two_full_turns:
+            print(
+                f"PASS: {count} native two-full-turn cases; four real attacks "
+                "preserved native identities, second-turn HP fell from 83 to "
+                "66 on both sides, player/enemy PP carried to 33/31, active "
+                "and party records agreed after cleanup, and execution "
+                "stopped before turn three"
+            )
+            return
 
         if options.next_turn_move:
             print(

@@ -492,6 +492,13 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
 
+      - id: test-native-two-full-turns
+        # Two turns exercise HP/PP persistence without repeating first-turn
+        # sentinel injections during the second pair of real attacks.
+        name: "Test native two full battle turns (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --two-full-turns
+
       - id: test-native-enemy-frontpic-dimensions
         name: "Test native enemy frontpic animation dimensions (normal)"
         run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
@@ -942,6 +949,11 @@ jobs:
         name: "Test native second-turn move selection and dispatch (debug)"
         timeout-minutes: 2
         run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
+
+      - id: test-native-two-full-turns-debug
+        name: "Test native two full battle turns (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --two-full-turns
 
       - id: test-native-enemy-frontpic-dimensions-debug
         name: "Test native enemy frontpic animation dimensions (debug)"
