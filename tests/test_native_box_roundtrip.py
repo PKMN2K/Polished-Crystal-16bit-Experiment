@@ -89,8 +89,8 @@ def main():
                     assert not invoke('DecodeTempMon')[1], context
                     actual = bytes(mem[start:end])
                     for i, (want, got) in enumerate(zip(expected, actual)):
-                        if start+i in (extra+1, extra+2):
-                            continue  # native word now occupies formerly unused bytes
+                        if start+i in (extra+1, extra+2, addr('wTempMonUnused')):
+                            continue  # native word / unserialized scratch byte
                         assert got == want, (context, hex(start+i), want, got)
                     assert bytes(mem[extra+1:extra+3]) == native.to_bytes(2, 'little'), context
                     count += 1
