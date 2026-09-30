@@ -743,6 +743,31 @@ BattlePartyRootsMatch::
 .done
 	jp PopBCDEHL
 
+BreedmonRootsMatch::
+; z if both daycare records have the same full native root species.
+; Mechanical variants retain their historical same-root breeding bonus.
+; Preserve bc/de/hl; player/daycare format marker selects the record decoder.
+	push hl
+	push de
+	push bc
+	ld hl, wBreedMon1Species
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	farcall GetRootSpeciesFromNativeIDBC
+	push bc
+	ld hl, wBreedMon2Species
+	ld de, MON_FORM - MON_SPECIES
+	call GetNativeSpeciesIDFromPokemonDataStruct
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
+	ld a, c
+	cp e
+	jr nz, .done
+	ld a, b
+	cp d
+.done
+	jp PopBCDEHL
+
 ConvertCopiedPartyTempIdentity::
 ; After CopyBetweenPartyAndTemp copies a record: b=direction/type flags,
 ; c=zero-based slot. Both the OT workspace and temp records remain legacy.

@@ -36,11 +36,8 @@ CheckBreedmonCompatibility:
 
 .breed_ok
 	farcall LoadBreedMon2LegacySpeciesAndForm
-	push bc
 	farcall LoadBreedMon1LegacySpeciesAndForm
-	pop de
-	ld a, c
-	cp e
+	farcall BreedmonRootsMatch
 	ld c, HIGHLY_COMPATIBLE
 	jr z, .compare_ids
 	ld c, MODERATELY_COMPATIBLE
@@ -83,8 +80,7 @@ CheckBreedmonCompatibility:
 ; Ditto is automatically compatible with everything.
 ; If not Ditto, load the breeding groups into b/c and d/e.
 	farcall LoadBreedMon2LegacySpeciesAndForm
-	ld a, c
-	cp DITTO
+	call .IsDitto
 	jr z, .Compatible
 	call GetBaseData
 	ld a, [wBaseEggGroups]
@@ -98,8 +94,7 @@ CheckBreedmonCompatibility:
 
 	push bc
 	farcall LoadBreedMon1LegacySpeciesAndForm
-	ld a, c
-	cp DITTO
+	call .IsDitto
 	jr z, .CompatiblePopBC
 	call GetBaseData
 	pop bc
@@ -135,9 +130,17 @@ CheckBreedmonCompatibility:
 	scf
 	ret
 
-.SetGenderData:
+.IsDitto:
+; The loaded root's species-extension bit distinguishes low-byte aliases.
+	ld a, [wCurForm]
+	and EXTSPECIES_MASK
+	ret nz
 	ld a, [wCurPartySpecies]
 	cp DITTO
+	ret
+
+.SetGenderData:
+	call .IsDitto
 	ld a, 1 << BREEDGEN_DITTO
 	ret z
 	ld a, TEMPMON
@@ -935,3 +938,4 @@ DayCareMonCompatibilityText:
 .SlightCompatibility:
 	; It shows interest in @ .
 	text_farend _BreedShowsInterestText
+
