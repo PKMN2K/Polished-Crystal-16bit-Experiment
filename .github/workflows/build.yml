@@ -112,6 +112,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_togepi_event_guard.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-hatchling-species-name
+        name: "Test native hatchling species-name lookup (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_species_name.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -680,6 +685,11 @@ jobs:
         name: "Test native hatchling Togepi event guard (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_togepi_event_guard.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-species-name-debug
+        name: "Test native hatchling species-name lookup (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_species_name.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
