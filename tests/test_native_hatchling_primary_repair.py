@@ -212,9 +212,18 @@ def main():
         mem[0xFF70] = 1
 
         # Keep the recovery decision, backup Pokemon/native-table loads, and
-        # automatic primary SaveGameData repair real. Bypass only unrelated
-        # mail/storage restoration and SaveGameData's backup-copy rewrite.
-        for name in ("LoadStorageSystem", "WriteBackupSave"):
+        # SaveGameData's PokemonData/native-table/checksum repair real. Headless
+        # CPU execution does not need RTC/options/player-data writes or the
+        # secondary backup rewrite, so stub only those unrelated subroutines.
+        for name in (
+            "LoadStorageSystem",
+            "WriteBackupSave",
+            "StageRTCTimeForSave",
+            "ValidateSave",
+            "SaveOptions",
+            "SavePlayerData",
+            "SaveRTC",
+        ):
             bank, target = symbols[name]
             mem[bank, target] = 0xC9
         bank, target = symbols["RestorePartyMonMail"]
