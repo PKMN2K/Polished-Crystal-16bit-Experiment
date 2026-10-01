@@ -2291,7 +2291,8 @@ RunPostBattleAbilities::
 
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
-	ld c, a
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	ld a, MON_IS_EGG
 	call GetPartyParamLocationAndValue
 	bit MON_IS_EGG_F, a

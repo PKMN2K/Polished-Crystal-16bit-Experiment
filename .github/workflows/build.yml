@@ -51,6 +51,17 @@ jobs:
         name: "Checkout Rangi42/polishedcrystal"
         uses: actions/checkout@v7
 
+      # FOCUSED SPECIES-MIGRATION RUNTIME TESTS
+      - id: setup-python-migration-tests
+        name: "Set up Python for native species CPU tests"
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - id: install-pyboy-migration-tests
+        name: "Install PyBoy for native species CPU tests"
+        run: python -m pip install pyboy==2.7.0
+
       # BUILD ROMS
       - id: build-polishedcrystal
         name: "Build polishedcrystal"
@@ -60,6 +71,589 @@ jobs:
           mv polishedcrystal-${{ env.PC_VERSION }}.gbc build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-${{ env.PC_VERSION }}.sym build/polishedcrystal-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-hatchling-frontpic
+        name: "Test native hatchling frontpic identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-egg-frontpic-identity
+        name: "Test generic Egg frontpic identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_egg_frontpic_identity.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-animation-identity
+        name: "Test native hatchling reveal animation identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_animation_identity.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-reveal-palette-identity
+        name: "Test native hatchling BG/palette reveal identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_reveal_palette_identity.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-palette-dispatch
+        name: "Test native hatchling palette dispatch identity (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_dispatch.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-palette-lookup
+        name: "Test native hatchling temp-mon palette lookup (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_lookup.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-dex-registration
+        name: "Test native hatchling Dex registration (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_dex_registration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-togepi-event-guard
+        name: "Test native hatchling Togepi event guard (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_togepi_event_guard.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-species-name
+        name: "Test native hatchling species-name lookup (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_species_name.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-stat-refresh
+        name: "Test native hatchling stat refresh (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_stat_refresh.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-real-stats
+        name: "Test native hatchling real stat calculation (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_real_stats.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-core-integration
+        name: "Test native core HatchEggs integration (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_core_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-save-roundtrip
+        name: "Test native hatchling primary save round trip (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_save_roundtrip.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-multi-slot-integration
+        name: "Test native multi-slot HatchEggs integration (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_multi_slot_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-backup-save-roundtrip
+        name: "Test native hatchling backup save round trip (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_backup_save_roundtrip.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-backup-recovery
+        name: "Test native hatchling backup recovery (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_backup_recovery.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-table-recovery
+        name: "Test native hatchling table-corruption recovery (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_table_recovery.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-primary-repair
+        name: "Test native hatchling primary save repair (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_primary_repair.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-breeding-compatibility
+        name: "Test native daycare breeding compatibility (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_breeding_compatibility.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-mewtwo-stale-form
+        name: "Test native Mewtwo stale-form repair (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_mewtwo_stale_form.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-item-form-guard
+        name: "Test held-item native form guard (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_item_form_guard.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-form-refresh
+        name: "Test intentional native party form updates (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_form_refresh.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-box-roundtrip
+        name: "Test complete native PC serialization round trips (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_box_roundtrip.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-box-forms
+        name: "Test native PC-box forms and checksum boundary (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_box_forms.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-form-decode
+        name: "Test authoritative native mechanical-form decoding (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_form_decode.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-root-boundaries
+        name: "Test bank-safe native battle roots and box decoding (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_root_boundaries.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-magikarp-length
+        name: "Test native Magikarp length guard (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_magikarp_length_guard.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-animation-substitutions
+        name: "Test native species animation substitutions (normal)"
+        timeout-minutes: 2
+        run: |
+          python tests/test_active_native_species_list.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+          python tests/test_native_animation_substitution.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-species-lists
+        name: "Test bank-aware species lists and native Tower eligibility (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_species_lists.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-tree-sleep
+        name: "Test native tree-encounter sleep (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_tree_sleep.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-move-animation-cry
+        name: "Test native move-animation cries (normal)"
+        run: python tests/test_native_move_animation_cry.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-transform-picture
+        name: "Test native Transform animation picture (normal)"
+        run: python tests/test_transform_animation_native_picture.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-ghost-reveal-picture
+        name: "Test native ghost-reveal picture and Dex (normal)"
+        run: python tests/test_native_ghost_reveal_picture.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-tempmon
+        name: "Test native enemy send-out temporary record (normal)"
+        run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-renderer
+        name: "Test native enemy frontpic renderer (normal)"
+        run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-vram
+        name: "Test real native enemy frontpic VRAM transfer (normal)"
+        run: python tests/test_native_enemy_frontpic_vram.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-vblank
+        name: "Test LCD-on native enemy frontpic VBlank transfer (normal)"
+        run: python tests/test_native_enemy_frontpic_vblank.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-integration
+        name: "Test native enemy send-out picture/animation integration (normal)"
+        run: python tests/test_native_enemy_sendout_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-wild-battle-intro-integration
+        name: "Test native wild-battle intro integration (normal)"
+        run: python tests/test_native_wild_battle_intro_integration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-battle-intro-wild-smoke
+        name: "Test single-entry native BattleIntro wild smoke (normal)"
+        run: python tests/test_native_battle_intro_wild_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-do-battle-entry-smoke
+        name: "Test native DoBattle entry smoke (normal)"
+        run: python tests/test_native_do_battle_entry_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-battle-turn-smoke
+        name: "Test native first BattleTurn setup smoke (normal)"
+        run: python tests/test_native_first_battle_turn_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-player-action-move-selection-smoke
+        name: "Test native player action move-selection boundary (normal)"
+        run: python tests/test_native_player_action_move_selection_smoke.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-selected-move-order-boundary
+        name: "Test native selected-move to move-order boundary (normal)"
+        run: python tests/test_native_selected_move_order_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-perform-move-entry-boundary
+        name: "Test native move-order to PerformMove entry boundary (normal)"
+        run: python tests/test_native_perform_move_entry_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-do-turn-initialize-boundary
+        name: "Test native DoTurn initialization boundary (normal)"
+        run: python tests/test_native_do_turn_initialize_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-effect-command-boundary
+        name: "Test native first effect-command boundary (normal)"
+        run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-second-effect-command-boundary
+        name: "Test native second effect-command boundary (normal)"
+        run: python tests/test_native_second_effect_command_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-doturn-pp-boundary
+        name: "Test native doturn PP boundary (normal)"
+        run: python tests/test_native_doturn_pp_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hastarget-boundary
+        name: "Test native hastarget boundary (normal)"
+        run: python tests/test_native_hastarget_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-checkhit-boundary
+        name: "Test native checkhit boundary (normal)"
+        run: python tests/test_native_checkhit_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-checkpriority-boundary
+        name: "Test native checkpriority boundary (normal)"
+        run: python tests/test_native_checkpriority_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-critical-boundary
+        name: "Test native critical boundary (normal)"
+        run: python tests/test_native_critical_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagestats-boundary
+        name: "Test native damagestats boundary (normal)"
+        run: python tests/test_native_damagestats_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagecalc-boundary
+        name: "Test native damagecalc boundary (normal)"
+        run: python tests/test_native_damagecalc_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-stab-boundary
+        name: "Test native STAB boundary (normal)"
+        run: python tests/test_native_stab_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagevariation-boundary
+        name: "Test native damagevariation boundary (normal)"
+        run: python tests/test_native_damagevariation_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-moveanim-boundary
+        name: "Test native moveanim boundary (normal)"
+        run: python tests/test_native_moveanim_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-failuretext-boundary
+        name: "Test native failuretext boundary (normal)"
+        run: python tests/test_native_failuretext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-applydamage-boundary
+        name: "Test native applydamage boundary (normal)"
+        run: python tests/test_native_applydamage_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-criticaltext-boundary
+        name: "Test native criticaltext boundary (normal)"
+        run: python tests/test_native_criticaltext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-supereffectivetext-boundary
+        name: "Test native supereffectivetext boundary (normal)"
+        run: python tests/test_native_supereffectivetext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-postfainteffects-boundary
+        name: "Test native postfainteffects boundary (normal)"
+        run: python tests/test_native_postfainteffects_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-posthiteffects-boundary
+        name: "Test native posthiteffects boundary (normal)"
+        run: python tests/test_native_posthiteffects_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-endmove-boundary
+        name: "Test native endmove termination boundary (normal)"
+        run: python tests/test_native_endmove_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-performmove-cleanup-boundary
+        name: "Test native PerformMove cleanup boundary (normal)"
+        run: python tests/test_native_performmove_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-resolvefaints-nonfaint-boundary
+        name: "Test native non-fainting ResolveFaints boundary (normal)"
+        run: python tests/test_native_resolvefaints_nonfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-postresolve-turnflip-boundary
+        name: "Test native post-ResolveFaints turn-flip boundary (normal)"
+        run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-performmove-doturn-boundary
+        name: "Test native enemy PerformMove to DoTurn boundary (normal)"
+        run: python tests/test_native_enemy_performmove_doturn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-doturn-initialization-boundary
+        name: "Test native enemy DoTurn initialization boundary (normal)"
+        run: python tests/test_native_enemy_doturn_initialization_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkobedience-usedmovetext-boundary
+        name: "Test native enemy checkobedience to usedmovetext boundary (normal)"
+        run: python tests/test_native_enemy_checkobedience_usedmovetext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-usedmovetext-doturn-boundary
+        name: "Test native enemy usedmovetext to doturn boundary (normal)"
+        run: python tests/test_native_enemy_usedmovetext_doturn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-doturn-hastarget-boundary
+        name: "Test native enemy doturn to hastarget boundary (normal)"
+        run: python tests/test_native_enemy_doturn_hastarget_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-hastarget-checkhit-boundary
+        name: "Test native enemy hastarget to checkhit boundary (normal)"
+        run: python tests/test_native_enemy_hastarget_checkhit_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkhit-checkpriority-boundary
+        name: "Test native enemy checkhit to checkpriority boundary (normal)"
+        run: python tests/test_native_enemy_checkhit_checkpriority_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkpriority-critical-boundary
+        name: "Test native enemy checkpriority to critical boundary (normal)"
+        run: python tests/test_native_enemy_checkpriority_critical_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-critical-damagestats-boundary
+        name: "Test native enemy critical to damagestats boundary (normal)"
+        run: python tests/test_native_enemy_critical_damagestats_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagestats-damagecalc-boundary
+        name: "Test native enemy damagestats to damagecalc boundary (normal)"
+        run: python tests/test_native_enemy_damagestats_damagecalc_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagecalc-stab-boundary
+        name: "Test native enemy damagecalc to STAB boundary (normal)"
+        run: python tests/test_native_enemy_damagecalc_stab_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-stab-damagevariation-boundary
+        name: "Test native enemy STAB to damagevariation boundary (normal)"
+        run: python tests/test_native_enemy_stab_damagevariation_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagevariation-moveanim-boundary
+        name: "Test native enemy damagevariation to moveanim boundary (normal)"
+        run: python tests/test_native_enemy_damagevariation_moveanim_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-moveanim-failuretext-boundary
+        name: "Test native enemy moveanim to failuretext boundary (normal)"
+        run: python tests/test_native_enemy_moveanim_failuretext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-failuretext-applydamage-boundary
+        name: "Test native enemy failuretext to applydamage boundary (normal)"
+        run: python tests/test_native_enemy_failuretext_applydamage_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-applydamage-criticaltext-boundary
+        name: "Test native enemy applydamage to criticaltext boundary (normal)"
+        run: python tests/test_native_enemy_applydamage_criticaltext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-criticaltext-supereffectivetext-boundary
+        name: "Test native enemy criticaltext to supereffectivetext boundary (normal)"
+        run: python tests/test_native_enemy_criticaltext_supereffectivetext_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-supereffectivetext-postfainteffects-boundary
+        name: "Test native enemy supereffectivetext to postfainteffects boundary (normal)"
+        run: python tests/test_native_enemy_supereffectivetext_postfainteffects_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postfainteffects-posthiteffects-boundary
+        name: "Test native enemy postfainteffects to posthiteffects boundary (normal)"
+        run: python tests/test_native_enemy_postfainteffects_posthiteffects_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-posthiteffects-endmove-boundary
+        name: "Test native enemy posthiteffects to endmove boundary (normal)"
+        run: python tests/test_native_enemy_posthiteffects_endmove_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-endmove-performmove-cleanup-boundary
+        name: "Test native enemy endmove to PerformMove cleanup boundary (normal)"
+        run: python tests/test_native_enemy_endmove_performmove_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-performmove-cleanup-resolvefaints-boundary
+        name: "Test native enemy PerformMove cleanup to ResolveFaints boundary (normal)"
+        run: python tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resolvefaints-deferredswitch-boundary
+        name: "Test native enemy ResolveFaints to DeferredSwitch boundary (normal)"
+        run: python tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-deferredswitch-resetabilityignorance-boundary
+        name: "Test native enemy DeferredSwitch to ResetAbilityIgnorance boundary (normal)"
+        run: python tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resetabilityignorance-postmove-boundary
+        name: "Test native enemy ResetAbilityIgnorance to post-move boundary (normal)"
+        run: python tests/test_native_enemy_resetabilityignorance_postmove_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postmove-processenemyfleeing-boundary
+        name: "Test native enemy post-move to ProcessEnemyFleeing boundary (normal)"
+        run: python tests/test_native_enemy_postmove_processenemyfleeing_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-processenemyfleeing-postcheck-boundary
+        name: "Test native enemy ProcessEnemyFleeing to post-check boundary (normal)"
+        run: python tests/test_native_enemy_processenemyfleeing_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postcheck-betweenturn-boundary
+        name: "Test native enemy post-check to between-turn boundary (normal)"
+        run: python tests/test_native_enemy_postcheck_betweenturn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-checkfaint-weather-boundary
+        name: "Test native between-turn CheckFaint to HandleWeather boundary (normal)"
+        run: python tests/test_native_betweenturn_checkfaint_weather_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-weather-postcheck-boundary
+        name: "Test native HandleWeather no-weather to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_weather_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-second-checkfaint-affection-boundary
+        name: "Test native second CheckFaint to HandleAffectionSelfCure boundary (normal)"
+        run: python tests/test_native_betweenturn_second_checkfaint_affection_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-affection-futuresight-boundary
+        name: "Test native HandleAffectionSelfCure to HandleFutureSight boundary (normal)"
+        run: python tests/test_native_betweenturn_affection_futuresight_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-futuresight-postcheck-boundary
+        name: "Test native HandleFutureSight zero-counter to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_futuresight_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postfuture-checkfaint-endturna-boundary
+        name: "Test native post-Future Sight CheckFaint to HandleEndturnBlockA boundary (normal)"
+        run: python tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-endturna-postcheck-boundary
+        name: "Test native HandleEndturnBlockA to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_endturna_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postendturna-checkfaint-leechseed-boundary
+        name: "Test native post-EndturnBlockA CheckFaint to HandleLeechSeed boundary (normal)"
+        run: python tests/test_native_betweenturn_postendturna_checkfaint_leechseed_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-leechseed-postcheck-boundary
+        name: "Test native HandleLeechSeed inactive to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_leechseed_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postleechseed-checkfaint-poison-boundary
+        name: "Test native post-LeechSeed CheckFaint to HandlePoison boundary (normal)"
+        run: python tests/test_native_betweenturn_postleechseed_checkfaint_poison_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-poison-postcheck-boundary
+        name: "Test native inactive HandlePoison to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_poison_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postpoison-checkfaint-burn-boundary
+        name: "Test native post-HandlePoison CheckFaint to HandleBurn boundary (normal)"
+        run: python tests/test_native_betweenturn_postpoison_checkfaint_burn_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-burn-postcheck-boundary
+        name: "Test native inactive HandleBurn to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_burn_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postburn-checkfaint-curse-boundary
+        name: "Test native post-HandleBurn CheckFaint to HandleCurse boundary (normal)"
+        run: python tests/test_native_betweenturn_postburn_checkfaint_curse_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-curse-postcheck-boundary
+        name: "Test native inactive HandleCurse to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_curse_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postcurse-checkfaint-wrap-boundary
+        name: "Test native post-HandleCurse CheckFaint to HandleWrap boundary (normal)"
+        run: python tests/test_native_betweenturn_postcurse_checkfaint_wrap_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-wrap-postcheck-boundary
+        name: "Test native inactive HandleWrap to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_wrap_postcheck_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postwrap-checkfaint-encore-boundary
+        name: "Test native post-HandleWrap CheckFaint to HandleEncore boundary (normal)"
+        run: python tests/test_native_betweenturn_postwrap_checkfaint_encore_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-encore-disable-boundary
+        name: "Test native inactive HandleEncore to HandleDisable boundary (normal)"
+        run: python tests/test_native_betweenturn_encore_disable_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-disable-perish-boundary
+        name: "Test native inactive HandleDisable to HandlePerishSong boundary (normal)"
+        run: python tests/test_native_betweenturn_disable_perish_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-perish-checkfaint-boundary
+        name: "Test native inactive HandlePerishSong to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_perish_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postperish-checkfaint-roost-boundary
+        name: "Test native post-HandlePerishSong CheckFaint to HandleRoost boundary (normal)"
+        run: python tests/test_native_betweenturn_postperish_checkfaint_roost_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-roost-reflect-boundary
+        name: "Test native inactive HandleRoost to HandleReflect boundary (normal)"
+        run: python tests/test_native_betweenturn_roost_reflect_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-reflect-lightscreen-boundary
+        name: "Test native inactive HandleReflect to HandleLightScreen boundary (normal)"
+        run: python tests/test_native_betweenturn_reflect_lightscreen_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-lightscreen-safeguard-boundary
+        name: "Test native inactive HandleLightScreen to HandleSafeguard boundary (normal)"
+        run: python tests/test_native_betweenturn_lightscreen_safeguard_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-safeguard-mist-boundary
+        name: "Test native inactive HandleSafeguard to HandleMist boundary (normal)"
+        run: python tests/test_native_betweenturn_safeguard_mist_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-mist-trickroom-boundary
+        name: "Test native inactive HandleMist to HandleTrickRoom boundary (normal)"
+        run: python tests/test_native_betweenturn_mist_trickroom_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-trickroom-endturnb-boundary
+        name: "Test native inactive HandleTrickRoom to HandleEndturnBlockB boundary (normal)"
+        run: python tests/test_native_betweenturn_trickroom_endturnb_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-endturnb-checkfaint-boundary
+        name: "Test native HandleEndturnBlockB to CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_endturnb_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postendturnb-checkfaint-leppaberry-boundary
+        name: "Test native post-HandleEndturnBlockB CheckFaint to HandleLeppaBerry boundary (normal)"
+        run: python tests/test_native_betweenturn_postendturnb_checkfaint_leppaberry_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-leppaberry-healingitems-boundary
+        name: "Test native inactive HandleLeppaBerry to HandleHealingItems boundary (normal)"
+        run: python tests/test_native_betweenturn_leppaberry_healingitems_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-healingitems-cleanup-boundary
+        name: "Test native inactive HandleHealingItems to end-turn cleanup boundary (normal)"
+        timeout-minutes: 6
+        run: |
+          set +e
+          trace_log="${RUNNER_TEMP}/healingitems-cleanup-trace.log"
+          timeout --signal=TERM --kill-after=10s 300s \
+            python -u tests/test_native_betweenturn_healingitems_cleanup_boundary.py \
+            build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc \
+            >"${trace_log}" 2>&1
+          status=$?
+          tail -n 200 "${trace_log}"
+          exit "${status}"
+
+      - id: test-native-betweenturn-player-writeback-enemy-writeback-boundary
+        name: "Test native player to enemy end-turn party writeback boundary (normal)"
+        run: python tests/test_native_betweenturn_player_writeback_enemy_writeback_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-enemy-writeback-endturn-checkfaint-boundary
+        name: "Test native enemy writeback through final CheckFaint boundary (normal)"
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-second-turn-action-menu
+        name: "Test native full turn to second action menu (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --next-turn-menu
+
+      - id: test-native-second-turn-move-dispatch
+        name: "Test native second-turn move selection and dispatch (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
+
+      - id: test-native-two-full-turns
+        # Two turns exercise HP/PP persistence without repeating first-turn
+        # sentinel injections during the second pair of real attacks.
+        name: "Test native two full battle turns (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc --two-full-turns
+
+      - id: test-native-enemy-frontpic-dimensions
+        name: "Test native enemy frontpic animation dimensions (normal)"
+        run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polishedcrystal-faithful
         name: "Build polishedcrystal-faithful"
@@ -96,6 +690,578 @@ jobs:
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.gbc build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
           mv polishedcrystal-debug-${{ env.PC_VERSION }}.sym build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.sym
           make tidy
+
+      - id: test-native-hatchling-frontpic-debug
+        name: "Test native hatchling frontpic identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_frontpic.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-egg-frontpic-identity-debug
+        name: "Test generic Egg frontpic identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_egg_frontpic_identity.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-animation-identity-debug
+        name: "Test native hatchling reveal animation identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_animation_identity.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-reveal-palette-identity-debug
+        name: "Test native hatchling BG/palette reveal identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_reveal_palette_identity.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-palette-dispatch-debug
+        name: "Test native hatchling palette dispatch identity (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_dispatch.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-palette-lookup-debug
+        name: "Test native hatchling temp-mon palette lookup (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_palette_lookup.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-dex-registration-debug
+        name: "Test native hatchling Dex registration (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_dex_registration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-togepi-event-guard-debug
+        name: "Test native hatchling Togepi event guard (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_togepi_event_guard.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-species-name-debug
+        name: "Test native hatchling species-name lookup (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_species_name.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-stat-refresh-debug
+        name: "Test native hatchling stat refresh (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_stat_refresh.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-real-stats-debug
+        name: "Test native hatchling real stat calculation (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_real_stats.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-core-integration-debug
+        name: "Test native core HatchEggs integration (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_core_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-save-roundtrip-debug
+        name: "Test native hatchling primary save round trip (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_save_roundtrip.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-multi-slot-integration-debug
+        name: "Test native multi-slot HatchEggs integration (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_multi_slot_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-backup-save-roundtrip-debug
+        name: "Test native hatchling backup save round trip (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_backup_save_roundtrip.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-backup-recovery-debug
+        name: "Test native hatchling backup recovery (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_backup_recovery.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-table-recovery-debug
+        name: "Test native hatchling table-corruption recovery (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_table_recovery.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-primary-repair-debug
+        name: "Test native hatchling primary save repair (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_primary_repair.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-breeding-compatibility-debug
+        name: "Test native daycare breeding compatibility (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_breeding_compatibility.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-mewtwo-stale-form-debug
+        name: "Test native Mewtwo stale-form repair (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_mewtwo_stale_form.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-item-form-guard-debug
+        name: "Test held-item native form guard (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_item_form_guard.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-form-refresh-debug
+        name: "Test intentional native party form updates (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_form_refresh.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-box-roundtrip-debug
+        name: "Test complete native PC serialization round trips (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_box_roundtrip.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-box-forms-debug
+        name: "Test native PC-box forms and checksum boundary (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_box_forms.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-form-decode-debug
+        name: "Test authoritative native mechanical-form decoding (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_form_decode.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-root-boundaries-debug
+        name: "Test bank-safe native battle roots and box decoding (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_root_boundaries.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-magikarp-length-debug
+        name: "Test native Magikarp length guard (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_magikarp_length_guard.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-animation-substitutions-debug
+        name: "Test native species animation substitutions (debug)"
+        timeout-minutes: 2
+        run: |
+          python tests/test_active_native_species_list.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+          python tests/test_native_animation_substitution.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-species-lists-debug
+        name: "Test bank-aware species lists and native Tower eligibility (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_species_lists.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-tree-sleep-debug
+        name: "Test native tree-encounter sleep (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_tree_sleep.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-move-animation-cry-debug
+        name: "Test native move-animation cries (debug)"
+        run: python tests/test_native_move_animation_cry.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-transform-picture-debug
+        name: "Test native Transform animation picture (debug)"
+        run: python tests/test_transform_animation_native_picture.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-ghost-reveal-picture-debug
+        name: "Test native ghost-reveal picture and Dex (debug)"
+        run: python tests/test_native_ghost_reveal_picture.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-tempmon-debug
+        name: "Test native enemy send-out temporary record (debug)"
+        run: python tests/test_native_enemy_sendout_tempmon.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-renderer-debug
+        name: "Test native enemy frontpic renderer (debug)"
+        run: python tests/test_native_enemy_frontpic_renderer.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-vram-debug
+        name: "Test real native enemy frontpic VRAM transfer (debug)"
+        run: python tests/test_native_enemy_frontpic_vram.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-frontpic-vblank-debug
+        name: "Test LCD-on native enemy frontpic VBlank transfer (debug)"
+        run: python tests/test_native_enemy_frontpic_vblank.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-sendout-integration-debug
+        name: "Test native enemy send-out picture/animation integration (debug)"
+        run: python tests/test_native_enemy_sendout_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-wild-battle-intro-integration-debug
+        name: "Test native wild-battle intro integration (debug)"
+        run: python tests/test_native_wild_battle_intro_integration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-battle-intro-wild-smoke-debug
+        name: "Test single-entry native BattleIntro wild smoke (debug)"
+        run: python tests/test_native_battle_intro_wild_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-do-battle-entry-smoke-debug
+        name: "Test native DoBattle entry smoke (debug)"
+        run: python tests/test_native_do_battle_entry_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-battle-turn-smoke-debug
+        name: "Test native first BattleTurn setup smoke (debug)"
+        run: python tests/test_native_first_battle_turn_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-player-action-move-selection-smoke-debug
+        name: "Test native player action move-selection boundary (debug)"
+        run: python tests/test_native_player_action_move_selection_smoke.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-selected-move-order-boundary-debug
+        name: "Test native selected-move to move-order boundary (debug)"
+        run: python tests/test_native_selected_move_order_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-perform-move-entry-boundary-debug
+        name: "Test native move-order to PerformMove entry boundary (debug)"
+        run: python tests/test_native_perform_move_entry_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-do-turn-initialize-boundary-debug
+        name: "Test native DoTurn initialization boundary (debug)"
+        run: python tests/test_native_do_turn_initialize_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-first-effect-command-boundary-debug
+        name: "Test native first effect-command boundary (debug)"
+        run: python tests/test_native_first_effect_command_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-second-effect-command-boundary-debug
+        name: "Test native second effect-command boundary (debug)"
+        run: python tests/test_native_second_effect_command_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-doturn-pp-boundary-debug
+        name: "Test native doturn PP boundary (debug)"
+        run: python tests/test_native_doturn_pp_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hastarget-boundary-debug
+        name: "Test native hastarget boundary (debug)"
+        run: python tests/test_native_hastarget_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-checkhit-boundary-debug
+        name: "Test native checkhit boundary (debug)"
+        run: python tests/test_native_checkhit_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-checkpriority-boundary-debug
+        name: "Test native checkpriority boundary (debug)"
+        run: python tests/test_native_checkpriority_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-critical-boundary-debug
+        name: "Test native critical boundary (debug)"
+        run: python tests/test_native_critical_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagestats-boundary-debug
+        name: "Test native damagestats boundary (debug)"
+        run: python tests/test_native_damagestats_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagecalc-boundary-debug
+        name: "Test native damagecalc boundary (debug)"
+        run: python tests/test_native_damagecalc_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-stab-boundary-debug
+        name: "Test native STAB boundary (debug)"
+        run: python tests/test_native_stab_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-damagevariation-boundary-debug
+        name: "Test native damagevariation boundary (debug)"
+        run: python tests/test_native_damagevariation_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-moveanim-boundary-debug
+        name: "Test native moveanim boundary (debug)"
+        run: python tests/test_native_moveanim_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-failuretext-boundary-debug
+        name: "Test native failuretext boundary (debug)"
+        run: python tests/test_native_failuretext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-applydamage-boundary-debug
+        name: "Test native applydamage boundary (debug)"
+        run: python tests/test_native_applydamage_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-criticaltext-boundary-debug
+        name: "Test native criticaltext boundary (debug)"
+        run: python tests/test_native_criticaltext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-supereffectivetext-boundary-debug
+        name: "Test native supereffectivetext boundary (debug)"
+        run: python tests/test_native_supereffectivetext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-postfainteffects-boundary-debug
+        name: "Test native postfainteffects boundary (debug)"
+        run: python tests/test_native_postfainteffects_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-posthiteffects-boundary-debug
+        name: "Test native posthiteffects boundary (debug)"
+        run: python tests/test_native_posthiteffects_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-endmove-boundary-debug
+        name: "Test native endmove termination boundary (debug)"
+        run: python tests/test_native_endmove_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-performmove-cleanup-boundary-debug
+        name: "Test native PerformMove cleanup boundary (debug)"
+        run: python tests/test_native_performmove_cleanup_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-resolvefaints-nonfaint-boundary-debug
+        name: "Test native non-fainting ResolveFaints boundary (debug)"
+        run: python tests/test_native_resolvefaints_nonfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-postresolve-turnflip-boundary-debug
+        name: "Test native post-ResolveFaints turn-flip boundary (debug)"
+        run: python tests/test_native_postresolve_turnflip_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-performmove-doturn-boundary-debug
+        name: "Test native enemy PerformMove to DoTurn boundary (debug)"
+        run: python tests/test_native_enemy_performmove_doturn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-doturn-initialization-boundary-debug
+        name: "Test native enemy DoTurn initialization boundary (debug)"
+        run: python tests/test_native_enemy_doturn_initialization_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkobedience-usedmovetext-boundary-debug
+        name: "Test native enemy checkobedience to usedmovetext boundary (debug)"
+        run: python tests/test_native_enemy_checkobedience_usedmovetext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-usedmovetext-doturn-boundary-debug
+        name: "Test native enemy usedmovetext to doturn boundary (debug)"
+        run: python tests/test_native_enemy_usedmovetext_doturn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-doturn-hastarget-boundary-debug
+        name: "Test native enemy doturn to hastarget boundary (debug)"
+        run: python tests/test_native_enemy_doturn_hastarget_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-hastarget-checkhit-boundary-debug
+        name: "Test native enemy hastarget to checkhit boundary (debug)"
+        run: python tests/test_native_enemy_hastarget_checkhit_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkhit-checkpriority-boundary-debug
+        name: "Test native enemy checkhit to checkpriority boundary (debug)"
+        run: python tests/test_native_enemy_checkhit_checkpriority_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-checkpriority-critical-boundary-debug
+        name: "Test native enemy checkpriority to critical boundary (debug)"
+        run: python tests/test_native_enemy_checkpriority_critical_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-critical-damagestats-boundary-debug
+        name: "Test native enemy critical to damagestats boundary (debug)"
+        run: python tests/test_native_enemy_critical_damagestats_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagestats-damagecalc-boundary-debug
+        name: "Test native enemy damagestats to damagecalc boundary (debug)"
+        run: python tests/test_native_enemy_damagestats_damagecalc_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagecalc-stab-boundary-debug
+        name: "Test native enemy damagecalc to STAB boundary (debug)"
+        run: python tests/test_native_enemy_damagecalc_stab_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-stab-damagevariation-boundary-debug
+        name: "Test native enemy STAB to damagevariation boundary (debug)"
+        run: python tests/test_native_enemy_stab_damagevariation_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-damagevariation-moveanim-boundary-debug
+        name: "Test native enemy damagevariation to moveanim boundary (debug)"
+        run: python tests/test_native_enemy_damagevariation_moveanim_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-moveanim-failuretext-boundary-debug
+        name: "Test native enemy moveanim to failuretext boundary (debug)"
+        run: python tests/test_native_enemy_moveanim_failuretext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-failuretext-applydamage-boundary-debug
+        name: "Test native enemy failuretext to applydamage boundary (debug)"
+        run: python tests/test_native_enemy_failuretext_applydamage_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-applydamage-criticaltext-boundary-debug
+        name: "Test native enemy applydamage to criticaltext boundary (debug)"
+        run: python tests/test_native_enemy_applydamage_criticaltext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-criticaltext-supereffectivetext-boundary-debug
+        name: "Test native enemy criticaltext to supereffectivetext boundary (debug)"
+        run: python tests/test_native_enemy_criticaltext_supereffectivetext_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-supereffectivetext-postfainteffects-boundary-debug
+        name: "Test native enemy supereffectivetext to postfainteffects boundary (debug)"
+        run: python tests/test_native_enemy_supereffectivetext_postfainteffects_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postfainteffects-posthiteffects-boundary-debug
+        name: "Test native enemy postfainteffects to posthiteffects boundary (debug)"
+        run: python tests/test_native_enemy_postfainteffects_posthiteffects_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-posthiteffects-endmove-boundary-debug
+        name: "Test native enemy posthiteffects to endmove boundary (debug)"
+        run: python tests/test_native_enemy_posthiteffects_endmove_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-endmove-performmove-cleanup-boundary-debug
+        name: "Test native enemy endmove to PerformMove cleanup boundary (debug)"
+        run: python tests/test_native_enemy_endmove_performmove_cleanup_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-performmove-cleanup-resolvefaints-boundary-debug
+        name: "Test native enemy PerformMove cleanup to ResolveFaints boundary (debug)"
+        run: python tests/test_native_enemy_performmove_cleanup_resolvefaints_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resolvefaints-deferredswitch-boundary-debug
+        name: "Test native enemy ResolveFaints to DeferredSwitch boundary (debug)"
+        run: python tests/test_native_enemy_resolvefaints_deferredswitch_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-deferredswitch-resetabilityignorance-boundary-debug
+        name: "Test native enemy DeferredSwitch to ResetAbilityIgnorance boundary (debug)"
+        run: python tests/test_native_enemy_deferredswitch_resetabilityignorance_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-resetabilityignorance-postmove-boundary-debug
+        name: "Test native enemy ResetAbilityIgnorance to post-move boundary (debug)"
+        run: python tests/test_native_enemy_resetabilityignorance_postmove_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postmove-processenemyfleeing-boundary-debug
+        name: "Test native enemy post-move to ProcessEnemyFleeing boundary (debug)"
+        run: python tests/test_native_enemy_postmove_processenemyfleeing_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-processenemyfleeing-postcheck-boundary-debug
+        name: "Test native enemy ProcessEnemyFleeing to post-check boundary (debug)"
+        run: python tests/test_native_enemy_processenemyfleeing_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-enemy-postcheck-betweenturn-boundary-debug
+        name: "Test native enemy post-check to between-turn boundary (debug)"
+        run: python tests/test_native_enemy_postcheck_betweenturn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-checkfaint-weather-boundary-debug
+        name: "Test native between-turn CheckFaint to HandleWeather boundary (debug)"
+        run: python tests/test_native_betweenturn_checkfaint_weather_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-weather-postcheck-boundary-debug
+        name: "Test native HandleWeather no-weather to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_weather_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-second-checkfaint-affection-boundary-debug
+        name: "Test native second CheckFaint to HandleAffectionSelfCure boundary (debug)"
+        run: python tests/test_native_betweenturn_second_checkfaint_affection_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-affection-futuresight-boundary-debug
+        name: "Test native HandleAffectionSelfCure to HandleFutureSight boundary (debug)"
+        run: python tests/test_native_betweenturn_affection_futuresight_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-futuresight-postcheck-boundary-debug
+        name: "Test native HandleFutureSight zero-counter to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_futuresight_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postfuture-checkfaint-endturna-boundary-debug
+        name: "Test native post-Future Sight CheckFaint to HandleEndturnBlockA boundary (debug)"
+        run: python tests/test_native_betweenturn_postfuture_checkfaint_endturna_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-endturna-postcheck-boundary-debug
+        name: "Test native HandleEndturnBlockA to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_endturna_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postendturna-checkfaint-leechseed-boundary-debug
+        name: "Test native post-EndturnBlockA CheckFaint to HandleLeechSeed boundary (debug)"
+        run: python tests/test_native_betweenturn_postendturna_checkfaint_leechseed_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-leechseed-postcheck-boundary-debug
+        name: "Test native HandleLeechSeed inactive to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_leechseed_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postleechseed-checkfaint-poison-boundary-debug
+        name: "Test native post-LeechSeed CheckFaint to HandlePoison boundary (debug)"
+        run: python tests/test_native_betweenturn_postleechseed_checkfaint_poison_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-poison-postcheck-boundary-debug
+        name: "Test native inactive HandlePoison to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_poison_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postpoison-checkfaint-burn-boundary-debug
+        name: "Test native post-HandlePoison CheckFaint to HandleBurn boundary (debug)"
+        run: python tests/test_native_betweenturn_postpoison_checkfaint_burn_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-burn-postcheck-boundary-debug
+        name: "Test native inactive HandleBurn to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_burn_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postburn-checkfaint-curse-boundary-debug
+        name: "Test native post-HandleBurn CheckFaint to HandleCurse boundary (debug)"
+        run: python tests/test_native_betweenturn_postburn_checkfaint_curse_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-curse-postcheck-boundary-debug
+        name: "Test native inactive HandleCurse to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_curse_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postcurse-checkfaint-wrap-boundary-debug
+        name: "Test native post-HandleCurse CheckFaint to HandleWrap boundary (debug)"
+        run: python tests/test_native_betweenturn_postcurse_checkfaint_wrap_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-wrap-postcheck-boundary-debug
+        name: "Test native inactive HandleWrap to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_wrap_postcheck_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postwrap-checkfaint-encore-boundary-debug
+        name: "Test native post-HandleWrap CheckFaint to HandleEncore boundary (debug)"
+        run: python tests/test_native_betweenturn_postwrap_checkfaint_encore_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-encore-disable-boundary-debug
+        name: "Test native inactive HandleEncore to HandleDisable boundary (debug)"
+        run: python tests/test_native_betweenturn_encore_disable_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-disable-perish-boundary-debug
+        name: "Test native inactive HandleDisable to HandlePerishSong boundary (debug)"
+        run: python tests/test_native_betweenturn_disable_perish_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-perish-checkfaint-boundary-debug
+        name: "Test native inactive HandlePerishSong to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_perish_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postperish-checkfaint-roost-boundary-debug
+        name: "Test native post-HandlePerishSong CheckFaint to HandleRoost boundary (debug)"
+        run: python tests/test_native_betweenturn_postperish_checkfaint_roost_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-roost-reflect-boundary-debug
+        name: "Test native inactive HandleRoost to HandleReflect boundary (debug)"
+        run: python tests/test_native_betweenturn_roost_reflect_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-reflect-lightscreen-boundary-debug
+        name: "Test native inactive HandleReflect to HandleLightScreen boundary (debug)"
+        run: python tests/test_native_betweenturn_reflect_lightscreen_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-lightscreen-safeguard-boundary-debug
+        name: "Test native inactive HandleLightScreen to HandleSafeguard boundary (debug)"
+        run: python tests/test_native_betweenturn_lightscreen_safeguard_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-safeguard-mist-boundary-debug
+        name: "Test native inactive HandleSafeguard to HandleMist boundary (debug)"
+        run: python tests/test_native_betweenturn_safeguard_mist_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-mist-trickroom-boundary-debug
+        name: "Test native inactive HandleMist to HandleTrickRoom boundary (debug)"
+        run: python tests/test_native_betweenturn_mist_trickroom_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-trickroom-endturnb-boundary-debug
+        name: "Test native inactive HandleTrickRoom to HandleEndturnBlockB boundary (debug)"
+        run: python tests/test_native_betweenturn_trickroom_endturnb_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-endturnb-checkfaint-boundary-debug
+        name: "Test native HandleEndturnBlockB to CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_endturnb_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-postendturnb-checkfaint-leppaberry-boundary-debug
+        name: "Test native post-HandleEndturnBlockB CheckFaint to HandleLeppaBerry boundary (debug)"
+        run: python tests/test_native_betweenturn_postendturnb_checkfaint_leppaberry_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-leppaberry-healingitems-boundary-debug
+        name: "Test native inactive HandleLeppaBerry to HandleHealingItems boundary (debug)"
+        run: python tests/test_native_betweenturn_leppaberry_healingitems_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-healingitems-cleanup-boundary-debug
+        name: "Test native inactive HandleHealingItems to end-turn cleanup boundary (debug)"
+        timeout-minutes: 5
+        run: python tests/test_native_betweenturn_healingitems_cleanup_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-player-writeback-enemy-writeback-boundary-debug
+        name: "Test native player to enemy end-turn party writeback boundary (debug)"
+        run: python tests/test_native_betweenturn_player_writeback_enemy_writeback_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-betweenturn-enemy-writeback-endturn-checkfaint-boundary-debug
+        name: "Test native enemy writeback through final CheckFaint boundary (debug)"
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-second-turn-action-menu-debug
+        name: "Test native full turn to second action menu (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --next-turn-menu
+
+      - id: test-native-second-turn-move-dispatch-debug
+        name: "Test native second-turn move selection and dispatch (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --next-turn-move
+
+      - id: test-native-two-full-turns-debug
+        name: "Test native two full battle turns (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_betweenturn_enemy_writeback_endturn_checkfaint_boundary.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc --two-full-turns
+
+      - id: test-native-enemy-frontpic-dimensions-debug
+        name: "Test native enemy frontpic animation dimensions (debug)"
+        run: python tests/test_native_enemy_frontpic_dimensions.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: build-polisheddebug-faithful
         name: "Build polisheddebug-faithful"

@@ -405,6 +405,11 @@ SavePlayerData:
 	jmp CloseSRAM
 
 SavePokemonData:
+	call SaveCurrentVersion
+	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	ld [wPokemonIndexTableFormat], a
+	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	ld [wPokemonIndexTableFormat + 1], a
 	ld a, BANK(sPokemonData)
 	call GetSRAMBank
 	ld hl, wPokemonData
@@ -413,16 +418,16 @@ SavePokemonData:
 	rst CopyBytes
 	jmp CloseSRAM
 
-; Bumped when roaming Pokémon became persistent transient IDs. Saves made by
-; earlier migration checkpoints are upgraded through the same legacy path.
-DEF POKEMON_INDEX_TABLE_MAGIC EQU $16bd
+; $16bd introduced transient roamers; $16be adds the table checksum.
+; Earlier tables retain their entries, then acquire integrity on the next save.
+DEF LEGACY_POKEMON_INDEX_TABLE_MAGIC EQU $16bd
+DEF POKEMON_INDEX_TABLE_MAGIC EQU $16be
 
 SavePokemonIndexTable:
 	ld a, BANK(sPokemonIndexTable)
 	call GetSRAMBank
-	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	xor a
 	ld [sPokemonIndexTableMagic], a
-	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
 	ld [sPokemonIndexTableMagic + 1], a
 	ldh a, [rSVBK]
 	push af
@@ -433,6 +438,17 @@ SavePokemonIndexTable:
 	ld de, sPokemonIndexTable
 	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
 	rst CopyBytes
+	ld hl, sPokemonIndexTable
+	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
+	call Checksum
+	ld a, e
+	ld [sPokemonIndexTableChecksum], a
+	ld a, d
+	ld [sPokemonIndexTableChecksum + 1], a
+	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	ld [sPokemonIndexTableMagic], a
+	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	ld [sPokemonIndexTableMagic + 1], a
 	pop af
 	ldh [rSVBK], a
 	jmp CloseSRAM
@@ -483,6 +499,11 @@ SaveBackupPlayerData:
 	jmp CloseSRAM
 
 SaveBackupPokemonData:
+	call SaveCurrentVersion
+	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	ld [wPokemonIndexTableFormat], a
+	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	ld [wPokemonIndexTableFormat + 1], a
 	ld a, BANK(sBackupPokemonData)
 	call GetSRAMBank
 	ld hl, wPokemonData
@@ -494,9 +515,8 @@ SaveBackupPokemonData:
 SaveBackupPokemonIndexTable:
 	ld a, BANK(sBackupPokemonIndexTable)
 	call GetSRAMBank
-	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	xor a
 	ld [sBackupPokemonIndexTableMagic], a
-	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
 	ld [sBackupPokemonIndexTableMagic + 1], a
 	ldh a, [rSVBK]
 	push af
@@ -506,6 +526,17 @@ SaveBackupPokemonIndexTable:
 	ld de, sBackupPokemonIndexTable
 	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
 	rst CopyBytes
+	ld hl, sBackupPokemonIndexTable
+	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
+	call Checksum
+	ld a, e
+	ld [sBackupPokemonIndexTableChecksum], a
+	ld a, d
+	ld [sBackupPokemonIndexTableChecksum + 1], a
+	ld a, LOW(POKEMON_INDEX_TABLE_MAGIC)
+	ld [sBackupPokemonIndexTableMagic], a
+	ld a, HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	ld [sBackupPokemonIndexTableMagic + 1], a
 	pop af
 	ldh [rSVBK], a
 	jmp CloseSRAM
@@ -543,6 +574,8 @@ TryLoadSaveFile:
 	call VerifyGameVersion
 	call VerifyChecksum
 	jr nz, .backup
+	call VerifyPokemonIndexTable
+	jr nz, .backup
 	call LoadPlayerData
 	call LoadPokemonData
 	call LoadPokemonIndexTable
@@ -560,6 +593,8 @@ TryLoadSaveFile:
 
 .backup
 	call VerifyBackupChecksum
+	jr nz, .corrupt
+	call VerifyBackupPokemonIndexTable
 	jr nz, .corrupt
 	call LoadBackupPlayerData
 	call LoadBackupPokemonData
@@ -705,8 +740,11 @@ LoadPokemonIndexTable:
 	ld a, BANK(sPokemonIndexTable)
 	call GetSRAMBank
 	ld a, [sPokemonIndexTableMagic]
+	cp LOW(LEGACY_POKEMON_INDEX_TABLE_MAGIC)
+	jr z, .check_high
 	cp LOW(POKEMON_INDEX_TABLE_MAGIC)
 	jr nz, .missing
+.check_high
 	ld a, [sPokemonIndexTableMagic + 1]
 	cp HIGH(POKEMON_INDEX_TABLE_MAGIC)
 	jr nz, .missing
@@ -721,8 +759,11 @@ LoadBackupPokemonIndexTable:
 	ld a, BANK(sBackupPokemonIndexTable)
 	call GetSRAMBank
 	ld a, [sBackupPokemonIndexTableMagic]
+	cp LOW(LEGACY_POKEMON_INDEX_TABLE_MAGIC)
+	jr z, .check_high
 	cp LOW(POKEMON_INDEX_TABLE_MAGIC)
 	jr nz, .missing
+.check_high
 	ld a, [sBackupPokemonIndexTableMagic + 1]
 	cp HIGH(POKEMON_INDEX_TABLE_MAGIC)
 	jr nz, .missing
@@ -862,6 +903,16 @@ VerifyGameVersion:
 	pop hl
 	call CloseSRAM
 
+	; Version 10 retains identical struct addresses and is decoded lazily.
+	; Stamp 11 before writing new data so older ROMs reject native box records
+	; and the new table envelope instead of misinterpreting them.
+	ld a, [wStringBuffer2]
+	and a
+	jr nz, .compare_current
+	ld a, [wStringBuffer2 + 1]
+	cp LEGACY_SPECIES_SAVE_VERSION
+	ret z
+.compare_current
 	; needs upgrade if [hl:2] != [de:2]
 	ld a, [de]
 	cp [hl]
@@ -917,3 +968,71 @@ SaveCurrentVersion:
 	ld a, LOW(SAVE_VERSION)
 	ld [sSaveVersion + 1], a
 	jmp CloseSRAM
+
+; The conversion table lives outside sGameData, so it needs its own checksum.
+; Check it before loading either copy of the save, allowing ordinary fallback.
+VerifyPokemonIndexTable:
+	ld a, BANK(sPokemonIndexTable)
+	call GetSRAMBank
+	ld hl, sPokemonIndexTableMagic
+	ld de, sPokemonData + wPokemonDataFormat - wPokemonData
+	jr VerifyPokemonIndexTableAtHL
+
+VerifyBackupPokemonIndexTable:
+	ld a, BANK(sBackupPokemonIndexTable)
+	call GetSRAMBank
+	ld hl, sBackupPokemonIndexTableMagic
+	ld de, sBackupPokemonData + wPokemonDataFormat - wPokemonData
+VerifyPokemonIndexTableAtHL:
+	ld a, [hli]
+	cp LOW(POKEMON_INDEX_TABLE_MAGIC)
+	jr nz, .older
+	ld a, [hli]
+	cp HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	jr nz, .fail
+	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
+	call Checksum
+	ld a, [hli]
+	cp e
+	jr nz, .fail
+	ld a, [hl]
+	cp d
+	jr .fail
+.older
+	; A new save's separately checksummed data requires the new envelope,
+	; even if the table magic was damaged or its write was interrupted.
+	push de
+	inc de
+	inc de
+	ld a, [de]
+	cp LOW(POKEMON_INDEX_TABLE_MAGIC)
+	jr nz, .old_envelope
+	inc de
+	ld a, [de]
+	cp HIGH(POKEMON_INDEX_TABLE_MAGIC)
+	jr z, .reject_envelope
+.old_envelope
+	pop de
+	; Prior checkpoint saves have no table checksum. Only legacy player
+	; records may use that path; a marked transient party requires integrity.
+	ld a, [de]
+	cp LOW(POKEMON_DATA_TRANSIENT_FORMAT)
+	jr nz, .legacy
+	inc de
+	ld a, [de]
+	cp HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	jr nz, .legacy
+	jr .reject
+.reject_envelope
+	pop de
+.reject
+	ld a, 1
+	and a
+	jr .fail
+.legacy
+	xor a
+.fail
+	push af
+	call CloseSRAM
+	pop af
+	ret

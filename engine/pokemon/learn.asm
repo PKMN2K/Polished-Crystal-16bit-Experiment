@@ -107,6 +107,7 @@ LearnMove:
 	ld hl, wPartyMon1Species
 	ld a, [wCurPartyMon]
 	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
 	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	ld a, c
 	cp LOW(PIKACHU)

@@ -273,14 +273,8 @@ PokeBallEffect:
 	ld hl, wPartyCount
 	ld a, [hl]
 	inc [hl]
-	ld hl, wPartyMon1
 	push af
-	call GetPartyLocation
-	ld d, h
-	ld e, l
-	ld hl, wOTPartyMon1
-	ld bc, PARTYMON_STRUCT_LENGTH
-	rst CopyBytes
+	farcall CopyCaughtPokemonToParty
 	pop af
 	push af
 	ld hl, wPartyMonOTs
@@ -1725,10 +1719,10 @@ WingCase_MonSelected:
 	call _GetStatString
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	ld [wNamedObjectIndex], a
-	ld bc, MON_FORM - MON_SPECIES
-	add hl, bc
-	ld a, [hl]
+	ld a, b
 	ld [wNamedObjectIndex+1], a
 	call GetPokemonName
 	ld hl, ItemStatRoseText
