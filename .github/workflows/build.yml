@@ -162,6 +162,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_primary_repair.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-hatchling-legacy-migration
+        name: "Test legacy hatchling migration round trip (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_legacy_migration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -780,6 +785,11 @@ jobs:
         name: "Test native hatchling primary save repair (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_primary_repair.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-hatchling-legacy-migration-debug
+        name: "Test legacy hatchling migration round trip (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_hatchling_legacy_migration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
