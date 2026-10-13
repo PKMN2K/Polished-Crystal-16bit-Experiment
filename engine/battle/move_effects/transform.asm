@@ -8,14 +8,25 @@ BattleCommand_transform:
 
 	ldh a, [hBattleTurn]
 	and a
-	ld hl, wEnemyMonSpecies
+	ld hl, wEnemyMonNativeSpecies
 	ld de, wEnemyMonItem
 	jr z, .got_mon_item
-	ld hl, wBattleMonSpecies
+	ld hl, wBattleMonNativeSpecies
 	ld de, wBattleMonItem
 .got_mon_item
-	ld a, [hl]
-	cp MEWTWO
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+	; Preserve the old Mewtwo-form wildcard, including Armored Mewtwo,
+	; but compare the full root ID rather than just a legacy species byte.
+	push de
+	farcall GetRootSpeciesFromNativeIDBC
+	pop de
+	ld a, b
+	cp HIGH(MEWTWO)
+	jr nz, .not_armored_mewtwo
+	ld a, c
+	cp LOW(MEWTWO)
 	jr nz, .not_armored_mewtwo
 	ld a, [de]
 	cp ARMOR_SUIT
@@ -131,6 +142,7 @@ BattleCommand_transform:
 	ld [hli], a
 	ld [hl], b
 	call GetPokemonName
+	call CopyTransformNativeIdentity
 	ld hl, wEnemyStatLevels
 	ld de, wPlayerStatLevels
 	ld bc, 8
@@ -185,3 +197,24 @@ BattleCommand_transform:
 	ret z ; avoid infinite loop
 
 	farjp RunEntryAbilitiesInner
+
+
+CopyTransformNativeIdentity::
+; Transform replaces the user's current battle identity with the target's.
+; Keep the direct native identity shadow synchronized with the legacy
+; battle species/form fields copied above.
+; hBattleTurn: 0 = player is transforming, 1 = enemy is transforming.
+	ld hl, wEnemyMonNativeSpecies
+	ld de, wBattleMonNativeSpecies
+	ldh a, [hBattleTurn]
+	and a
+	jr z, .copy
+	ld hl, wBattleMonNativeSpecies
+	ld de, wEnemyMonNativeSpecies
+.copy
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hl]
+	ld [de], a
+	ret

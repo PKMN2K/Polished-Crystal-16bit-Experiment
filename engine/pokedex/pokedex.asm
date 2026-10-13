@@ -3005,8 +3005,11 @@ Pokedex_IterateSpecies:
 	push bc
 	push af
 
-	; Get current species
+	; Get current species. Native dex-order entries that cannot yet fit
+	; wDexMons' transitional species/form representation are skipped instead of
+	; being truncated through EXTSPECIES.
 	call .GetSpeciesID
+	jr c, .next_species
 
 	; Begin at form 1, not form 0.
 	inc b
@@ -3107,8 +3110,31 @@ Pokedex_IterateSpecies:
 .got_dex_order
 	add hl, bc
 	add hl, bc
-	farcall LoadLegacySpeciesFromNativeWord
+	ld a, [hli]
+	ld c, a
+	ld a, [hl]
+	ld b, a
+	farcall GetRootSpeciesFromNativeIDBC
 	pop hl
+
+	; wDexMons and the iterator callbacks still use Polished's transitional
+	; species/form pair. Do not silently truncate a native root above $01ff;
+	; signal the caller to skip it until that list representation is migrated.
+	ld a, b
+	cp 2
+	jr nc, .native_unrepresentable
+	assert MON_EXTSPECIES_F == 5
+	add a
+	add a
+	add a
+	add a
+	add a
+	ld b, a
+	ld a, c
+	and a
+	ret
+.native_unrepresentable
+	scf
 	ret
 
 Pokedex_GetInput:

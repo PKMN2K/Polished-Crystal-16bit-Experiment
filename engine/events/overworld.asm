@@ -558,12 +558,12 @@ GetSurfType:
 
 	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
+	ld de, MON_FORM - MON_SPECIES
+	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	cp LOW(PIKACHU)
 	jr nz, .not_pikachu
 	assert !HIGH(PIKACHU)
-	ld de, MON_EXTSPECIES - MON_SPECIES
-	add hl, de
-	ld a, [hl]
+	ld a, b
 	and 1 << MON_EXTSPECIES_F
 	ld a, PLAYER_SURF_PIKA
 	ret z

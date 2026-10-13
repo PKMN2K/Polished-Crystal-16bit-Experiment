@@ -367,7 +367,7 @@ PCGiveItem:
 SwapPartyItem:
 	ld a, [wPartyCount]
 	cp 2
-	jmp c, .DontSwap
+	jr c, .DontSwap
 	ld a, [wCurPartyMon]
 	inc a
 	ld [wSwitchMon], a
@@ -427,11 +427,6 @@ SwapPartyItem:
 	; actual swap
 	pop af
 	ld [hl], a ; pkmn1 get pkmn2 item
-	xor a ; ld a, MON_SPECIES
-	push hl
-	call GetPartyParamLocationAndValue
-	pop hl
-	ld [wCurPartySpecies], a ; load pkmn1 species
 	push bc
 	call UpdateMewtwoForm
 	pop bc
@@ -440,11 +435,6 @@ SwapPartyItem:
 	ld [hl], a ; pkmn2 get pkmn1 item
 	ld a, c
 	ld [wCurPartyMon], a ; restore pkmn2
-	xor a ; ld a, MON_SPECIES
-	push hl
-	call GetPartyParamLocationAndValue
-	pop hl
-	ld [wCurPartySpecies], a ; load pkmn2 species
 	call UpdateMewtwoForm
 .DontSwap
 	xor a ; PARTYMENUACTION_CHOOSE_POKEMON
@@ -481,10 +471,32 @@ TakePartyItem:
 	jmp MenuTextboxBackup
 
 UpdateMewtwoForm:
-	ld d, h
-	ld e, l
-	ld a, MON_FORM
+	push hl ; held-item address
+	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
+	pop de
+	; Other species have no item-driven form edit here. Keep their authoritative
+	; native ID rather than remapping a possibly stale presentation form.
+	ld a, c
+	cp MEWTWO
+	ret nz
+	ld a, b
+	and EXTSPECIES_MASK
+	ret nz
+	ld bc, MON_FORM - MON_SPECIES
+	add hl, bc
+	; The decoded native identity passed the Mewtwo guard. Repair presentation
+	; species/form bits before the legacy item writer tests EXTSPECIES.
+	ld a, [hl]
+	and ~SPECIESFORM_MASK
+	ld b, a
+	ld a, [wCurForm]
+	or b
+	ld [hl], a
+	call _UpdateMewtwoForm
+	farjp RefreshPartyIdentityAfterFormChange
+
 _UpdateMewtwoForm:
 	ld a, [wCurPartySpecies]
 	cp MEWTWO
@@ -1701,3 +1713,4 @@ String_PowAcc:
 
 Text_CantForgetHM:
 	text_farend _MoveCantForgetHMText
+
