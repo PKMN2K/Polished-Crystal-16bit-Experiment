@@ -164,7 +164,14 @@ def main():
         assert bytes(
             mem[addr("wPokemonDataFormat"):addr("wPokemonDataFormat") + 2]
         ) == bytes([0xBC, 0x16])
-        assert mem[party] != 1, "legacy species byte was not converted to a transient ID"
+        transient_slot = mem[party]
+        assert transient_slot != 0, "migration produced an empty transient species slot"
+        mem[0xFF70] = 2
+        mapped_native = int.from_bytes(
+            mem[table_entry(transient_slot):table_entry(transient_slot) + 2], "little"
+        )
+        mem[0xFF70] = 1
+        assert mapped_native == native, hex(mapped_native)
         assert mem[party + form_offset] == 0xE1, hex(mem[party + form_offset])
 
         invoke("GetNativeSpeciesIDFromPokemonDataStruct", hl=party, de=form_offset)
