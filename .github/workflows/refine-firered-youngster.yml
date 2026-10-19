@@ -1,0 +1,64 @@
+name: Youngster Gen 2 art candidate
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/refine_firered_youngster.py'
+      - '.github/workflows/refine-firered-youngster.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refine-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install conversion dependencies
+        run: python -m pip install 'Pillow>=10,<13'
+      - name: Create refined candidate and comparison
+        run: python scripts/refine_firered_youngster.py
+      - name: Check native 2bpp requirements
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          for path in ['gfx/trainers/conversions/youngster_firered.png','gfx/trainers/conversions/youngster_firered_refined.png']:
+              with Image.open(path) as img:
+                  assert img.size == (56,56)
+                  assert img.mode == 'P'
+                  assert max(img.getdata()) <= 3
+          print("56x56 indexed 4-colour candidate verified")
+          PY
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison gcc git make libpng-dev
+      - uses: actions/checkout@v4
+        with:
+          repository: gbdev/rgbds
+          ref: v1.0.3
+          path: rgbds
+      - run: sudo make -C rgbds install
+      - name: Build candidate as Polished Crystal Youngster
+        run: |
+          cp gfx/trainers/conversions/youngster_firered_refined.png gfx/trainers/youngster.png
+          cp gfx/trainers/conversions/youngster_firered.pal gfx/trainers/youngster.pal
+          make -j2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: youngster-refinement-review
+          path: |
+            gfx/trainers/conversions/youngster_firered_refined.png
+            gfx/trainers/conversions/youngster_comparison.png
+            polishedcrystal-*.gbc
+      - name: Commit candidate and comparison (not active in-game sprite)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gfx/trainers/conversions/youngster_firered_refined.png gfx/trainers/conversions/youngster_comparison.png
+          if ! git diff --cached --quiet; then
+            git commit -m "assets: add FireRed Youngster Gen 2 refinement candidate"
+            git push
+          fi
