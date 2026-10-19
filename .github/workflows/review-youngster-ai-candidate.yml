@@ -1,0 +1,38 @@
+name: Review Youngster AI sprite candidate
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_path:
+        description: "PNG already committed to feature/gen2-sprite-conversions (for example gfx/trainers/conversions/youngster_ai_input.png)"
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'Pillow>=10,<13'
+      - name: Confirm input is a committed PNG in this repository
+        env:
+          CANDIDATE: ${{ inputs.candidate_path }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          name=Path(os.environ["CANDIDATE"])
+          if name.is_absolute() or ".." in name.parts or name.suffix.lower()!=".png" or not name.is_file():
+              raise SystemExit("Set candidate_path to an existing repository-relative PNG")
+          PY
+      - name: Generate review and diagnostics, not AI generation
+        env:
+          CANDIDATE: ${{ inputs.candidate_path }}
+        run: python scripts/review_youngster_candidate.py --candidate "$CANDIDATE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: youngster-ai-candidate-review
+          path: build/youngster-review/
