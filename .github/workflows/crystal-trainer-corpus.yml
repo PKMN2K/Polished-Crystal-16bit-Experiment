@@ -1,0 +1,64 @@
+name: Crystal trainer corpus and editable Aseprite export
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/export_aseprite_project.py'
+      - 'scripts/analyze_trainer_corpus.py'
+      - '.github/workflows/crystal-trainer-corpus.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  profile-and-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent image tools
+        run: python -m pip install 'Pillow>=10,<14'
+      - name: Generate young trainer source and diagnostics
+        run: |
+          python scripts/prepare_aseprite_youngster.py
+          python scripts/preview_aseprite_youngster.py
+      - name: Export and verify native .aseprite project file
+        run: python scripts/export_aseprite_project.py
+      - name: Analyze entire native trainer library (hold Youngster out)
+        run: python scripts/analyze_trainer_corpus.py
+      - name: Verify native-trainer report and layer source
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('reports/trainer-style-corpus')
+          profile=json.loads((out/'corpus.json').read_text())
+          assert profile['native_56x56_trainers_excluding_youngster'] >= 20
+          assert len(profile['native_reference_profile']) == 11
+          assert profile['heldout_youngster']['measurements']['canvas_w'] == 56
+          assert len(profile['diagnostic_candidates']) == 3
+          assert (out/'README.md').is_file() and (out/'trainers.csv').is_file()
+          p=Path('build/aseprite-youngster/youngster_candidates.aseprite')
+          assert p.read_bytes()[4:6] == b'\xe0\xa5'
+          with Image.open('gfx/trainers/youngster.png') as image: assert image.size==(56,56)
+          print('Source Youngster untouched. Aseprite binary structural validation passed.')
+          PY
+      - name: Upload real editable .aseprite project and diagnostic images
+        uses: actions/upload-artifact@v4
+        with:
+          name: youngster-native-aseprite-project-and-corpus
+          path: |
+            build/aseprite-youngster/
+            reports/trainer-style-corpus/
+          if-no-files-found: error
+      - name: Commit measured native sprite corpus
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/trainer-style-corpus/README.md reports/trainer-style-corpus/corpus.json reports/trainer-style-corpus/trainers.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "analysis: profile native trainer sprites with Youngster held out"
+            git push
+          fi
