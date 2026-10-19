@@ -1,0 +1,66 @@
+name: Train Crystal contour reconstruction
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/learn_crystal_contours.py'
+      - '.github/workflows/train-crystal-contours.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  learn-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pillow
+        run: python -m pip install 'Pillow>=10,<14'
+      - name: Prepare FireRed and native reference
+        run: |
+          python scripts/prepare_aseprite_youngster.py
+          python scripts/preview_aseprite_youngster.py
+      - name: Learn from independent native sprites
+        run: python scripts/learn_crystal_contours.py
+      - name: Validate candidate, holdouts and source integrity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image,ImageChops
+          import json
+          out=Path('reports/learned-contours')
+          r=json.loads((out/'results.json').read_text())
+          assert r['native_youngster_used_for_training'] is False
+          assert r['training_trainers']>=50
+          assert r['validation_trainers']>=10
+          assert r['validation']['edge_pixels']>100
+          assert r['candidate']['edge_pixels']>100
+          assert r['candidate']['modified_edge_pixels']>0
+          assert 0<=r['validation']['learned_accuracy']<=1
+          assert 0<=r['heldout_native_youngster']['learned_accuracy']<=1
+          with Image.open(out/'youngster_firered_learned_contour.png') as im:
+            assert im.size==(56,56)
+            assert set(im.convert('L').getdata())<={0,85,170,255}
+            im.verify()
+          with Image.open(out/'comparison.png') as im: im.verify()
+          with Image.open('gfx/trainers/youngster.png') as original:
+            assert original.size==(56,56)
+          print('Trained with disjoint holdouts; original trainer unchanged')
+          PY
+      - name: Upload candidate plus report
+        uses: actions/upload-artifact@v4
+        with:
+          name: crystal-learned-youngster-contours
+          path: reports/learned-contours/
+          if-no-files-found: error
+      - name: Commit reproducible measurements and experimental candidate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/learned-contours/README.md reports/learned-contours/results.json reports/learned-contours/comparison.png reports/learned-contours/youngster_firered_learned_contour.png
+          if ! git diff --cached --quiet; then
+            git commit -m "experiment: save learned-contour candidate and held-out benchmark"
+            git push
+          fi
