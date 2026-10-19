@@ -1,0 +1,54 @@
+name: Youngster pixel-structure analysis
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/measure_youngster_style.py'
+      - '.github/workflows/measure-youngster-style.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image-analysis library
+        run: python -m pip install 'Pillow>=10,<13'
+      - name: Analyze source sprites
+        run: python scripts/measure_youngster_style.py
+      - name: Validate report against source graphics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('reports/youngster-style-analysis')
+          m=json.loads((out/'metrics.json').read_text())
+          assert m['native']['canvas_px'] == [56,56]
+          assert m['firered']['canvas_px'] == [64,64]
+          assert m['native']['foreground_colors_used'] <= 4
+          assert m['firered']['foreground_colors_used'] > 4
+          with Image.open(out/'comparison.png') as im:
+              im.verify()
+          assert (out/'README.md').stat().st_size > 500
+          print('Validated reports; active trainer graphics untouched')
+          PY
+      - name: Upload analysis outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: youngster-source-analysis
+          path: reports/youngster-style-analysis/
+          if-no-files-found: error
+      - name: Commit metrics and comparison to project branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/youngster-style-analysis/README.md reports/youngster-style-analysis/metrics.json reports/youngster-style-analysis/comparison.png
+          if ! git diff --cached --quiet; then
+            git commit -m "analysis: record Crystal and FireRed Youngster measurements"
+            git push
+          fi
