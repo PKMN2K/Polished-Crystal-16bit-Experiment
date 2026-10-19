@@ -1,0 +1,64 @@
+name: Aseprite Youngster prototype - prepare and validate
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/prepare_aseprite_youngster.py'
+      - 'scripts/preview_aseprite_youngster.py'
+      - 'scripts/reconstruct_youngster.lua'
+      - 'docs/ASEPRITE_YOUNGSTER_PIPELINE.md'
+      - '.github/workflows/aseprite-youngster-prototype.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install 'Pillow>=10,<14' 'luaparser>=3,<5'
+      - name: Parse Lua syntax only (does not execute Aseprite)
+        run: |
+          python - <<'PY'
+          from luaparser import ast
+          from pathlib import Path
+          ast.parse(Path('scripts/reconstruct_youngster.lua').read_text())
+          print('Valid Lua syntax (Aseprite API execution not tested)')
+          PY
+      - name: Prepare FireRed pose, native reference and region labels
+        run: python scripts/prepare_aseprite_youngster.py
+      - name: Produce standalone Python diagnostic preview
+        run: python scripts/preview_aseprite_youngster.py
+      - name: Validate prepared files and preview palette
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          out=Path('build/aseprite-youngster')
+          m=json.loads((out/'manifest.json').read_text())
+          p=json.loads((out/'preview_metrics.json').read_text())
+          assert m['source_bbox_xyxy']==[16,15,50,63]
+          assert m['target_bbox_xyxy']==[10,4,51,55]
+          assert p['previews_are_python_not_aseprite'] is True
+          assert p['pixel_differences_luma_vs_regions']>0
+          for name in ('firered_placed_56.png','regions_56.png','crystal_reference_56.png',
+                       'preview_00_luma.png','preview_01_regions.png','preview_02_cleanup.png',
+                       'candidate_comparison.png'):
+            with Image.open(out/name) as im: im.verify()
+          for name in ('preview_00_luma.png','preview_01_regions.png','preview_02_cleanup.png'):
+            with Image.open(out/name) as im:
+              assert im.size==(56,56)
+              assert set(im.convert('L').getdata()) <= {0,85,170,255}
+          assert not (out/'youngster_candidates.aseprite').exists()
+          print('Python diagnostic stage verified; trainer graphics untouched')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: youngster-aseprite-preparation-and-python-previews
+          path: build/aseprite-youngster/
+          if-no-files-found: error
