@@ -51,7 +51,7 @@ jobs:
           with Image.open(out/'comparison.png') as im: im.verify()
           import struct
           aseprite=Path('build/aseprite-youngster/youngster_candidates.aseprite').read_bytes()
-          assert aseprite[4:6]==b'\\xe0\\xa5'
+          assert aseprite[4:6]==bytes.fromhex('e0a5')
           assert struct.unpack_from('<H',aseprite,134)[0]==12  # six layers and six cels
           with Image.open('gfx/trainers/youngster.png') as original:
             assert original.size==(56,56)
