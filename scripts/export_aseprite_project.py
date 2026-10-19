@@ -21,6 +21,12 @@ def chunk(kind, data):
     return struct.pack('<IH',len(data)+6,kind)+data
 
 def build(root):
+    global LAYERS
+    # Learned candidate is opt-in; earlier reproducible builds stay identical.
+    if (root / 'preview_03_learned_outline.png').exists() and len(LAYERS)==5:
+        LAYERS[-1] = (LAYERS[-1][0],LAYERS[-1][1],False)
+        LAYERS.append(('03 - Learned contour (diagnostic)',
+                       'preview_03_learned_outline.png',True))
     chunks=[]
     imgs=[]
     for name,filename,visible in LAYERS:
