@@ -1,0 +1,45 @@
+name: FireRed Youngster conversion
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'scripts/convert_firered_youngster.py'
+      - '.github/workflows/convert-firered-youngster.yml'
+      - 'gfx/trainers/youngster.png'
+      - 'gfx/trainers/youngster.pal'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'Pillow>=10,<13'
+      - name: Create native-format draft asset from upstream source
+        run: python scripts/convert_firered_youngster.py
+      - name: Validate PNG dimensions and four indexed values
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path('gfx/trainers/conversions/youngster_firered.png')
+          with Image.open(p) as im:
+              assert im.size == (56,56), im.size
+              assert im.mode == 'P', im.mode
+              assert len(set(im.getdata())) <= 4
+          assert Path('gfx/trainers/conversions/youngster_firered.pal').read_bytes() == Path('gfx/trainers/youngster.pal').read_bytes()
+          print('PNG and palette checks passed')
+          PY
+      - name: Commit generated draft assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gfx/trainers/conversions/youngster_firered.png gfx/trainers/conversions/youngster_firered.pal
+          if ! git diff --cached --quiet; then
+            git commit -m "assets: generate FireRed Youngster Crystal draft"
+            git push
+          fi
