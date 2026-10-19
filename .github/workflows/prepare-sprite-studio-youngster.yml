@@ -1,0 +1,31 @@
+name: Prepare Youngster Sprite Studio references
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'Pillow>=10,<13'
+      - name: Build FireRed identity and Crystal style reference pack
+        run: python scripts/prepare_sprite_studio_youngster.py
+      - name: Verify real source and native reference dimensions
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          base = Path('build/sprite-studio-youngster')
+          assert Image.open(base/'firered_youngster_original_64.png').size == (64, 64)
+          assert Image.open(base/'crystal_youngster_style_reference_56.png').size == (56, 56)
+          assert (base/'SPRITE_STUDIO_PROMPT.txt').exists()
+          print('Reference pack validated')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sprite-studio-youngster-references
+          path: build/sprite-studio-youngster/
