@@ -24,6 +24,10 @@ jobs:
           python scripts/preview_aseprite_youngster.py
       - name: Learn from independent native sprites
         run: python scripts/learn_crystal_contours.py
+      - name: Add learned candidate as separate editable Aseprite layer
+        run: |
+          cp reports/learned-contours/youngster_firered_learned_contour.png build/aseprite-youngster/preview_03_learned_outline.png
+          python scripts/export_aseprite_project.py
       - name: Validate candidate, holdouts and source integrity
         run: |
           python - <<'PY'
@@ -45,6 +49,10 @@ jobs:
             assert set(im.convert('L').getdata())<={0,85,170,255}
           with Image.open(out/'youngster_firered_learned_contour.png') as im: im.verify()
           with Image.open(out/'comparison.png') as im: im.verify()
+          import struct
+          aseprite=Path('build/aseprite-youngster/youngster_candidates.aseprite').read_bytes()
+          assert aseprite[4:6]==b'\\xe0\\xa5'
+          assert struct.unpack_from('<H',aseprite,134)[0]==12  # six layers and six cels
           with Image.open('gfx/trainers/youngster.png') as original:
             assert original.size==(56,56)
           print('Trained with disjoint holdouts; original trainer unchanged')
@@ -53,7 +61,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crystal-learned-youngster-contours
-          path: reports/learned-contours/
+          path: |
+            reports/learned-contours/
+            build/aseprite-youngster/youngster_candidates.aseprite
           if-no-files-found: error
       - name: Commit reproducible measurements and experimental candidate
         run: |
