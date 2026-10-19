@@ -1,0 +1,38 @@
+name: Youngster in-game build test
+on:
+  push:
+    branches: [feature/gen2-sprite-conversions]
+    paths:
+      - 'gfx/trainers/conversions/youngster_firered.png'
+      - 'gfx/trainers/conversions/youngster_firered.pal'
+      - '.github/workflows/test-firered-youngster.yml'
+  workflow_dispatch:
+jobs:
+  rom-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build requirements
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison gcc git make libpng-dev
+      - uses: actions/checkout@v4
+        with:
+          repository: gbdev/rgbds
+          ref: v1.0.3
+          path: rgbds
+      - name: Install RGBDS
+        run: sudo make -C rgbds install
+      - name: Swap in conversion for test build only
+        run: |
+          test -f gfx/trainers/conversions/youngster_firered.png
+          cp gfx/trainers/conversions/youngster_firered.png gfx/trainers/youngster.png
+          cp gfx/trainers/conversions/youngster_firered.pal gfx/trainers/youngster.pal
+      - name: Build ROM
+        run: make -j2
+      - name: Upload test ROM
+        uses: actions/upload-artifact@v4
+        with:
+          name: firered-youngster-build-test
+          path: polishedcrystal-*.gbc
+          if-no-files-found: error
