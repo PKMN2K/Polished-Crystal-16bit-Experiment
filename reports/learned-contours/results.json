@@ -1,0 +1,62 @@
+{
+  "training_trainers": 126,
+  "validation_trainers": 26,
+  "method": "trainer-disjoint statistical outline dark-pixel classification",
+  "validation": {
+    "trainers": 26,
+    "edge_pixels": 5480,
+    "learned_accuracy": 0.80529,
+    "all_dark_baseline_accuracy": 0.85493,
+    "learned_dark_precision": 0.88604,
+    "learned_dark_recall": 0.88623
+  },
+  "heldout_native_youngster": {
+    "trainers": 1,
+    "edge_pixels": 200,
+    "learned_accuracy": 0.8,
+    "all_dark_baseline_accuracy": 0.865,
+    "learned_dark_precision": 0.88889,
+    "learned_dark_recall": 0.87861
+  },
+  "candidate": {
+    "edge_pixels": 225,
+    "dark_pixels_before": 122,
+    "dark_pixels_after": 192,
+    "modified_edge_pixels": 98,
+    "learned_dark_ratio": 0.85511
+  },
+  "heldout_trainer_names": [
+    "ace_duo",
+    "ariana",
+    "aroma_lady",
+    "artist",
+    "boarder",
+    "burglar",
+    "cooltrainer_f",
+    "dragon_tamer",
+    "factoryhead",
+    "guitarist_f",
+    "kabutops_fossil",
+    "lt_surge",
+    "lyra2",
+    "oak",
+    "omastar_fossil",
+    "pokefan_f",
+    "pokefan_m",
+    "proton",
+    "sightseer_f",
+    "silhouette",
+    "skier",
+    "teacher_m",
+    "victor",
+    "waiter",
+    "walker",
+    "will"
+  ],
+  "native_youngster_used_for_training": false,
+  "limits": [
+    "Not overall artistic quality",
+    "Anatomy not rebuilt",
+    "Aseprite Lua is not executed by this Python prototype"
+  ]
+}
