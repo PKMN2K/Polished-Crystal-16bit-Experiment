@@ -43,7 +43,7 @@ jobs:
           with Image.open(out/'youngster_firered_learned_contour.png') as im:
             assert im.size==(56,56)
             assert set(im.convert('L').getdata())<={0,85,170,255}
-            im.verify()
+          with Image.open(out/'youngster_firered_learned_contour.png') as im: im.verify()
           with Image.open(out/'comparison.png') as im: im.verify()
           with Image.open('gfx/trainers/youngster.png') as original:
             assert original.size==(56,56)
