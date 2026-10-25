@@ -205,7 +205,13 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	push hl
 	push de
 	push af
+	; The legacy species/form representation has only one extension bit.
+	; Never wrap native IDs above $01ff into a different legacy species.
+	; Until these callers are migrated to native words, return the invalid
+	; species sentinel (a = b = c = 0) rather than an incorrect identity.
 	ld a, b
+	cp $02
+	jr nc, .unsupported
 	cp HIGH(NUM_SPECIES)
 	jr c, .root
 	jr nz, .variant
@@ -240,6 +246,14 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	or e
 	ld b, a
 	ld a, c
+	pop de
+	pop hl
+	ret
+.unsupported
+	pop af
+	xor a
+	ld b, a
+	ld c, a
 	pop de
 	pop hl
 	ret
