@@ -58,9 +58,9 @@ def main():
         cases += [(129, 129, form, form | extra)
                   for form in range(1, 21) for extra in (0, 0x20)]
         cases += [(257, 257, 1, raw) for raw in (1, 0x21)]
-        # A native ID above the legacy nine-bit ceiling must never alias a
-        # lower species. The guarded direct boundary returns an invalid pair.
-        for native in (0x0200, 0x0201, 0x02ff, 0xffff):
+        # Zero and IDs above the nine-bit ceiling must never alias a
+        # valid species or preserve stale form metadata.
+        for native in (0x0000, 0x0200, 0x0201, 0x02ff, 0xffff):
             for raw in (0x00, 0x21, 0xc0, 0xff):
                 result = invoke('GetLegacySpeciesAndFormFromNativeIDBC', native, raw)
                 assert result == (0, 0, 0), (native, raw, result)
