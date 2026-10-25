@@ -576,6 +576,38 @@ PrepareLegacyPokemonDataStructForStorage::
 	farcall MigrateLegacySpeciesAndFormAtHL
 	ret
 
+InitializeNativePokemonDataForNewGame::
+; Fresh games have no legacy party/daycare identities to preserve. Start them
+; directly in transient/native format, clearing any stale conversion-table
+; state left by New Game+ before new player records can be generated.
+	push bc
+	push hl
+	ldh a, [rSVBK]
+	push af
+
+	ld a, BANK(wPokemonIndexTable)
+	ldh [rSVBK], a
+	xor a
+	ld hl, wPokemonIndexTable
+	ld bc, wPokemonIndexTableEnd - wPokemonIndexTable
+	rst ByteFill
+
+	ld a, BANK(wPokemonDataFormat)
+	ldh [rSVBK], a
+	ld a, LOW(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat], a
+	ld a, HIGH(POKEMON_DATA_TRANSIENT_FORMAT)
+	ld [wPokemonDataFormat + 1], a
+	xor a
+	ld [wPokemonIndexTableFormat], a
+	ld [wPokemonIndexTableFormat + 1], a
+
+	pop af
+	ldh [rSVBK], a
+	pop hl
+	pop bc
+	ret
+
 PokemonDataUsesTransientSpecies::
 ; Return z when persistent player-party and daycare structures use transient
 ; conversion-table species IDs. This marker does not describe legacy opponent

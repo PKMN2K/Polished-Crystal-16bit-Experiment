@@ -172,6 +172,11 @@ jobs:
         timeout-minutes: 2
         run: python tests/test_native_hatchling_loaded_legacy_migration.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
+      - id: test-native-new-game-format
+        name: "Test native new-game Pokemon format (normal)"
+        timeout-minutes: 2
+        run: python tests/test_native_new_game_format.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+
       - id: test-native-breeding-compatibility
         name: "Test native daycare breeding compatibility (normal)"
         timeout-minutes: 2
@@ -800,6 +805,11 @@ jobs:
         name: "Test loaded legacy hatchling migration round trip (debug)"
         timeout-minutes: 2
         run: python tests/test_native_hatchling_loaded_legacy_migration.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
+
+      - id: test-native-new-game-format-debug
+        name: "Test native new-game Pokemon format (debug)"
+        timeout-minutes: 2
+        run: python tests/test_native_new_game_format.py build/polishedcrystal-debug-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-breeding-compatibility-debug
         name: "Test native daycare breeding compatibility (debug)"
