@@ -212,6 +212,9 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	ld a, b
 	cp $02
 	jr nc, .unsupported
+	or c
+	jr z, .unsupported ; zero is not a valid one-based native identity
+	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .root
 	jr nz, .variant
