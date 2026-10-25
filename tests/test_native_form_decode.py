@@ -60,7 +60,14 @@ def main():
         cases += [(257, 257, 1, raw) for raw in (1, 0x21)]
         # Zero, the reserved $0100 root, and out-of-catalog native IDs
         # must never alias a valid species or preserve stale metadata.
-        for native in (0x0000, 0x0100, 0x0152, 0x01ff, 0x0200, 0x0201, 0x02ff, 0xffff):
+        # The final catalog entry is the last mechanical variant. Derive
+        # the first invalid ID from the table rather than hardcoding $0152,
+        # so newly added species do not break this safety regression.
+        last_native = 256 + len(variants)
+        invalid_ids = (0x0000, 0x0100, last_native + 1, 0x01ff,
+                       0x0200, 0x0201, 0x02ff, 0xffff)
+        assert last_native < 0x01ff, "update boundary test for expanded catalog"
+        for native in invalid_ids:
             for raw in (0x00, 0x21, 0xc0, 0xff):
                 result = invoke('GetLegacySpeciesAndFormFromNativeIDBC', native, raw)
                 assert result == (0, 0, 0), (native, raw, result)
