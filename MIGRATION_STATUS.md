@@ -1,3 +1,15 @@
+## Current verified branch checkpoint (2026-10-25)
+
+- Branch: `migration/battle-party-readers`; verified head: `2fee5dec3131080803e651be9a90b628b0984e15`.
+- GitHub Actions CI **#563** (run `40156307020`) completed **successfully** at that head.
+- In both normal and debug ROM configurations, the focused native battle tests passed from the inactive `HandleEncore -> HandleDisable` boundary through inactive Disable/Perish Song, subsequent residual-effect boundaries, both end-turn party write-backs, second action-menu entry, second-turn move dispatch, and **two full battle turns**.
+- The workflow also completed its configured normal, faithful, VC, debug, debug-faithful and debug VC builds successfully.
+- This is evidence for the test fixtures and boundaries exercised, **not** proof of general playable battles, arbitrary native species IDs above `$01ff`, or persistent-format readiness. No new 16-bit species format has been enabled by this checkpoint.
+
+**Next implementation milestone:** investigate the remaining native-versus-legacy battle identity boundary and implement/test a playable native species above `$01ff`, including lookup, generation, battle, party, PC and save/load round-trips. Keep persistent-format activation disabled until its save conversion and recovery gates pass.
+
+The dated sections below are historical checkpoints; their `Next recommended step` lines are superseded by this current verified branch checkpoint.
+
 ## Latest checkpoint: native post-HandleWrap CheckFaint -> HandleEncore boundary regression (2026-09-27)
 
 - Added `tests/test_native_betweenturn_postwrap_checkfaint_encore_boundary.py` and wired it into normal/debug CI.
