@@ -214,6 +214,23 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	jr nc, .unsupported
 	or c
 	jr z, .unsupported ; zero is not a valid one-based native identity
+	; Reject the reserved $0100 root hole and native IDs outside the
+	; defined catalog before indexing the mechanical-variant table.
+	ld a, b
+	cp HIGH(NUM_NATIVE_SPECIES + 1)
+	jr c, .within_catalog
+	jr nz, .unsupported
+	ld a, c
+	cp LOW(NUM_NATIVE_SPECIES + 1)
+	jr nc, .unsupported
+.within_catalog
+	ld a, b
+	cp 1
+	jr nz, .valid_native
+	ld a, c
+	and a
+	jr z, .unsupported
+.valid_native
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .root
