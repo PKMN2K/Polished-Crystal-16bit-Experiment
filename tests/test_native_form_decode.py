@@ -63,7 +63,7 @@ def main():
         # The final catalog entry is the last mechanical variant. Derive
         # the first invalid ID from the table rather than hardcoding $0152,
         # so newly added species do not break this safety regression.
-        last_native = 256 + len(variants)
+        last_native = variants[-1][0]  # authoritative ID in the ROM table
         invalid_ids = (0x0000, 0x0100, last_native + 1, 0x01ff,
                        0x0200, 0x0201, 0x02ff, 0xffff)
         assert last_native < 0x01ff, "update boundary test for expanded catalog"
