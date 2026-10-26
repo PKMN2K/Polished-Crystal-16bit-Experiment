@@ -65,7 +65,12 @@ def main():
                  for native, base, form in variants for raw in (0, 1, 0x21, 0x3F)]
         cases += [(129, 129, form, form | extra)
                   for form in range(1, 21) for extra in (0, 0x20)]
-        cases += [(257, 257, 1, raw) for raw in (1, 0x21)]
+        # Cover every high-byte root preceding the mechanical variant table.
+        # These roots must retain their own low species byte and extension
+        # bit without being mistaken for a mechanical variant.
+        cases += [(native, native, 1, raw)
+                  for native in range(0x0101, first_variant)
+                  for raw in (1, 0x21)]
         # Zero, the reserved $0100 root, and out-of-catalog native IDs
         # must never alias a valid species or preserve stale metadata.
         # The final catalog entry is the last mechanical variant. Derive
