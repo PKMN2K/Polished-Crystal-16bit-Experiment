@@ -206,6 +206,9 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	push de
 	push af
 	; The legacy species/form representation has only one extension bit.
+	; If the catalog grows beyond $01ff, this temporary boundary must be
+	; migrated to native words rather than silently making species unreachable.
+	assert NUM_NATIVE_SPECIES <= $01ff
 	; Never wrap native IDs above $01ff into a different legacy species.
 	; Until these callers are migrated to native words, return the invalid
 	; species sentinel (a = b = c = 0) rather than an incorrect identity.
