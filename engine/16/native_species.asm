@@ -98,10 +98,24 @@ GetPokemonNameFromNativeIDBC::
 	ret
 
 GetRootSpeciesFromNativeIDBC::
-; Resolve a one-based native species ID to the root species used by Polished's
-; transitional species/form runtime representation.
-; in: bc = one-based native species ID
-; out: bc = one-based root species ID
+; Resolve a one-based native species ID to its canonical root.
+; Reject unsupported IDs before indexing the mechanical-variant table.
+; in: bc = native species ID; out: bc = root ID, or zero if invalid
+	ld a, b
+	cp HIGH(NUM_NATIVE_SPECIES + 1)
+	jr c, .within_catalog
+	jr nz, .invalid
+	ld a, c
+	cp LOW(NUM_NATIVE_SPECIES + 1)
+	jr nc, .invalid
+.within_catalog
+	ld a, b
+	cp 1
+	jr nz, .check_root
+	ld a, c
+	and a
+	jr z, .invalid ; $0100 is reserved, not a species
+.check_root
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	ret c
@@ -118,6 +132,11 @@ GetRootSpeciesFromNativeIDBC::
 	call GetFarWord
 	ld b, h
 	ld c, l
+	ret
+.invalid
+	xor a
+	ld b, a
+	ld c, a
 	ret
 
 GetNativeVariantIdentityPointer:
