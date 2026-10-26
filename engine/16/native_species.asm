@@ -72,7 +72,15 @@ GetPokemonNameFromNativeIDBC::
 	ld a, b
 	or c
 	pop bc
-	ret z
+	jr nz, .valid_name
+	; Return a deterministic empty string for an invalid identity instead
+	; of exposing the previous species name through wStringBuffer1.
+	ld hl, wStringBuffer1
+	ld [hl], '@'
+	ld d, h
+	ld e, l
+	ret
+.valid_name
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .got_name_root
