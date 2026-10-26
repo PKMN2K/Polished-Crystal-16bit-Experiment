@@ -97,8 +97,11 @@ def main():
             for hi in range(0x02, 0x100)
             for lo in (0x00, 0x55, 0xaa, 0xff)
         )
+        # The first page beyond the legacy nine-bit limit is the critical
+        # boundary: check every low byte there, not only sampled offsets.
+        first_unsupported_page = range(0x0200, 0x0300)
         invalid_ids = (0x0000, 0x0100, *unsupported_tail,
-                       *invalid_high_words)
+                       *first_unsupported_page, *invalid_high_words)
         for native in invalid_ids:
             for raw in (0x00, 0x21, 0xc0, 0xff):
                 result = invoke('GetLegacySpeciesAndFormFromNativeIDBC', native, raw)
