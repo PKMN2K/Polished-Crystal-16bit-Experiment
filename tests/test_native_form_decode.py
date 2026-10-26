@@ -63,6 +63,12 @@ def main():
         mem[0xFF70] = 1
         cases = [(native, base, form, raw)
                  for native, base, form in variants for raw in (0, 1, 0x21, 0x3F)]
+        # Exercise every one-byte root species as well as the upper roots.
+        # These IDs must decode directly without borrowing a variant's
+        # canonical form or unexpectedly setting the extension bit.
+        cases += [(native, native, raw, raw)
+                  for native in range(1, 0x100)
+                  for raw in (0, 1)]
         cases += [(129, 129, form, form | extra)
                   for form in range(1, 21) for extra in (0, 0x20)]
         # Cover every high-byte root preceding the mechanical variant table.
