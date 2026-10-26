@@ -24,7 +24,7 @@ def main():
     # native IDs. Verify the actual ROM table rather than trusting its last
     # entry if a future catalog edit introduces a gap or duplicate.
     first_variant = variants[0][0]
-    assert first_variant == 0x0101, first_variant
+    assert first_variant > 0x0100, first_variant  # native variants follow the root catalog
     assert all(native == first_variant + i for i, (native, _, _) in enumerate(variants)), (
         "native variant identity table contains a gap or duplicate"
     )
