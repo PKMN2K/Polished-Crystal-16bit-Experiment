@@ -65,7 +65,7 @@ def main():
         # identities before reading the mechanical-variant identity table.
         root_cases = [(native, native) for native in range(1, 0x100)]
         root_cases += [(native, native) for native in range(0x0101, first_variant)]
-        root_cases += [(native, base) for native, base, _, _ in variants]
+        root_cases += [(native, base) for native, base, _ in variants]
         root_cases += [(native, 0) for native in
                        (0x0000, 0x0100, *(range(variants[-1][0] + 1, 0x0200)),
                         0x0200, 0x02ff, 0x7f55, 0xffff)]
