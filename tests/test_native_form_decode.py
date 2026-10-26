@@ -20,6 +20,14 @@ def main():
     pos = bank * 0x4000 + at - 0x4000
     n = sum(l.strip().startswith('native_variant_identity ') for l in (root / 'data/pokemon/native_variant_name_roots.asm').read_text().splitlines())
     variants = [(int.from_bytes(data[p:p+2], 'little'), int.from_bytes(data[p+2:p+4], 'little'), data[p+4]) for p in range(pos, pos+5*n, 5)]
+    # The catalog-boundary checks below assume variants occupy consecutive
+    # native IDs. Verify the actual ROM table rather than trusting its last
+    # entry if a future catalog edit introduces a gap or duplicate.
+    first_variant = variants[0][0]
+    assert first_variant == 0x0101, first_variant
+    assert all(native == first_variant + i for i, (native, _, _) in enumerate(variants)), (
+        "native variant identity table contains a gap or duplicate"
+    )
     p = PyBoy(str(rom), window='null', sound_emulated=False, cgb=True, log_level='ERROR')
     mem, regs = p.memory, p.register_file
     def put(s, value): mem[addr(s)] = value
