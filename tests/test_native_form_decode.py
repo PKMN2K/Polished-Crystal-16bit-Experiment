@@ -77,8 +77,15 @@ def main():
         # not just its endpoints. A partial range check must not allow a
         # nonexistent variant to index past NativeVariantIdentityTable.
         unsupported_tail = range(last_native + 1, 0x0200)
+        # Exercise high-byte rejection across the 16-bit space; checking
+        # only $0200 and $FFFF would miss a guard that accepts middle banks.
+        invalid_high_words = (
+            (hi << 8) | lo
+            for hi in (0x02, 0x03, 0x7f, 0x80, 0xfe, 0xff)
+            for lo in (0x00, 0x01, 0x7f, 0xff)
+        )
         invalid_ids = (0x0000, 0x0100, *unsupported_tail,
-                       0x0200, 0x0201, 0x02ff, 0xffff)
+                       *invalid_high_words)
         for native in invalid_ids:
             for raw in (0x00, 0x21, 0xc0, 0xff):
                 result = invoke('GetLegacySpeciesAndFormFromNativeIDBC', native, raw)
