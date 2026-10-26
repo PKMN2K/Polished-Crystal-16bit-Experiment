@@ -65,6 +65,14 @@ GetEggMovePointerFromNativeIDBC::
 GetPokemonNameFromNativeIDBC::
 ; in: bc = one-based native species ID
 ; out: de = wStringBuffer1 containing the display name
+	; Invalid native identities must not compute an out-of-bounds variant
+	; pointer or index the root-name pointer table.
+	push bc
+	call GetRootSpeciesFromNativeIDBC
+	ld a, b
+	or c
+	pop bc
+	ret z
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .got_name_root
