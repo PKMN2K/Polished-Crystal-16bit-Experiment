@@ -61,6 +61,19 @@ def main():
         mem[0xFF50] = 1
         mem[0xFFFF] = mem[0xFF0F] = mem[0xFF40] = 0
         mem[0xFF70] = 1
+        # The direct native-root helper must reject reserved and out-of-range
+        # identities before reading the mechanical-variant identity table.
+        root_cases = [(native, native) for native in range(1, 0x100)]
+        root_cases += [(native, native) for native in range(0x0101, first_variant)]
+        root_cases += [(native, base) for native, base, _, _ in variants]
+        root_cases += [(native, 0) for native in
+                       (0x0000, 0x0100, *(range(variants[-1][0] + 1, 0x0200)),
+                        0x0200, 0x02ff, 0x7f55, 0xffff)]
+        for native, expected_root in root_cases:
+            result = invoke('GetRootSpeciesFromNativeIDBC', native, 0)
+            assert (regs.B << 8 | regs.C) == expected_root, (native, expected_root, regs.B, regs.C)
+            count += 1
+
         cases = [(native, base, form, raw)
                  for native, base, form in variants for raw in (0, 1, 0x21, 0x3F)]
         # Exercise every one-byte root species as well as the upper roots.
