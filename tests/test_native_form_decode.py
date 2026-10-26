@@ -90,12 +90,12 @@ def main():
         # not just its endpoints. A partial range check must not allow a
         # nonexistent variant to index past NativeVariantIdentityTable.
         unsupported_tail = range(last_native + 1, 0x0200)
-        # Exercise high-byte rejection across the 16-bit space; checking
-        # only $0200 and $FFFF would miss a guard that accepts middle banks.
+        # Exhaustively reject every unsupported high byte ($02-$FF),
+        # sampling both ends of each 256-ID page to prevent bank aliasing.
         invalid_high_words = (
             (hi << 8) | lo
-            for hi in (0x02, 0x03, 0x7f, 0x80, 0xfe, 0xff)
-            for lo in (0x00, 0x01, 0x7f, 0xff)
+            for hi in range(0x02, 0x100)
+            for lo in (0x00, 0xff)
         )
         invalid_ids = (0x0000, 0x0100, *unsupported_tail,
                        *invalid_high_words)
