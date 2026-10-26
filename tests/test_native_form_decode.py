@@ -74,6 +74,16 @@ def main():
             assert (regs.B << 8 | regs.C) == expected_root, (native, expected_root, regs.B, regs.C)
             count += 1
 
+        # An invalid native ID must clear the previously displayed name and
+        # return its buffer pointer, never leave a stale Pokémon name visible.
+        for native in (0x0000, 0x0100, variants[-1][0] + 1,
+                       0x0200, 0x02ff, 0x7f55, 0xffff):
+            mem[addr('wStringBuffer1')] = 0x42
+            invoke('GetPokemonNameFromNativeIDBC', native, 0)
+            assert regs.DE == addr('wStringBuffer1'), (native, regs.DE)
+            assert mem[addr('wStringBuffer1')] == 0x50, native  # '@'
+            count += 1
+
         cases = [(native, base, form, raw)
                  for native, base, form in variants for raw in (0, 1, 0x21, 0x3F)]
         # Exercise every one-byte root species as well as the upper roots.
