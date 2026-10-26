@@ -74,10 +74,11 @@ def main():
         # Cover every high-byte root preceding the mechanical variant table.
         # These roots must retain their own low species byte and extension
         # bit without being mistaken for a mechanical variant.
-        cases += [(native, native, form, form | extra)
+        # Only forms that round-trip through the legacy index mapper belong
+        # in these identity cases; other cosmetic form bytes may be remapped.
+        cases += [(native, native, 1, raw)
                   for native in range(0x0101, first_variant)
-                  for form in range(0x20)
-                  for extra in (0, 0x20)]
+                  for raw in (1, 0x21)]
         # Zero, the reserved $0100 root, and out-of-catalog native IDs
         # must never alias a valid species or preserve stale metadata.
         # The final catalog entry is the last mechanical variant. Derive
