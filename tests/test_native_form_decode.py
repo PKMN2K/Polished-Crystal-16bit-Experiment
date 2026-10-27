@@ -81,7 +81,7 @@ def main():
             mem[addr('wStringBuffer1')] = 0x42
             invoke('GetPokemonNameFromNativeIDBC', native, 0)
             assert (regs.D << 8 | regs.E) == addr('wStringBuffer1'), (native, regs.D, regs.E)
-            assert mem[addr('wStringBuffer1')] == 0x50, native  # '@'
+            assert mem[addr('wStringBuffer1')] == 0x53, native  # '@' in constants/charmap.asm
             count += 1
 
         cases = [(native, base, form, raw)
