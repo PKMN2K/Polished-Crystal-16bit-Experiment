@@ -473,7 +473,10 @@ jobs:
 
       - id: test-native-enemy-endmove-performmove-cleanup-boundary
         name: "Test native enemy endmove to PerformMove cleanup boundary (normal)"
-        run: python tests/test_native_enemy_endmove_performmove_cleanup_boundary.py build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
+        run: |
+          timeout --signal=TERM --kill-after=10s 300s \
+            python -u tests/test_native_enemy_endmove_performmove_cleanup_boundary.py \
+            build/polishedcrystal-dev-${{ env.SHORT_SHA }}.gbc
 
       - id: test-native-enemy-performmove-cleanup-resolvefaints-boundary
         name: "Test native enemy PerformMove cleanup to ResolveFaints boundary (normal)"
