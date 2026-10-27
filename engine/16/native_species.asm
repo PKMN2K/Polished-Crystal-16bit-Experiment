@@ -67,11 +67,11 @@ GetPokemonNameFromNativeIDBC::
 ; out: de = wStringBuffer1 containing the display name
 	; Invalid native identities must not compute an out-of-bounds variant
 	; pointer or index the root-name pointer table.
-	push bc
+	; The root helper already resolves mechanical variants to their
+	; canonical name root, so reuse BC rather than reading the table twice.
 	call GetRootSpeciesFromNativeIDBC
 	ld a, b
 	or c
-	pop bc
 	jr nz, .valid_name
 	; Return a deterministic empty string for an invalid identity instead
 	; of exposing the previous species name through wStringBuffer1.
@@ -81,24 +81,6 @@ GetPokemonNameFromNativeIDBC::
 	ld e, l
 	ret
 .valid_name
-	ld a, b
-	cp HIGH(NUM_SPECIES)
-	jr c, .got_name_root
-	jr nz, .variant
-	ld a, c
-	cp LOW(NUM_SPECIES) + 1
-	jr c, .got_name_root
-
-.variant
-	call GetNativeVariantIdentityPointer
-	inc hl
-	inc hl
-	ld a, BANK(NativeVariantIdentityTable)
-	call GetFarWord
-	ld b, h
-	ld c, l
-
-.got_name_root
 	ld hl, PokemonNames
 	ld a, BANK(PokemonNames)
 	call LoadIndirectPointer
