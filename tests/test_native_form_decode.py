@@ -84,6 +84,16 @@ def main():
             assert mem[addr('wStringBuffer1')] == 0x53, native  # '@' in constants/charmap.asm
             count += 1
 
+        # Mechanical variants must display their canonical root's name.
+        # This exercises the root-reuse path in GetPokemonNameFromNativeIDBC.
+        for native, root_id, _ in variants:
+            invoke('GetPokemonNameFromNativeIDBC', root_id, 0)
+            root_name = bytes(mem[addr('wStringBuffer1'):addr('wStringBuffer1') + 11])
+            invoke('GetPokemonNameFromNativeIDBC', native, 0)
+            variant_name = bytes(mem[addr('wStringBuffer1'):addr('wStringBuffer1') + 11])
+            assert variant_name == root_name, (native, root_id, variant_name, root_name)
+            count += 1
+
         cases = [(native, base, form, raw)
                  for native, base, form in variants for raw in (0, 1, 0x21, 0x3F)]
         # Exercise every one-byte root species as well as the upper roots.
