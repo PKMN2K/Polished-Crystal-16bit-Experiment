@@ -12,10 +12,26 @@ GetAbilityFromNativeIDBC::
 ; out: ability in a and b; preserves hl, de and c
 ; Reads the base-data ability bytes through a far pointer so this routine can
 ; live outside ROM0 without disturbing the current base-data buffer.
+	; Never fetch ability data through an invalid native identity.
+	; Preserve BC (including the caller's C) and the personality pointer.
 	ld a, b
 	or c
 	jr z, .no_ability
-
+	ld a, b
+	cp HIGH(NUM_NATIVE_SPECIES + 1)
+	jr c, .check_reserved
+	jr nz, .no_ability
+	ld a, c
+	cp LOW(NUM_NATIVE_SPECIES + 1)
+	jr nc, .no_ability
+.check_reserved
+	ld a, b
+	cp 1
+	jr nz, .valid_ability_species
+	ld a, c
+	and a
+	jr z, .no_ability
+.valid_ability_species
 	ld a, [wInitialOptions]
 	and ABILITIES_OPTMASK
 	jr z, .got_ability
