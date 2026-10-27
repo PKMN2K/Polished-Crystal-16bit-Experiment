@@ -80,7 +80,7 @@ def main():
                        0x0200, 0x02ff, 0x7f55, 0xffff):
             mem[addr('wStringBuffer1')] = 0x42
             invoke('GetPokemonNameFromNativeIDBC', native, 0)
-            assert regs.DE == addr('wStringBuffer1'), (native, regs.DE)
+            assert (regs.D << 8 | regs.E) == addr('wStringBuffer1'), (native, regs.D, regs.E)
             assert mem[addr('wStringBuffer1')] == 0x50, native  # '@'
             count += 1
 
