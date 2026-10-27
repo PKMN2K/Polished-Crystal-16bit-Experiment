@@ -76,7 +76,7 @@ def main():
 
         # An invalid native ID must clear the previously displayed name and
         # return its buffer pointer, never leave a stale Pokémon name visible.
-        for native in (0x0000, 0x0100, variants[-1][0] + 1,
+        for native in (0x0000, 0x0100, *range(variants[-1][0] + 1, 0x0200),
                        0x0200, 0x02ff, 0x7f55, 0xffff):
             mem[addr('wStringBuffer1')] = 0x42
             invoke('GetPokemonNameFromNativeIDBC', native, 0)
