@@ -3502,9 +3502,11 @@ def main():
 
         count = 0
         for native, species, form in cases:
-            setup_case(native, species, form)
             context = (native, species, form)
+            print(f"START enemy endmove case {context}: setup", flush=True)
+            setup_case(native, species, form)
 
+            print(f"START enemy endmove case {context}: BattleIntro", flush=True)
             invoke("BattleIntro")
 
             assert intro_calls == [True], ("BattleIntro count", context, intro_calls)
@@ -3520,6 +3522,7 @@ def main():
             enemy_base_before = len(enemy_base_calls)
             active_base_before = len(active_base_calls)
 
+            print(f"START enemy endmove case {context}: DoBattle", flush=True)
             invoke("DoBattle", max_frames=256)
 
             assert do_battle_calls == [True], ("DoBattle count", context, do_battle_calls)
