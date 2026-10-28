@@ -423,6 +423,8 @@ def main():
     diagnostic_pc = [None]
     future_sight_repeat_count = [0]
     future_sight_last_state = [None]
+    future_sight_callers = []
+    future_sight_caller_counts = {}
 
     def report_stalled_variant():
         # Only use Python-side snapshots: reading emulator registers from
@@ -454,7 +456,35 @@ def main():
                         mem[addr("wPlayerFutureSightCount")],
                         mem[addr("wEnemyFutureSightCount")],
                     )
-                    if future_sight_repeat_count[0] in (1, 100, 1000, 10000):
+                    # Decode only the immediate stack return site. Do not
+                    # interpret deeper stack words as a valid call chain.
+                    stack = future_sight_last_state[0][4]
+                    return_pc = stack[0] | (stack[1] << 8)
+                    rom_bank = mem[addr("hROMBank")]
+                    caller_bank = 0 if return_pc < 0x4000 else rom_bank
+                    caller_key = (caller_bank, return_pc)
+                    future_sight_caller_counts[caller_key] = (
+                        future_sight_caller_counts.get(caller_key, 0) + 1
+                    )
+                    if caller_key not in future_sight_callers and len(future_sight_callers) < 16:
+                        # Capture the bytes preceding the return address from
+                        # the original ROM, not potentially patched live memory.
+                        if 3 <= return_pc < 0x8000:
+                            pos = caller_bank * 0x4000 + (return_pc - 3) - (0x4000 if caller_bank else 0)
+                            opcodes = data[pos:pos + 3].hex()
+                        else:
+                            opcodes = "outside ROM"
+                        future_sight_callers.append((caller_bank, return_pc, opcodes, regs.SP))
+                    if future_sight_repeat_count[0] == 10000:
+                        print(
+                            "DIAG Future Sight cutoff: callers="
+                            f"{future_sight_callers}; counts="
+                            f"{sorted(future_sight_caller_counts.items(), key=lambda x: -x[1])[:16]}; "
+                            f"last_state={future_sight_last_state[0]}",
+                            flush=True,
+                        )
+                        raise RuntimeError("Future Sight callback loop cutoff at 10000 calls")
+                    if future_sight_repeat_count[0] in (1, 100, 1000):
                         print(
                             f"DIAG GetFutureSightUser repeat "
                             f"{future_sight_repeat_count[0]} state="
