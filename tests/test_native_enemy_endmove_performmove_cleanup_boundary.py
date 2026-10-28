@@ -426,6 +426,10 @@ def main():
     future_sight_last_state = [None]
     future_sight_callers = []
     future_sight_caller_counts = {}
+    item_entry_samples = []
+    item_return_samples = []
+    item_entry_count = [0]
+    item_return_count = [0]
     # Resolve bank-local return sites against the built ROM's symbol file.
     bank_symbols = sorted(
         (bank, address, label) for label, (bank, address) in symbols.items()
@@ -438,7 +442,9 @@ def main():
             f"DIAG WATCHDOG variant last pre-tick={diagnostic_pc[0]}; "
             f"last 40 hooks={list(diagnostic_hooks)}; "
             f"GetFutureSightUser count={future_sight_repeat_count[0]}; "
-            f"last callback state={future_sight_last_state[0]}",
+            f"last callback state={future_sight_last_state[0]}; "
+            f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
+            f"entry samples={item_entry_samples}; return samples={item_return_samples}",
             flush=True,
         )
 
@@ -490,7 +496,9 @@ def main():
                             "DIAG Future Sight cutoff: callers="
                             f"{future_sight_callers}; counts="
                             f"{sorted(future_sight_caller_counts.items(), key=lambda x: -x[1])[:16]}; "
-                            f"last_state={future_sight_last_state[0]}",
+                            f"last_state={future_sight_last_state[0]}; "
+                            f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
+                            f"entry samples={item_entry_samples}; return samples={item_return_samples}",
                             flush=True,
                         )
                         # PyBoy ignores exceptions raised inside hooks. Exit the
@@ -506,6 +514,29 @@ def main():
                         )
             callback(context)
         pyboy.hook_register(bank, address, traced, None)
+
+    # In the built ROM the immediate instruction following GetUserItem's
+    # CALL GetFutureSightUser is bank 13:$7b6b. Observe execution at that
+    # boundary without patching instructions or changing CPU state.
+    item_bank, item_address = symbols["GetUserItem"]
+    future_bank, future_address = symbols["GetFutureSightUser"]
+    return_site = item_address + 3  # CALL nn is three bytes.
+    call_offset = offset("GetUserItem")
+    assert data[call_offset:call_offset + 3] == bytes((0xCD, future_address & 255, future_address >> 8)), (
+        "GetUserItem no longer begins with CALL GetFutureSightUser",
+        data[call_offset:call_offset + 3].hex(),
+    )
+    assert item_bank == future_bank, "unexpected cross-bank direct CALL"
+
+    def trace_item_return(_):
+        if current_case[0] == (292, 130, 21):
+            item_return_count[0] += 1
+            if len(item_return_samples) < 16:
+                item_return_samples.append((regs.PC, regs.SP, regs.A, regs.F,
+                                            mem[addr("hROMBank")],
+                                            tuple(mem[regs.SP:regs.SP + 4])))
+
+    pyboy.hook_register(item_bank, return_site, trace_item_return, None)
 
     def invoke(label, max_frames=128):
         bank, target = symbols[label]
@@ -1921,6 +1952,12 @@ def main():
             ))
 
     def observe_user_item(_):
+        if current_case[0] == (292, 130, 21):
+            item_entry_count[0] += 1
+            if len(item_entry_samples) < 16:
+                item_entry_samples.append((regs.PC, regs.SP, regs.A, regs.F,
+                                           mem[addr("hROMBank")],
+                                           tuple(mem[regs.SP:regs.SP + 4])))
         if enemy_critical_active[0]:
             enemy_user_item_snapshots.append((
                 read_native("wBattleMonNativeSpecies"),
