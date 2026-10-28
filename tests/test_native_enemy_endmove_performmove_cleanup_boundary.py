@@ -14,6 +14,7 @@ the enemy PerformMove cleanup tail clears IN_ABILITY, ticks Disable/Encore,
 clears Protect/Endure, refreshes the tilemap, or enters ResolveFaints.
 """
 import argparse
+import faulthandler
 from pathlib import Path
 
 from pyboy import PyBoy
@@ -427,10 +428,16 @@ def main():
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        for _ in range(max_frames):
-            pyboy.tick(1, False, False)
-            if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
-                break
+        # If a PyBoy tick or battle hook blocks, capture the Python stack
+        # before the workflow's five-minute wall-clock timeout fires.
+        faulthandler.dump_traceback_later(30, repeat=False)
+        try:
+            for _ in range(max_frames):
+                pyboy.tick(1, False, False)
+                if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
+                    break
+        finally:
+            faulthandler.cancel_dump_traceback_later()
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
