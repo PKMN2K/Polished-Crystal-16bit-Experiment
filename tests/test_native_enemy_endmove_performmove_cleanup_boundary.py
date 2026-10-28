@@ -421,13 +421,17 @@ def main():
     # DoBattle tick stalled in CI #599. Existing callbacks still run normally.
     diagnostic_hooks = []
     diagnostic_pc = [None]
+    future_sight_repeat_count = [0]
+    future_sight_last_state = [None]
 
     def report_stalled_variant():
         # Only use Python-side snapshots: reading emulator registers from
         # another thread while PyBoy.tick is active would be unsafe.
         print(
             f"DIAG WATCHDOG variant last pre-tick={diagnostic_pc[0]}; "
-            f"last 40 hooks={list(diagnostic_hooks)}",
+            f"last 40 hooks={list(diagnostic_hooks)}; "
+            f"GetFutureSightUser count={future_sight_repeat_count[0]}; "
+            f"last callback state={future_sight_last_state[0]}",
             flush=True,
         )
 
@@ -438,6 +442,21 @@ def main():
                 diagnostic_hooks.append((label, bank, address, regs.PC))
                 if len(diagnostic_hooks) > 40:
                     del diagnostic_hooks[:-40]
+                if label == "GetFutureSightUser":
+                    future_sight_repeat_count[0] += 1
+                    future_sight_last_state[0] = (
+                        regs.PC, regs.SP, regs.B, regs.C,
+                        mem[addr("hBattleTurn")],
+                        mem[addr("wPlayerFutureSightCount")],
+                        mem[addr("wEnemyFutureSightCount")],
+                    )
+                    if future_sight_repeat_count[0] in (1, 100, 1000):
+                        print(
+                            f"DIAG GetFutureSightUser repeat "
+                            f"{future_sight_repeat_count[0]} state="
+                            f"{future_sight_last_state[0]}",
+                            flush=True,
+                        )
             callback(context)
         pyboy.hook_register(bank, address, traced, None)
 
