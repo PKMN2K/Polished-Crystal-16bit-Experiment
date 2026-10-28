@@ -446,11 +446,15 @@ def main():
                     future_sight_repeat_count[0] += 1
                     future_sight_last_state[0] = (
                         regs.PC, regs.SP, regs.B, regs.C,
+                        # Hook fires at routine entry, before its pushes:
+                        # the first stack word is the immediate return site.
+                        tuple(mem[regs.SP:regs.SP + 8]),
+                        mem[addr("hROMBank")],
                         mem[addr("hBattleTurn")],
                         mem[addr("wPlayerFutureSightCount")],
                         mem[addr("wEnemyFutureSightCount")],
                     )
-                    if future_sight_repeat_count[0] in (1, 100, 1000):
+                    if future_sight_repeat_count[0] in (1, 100, 1000, 10000):
                         print(
                             f"DIAG GetFutureSightUser repeat "
                             f"{future_sight_repeat_count[0]} state="
