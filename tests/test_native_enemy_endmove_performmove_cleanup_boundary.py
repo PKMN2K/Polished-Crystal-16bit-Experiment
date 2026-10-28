@@ -15,6 +15,7 @@ clears Protect/Endure, refreshes the tilemap, or enters ResolveFaints.
 """
 import argparse
 import faulthandler
+import threading
 from pathlib import Path
 
 from pyboy import PyBoy
@@ -421,6 +422,15 @@ def main():
     diagnostic_hooks = []
     diagnostic_pc = [None]
 
+    def report_stalled_variant():
+        # Only use Python-side snapshots: reading emulator registers from
+        # another thread while PyBoy.tick is active would be unsafe.
+        print(
+            f"DIAG WATCHDOG variant last pre-tick={diagnostic_pc[0]}; "
+            f"last 40 hooks={list(diagnostic_hooks)}",
+            flush=True,
+        )
+
     def hook(label, callback):
         bank, address = symbols[label]
         def traced(context):
@@ -442,6 +452,11 @@ def main():
         # If a PyBoy tick or battle hook blocks, capture the Python stack
         # before the workflow's five-minute wall-clock timeout fires.
         faulthandler.dump_traceback_later(30, repeat=False)
+        watchdog = None
+        if label == "DoBattle" and current_case[0] == (292, 130, 21):
+            watchdog = threading.Timer(30, report_stalled_variant)
+            watchdog.daemon = True
+            watchdog.start()
         try:
             for frame in range(max_frames):
                 if label == "DoBattle" and current_case[0] == (292, 130, 21):
@@ -453,6 +468,8 @@ def main():
                     break
         finally:
             faulthandler.cancel_dump_traceback_later()
+            if watchdog is not None:
+                watchdog.cancel()
             if label == "DoBattle" and current_case[0] == (292, 130, 21):
                 print(f"DIAG variant last pre-tick (frame, PC, SP, bank)={diagnostic_pc[0]}; last 40 hooks={diagnostic_hooks}", flush=True)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
