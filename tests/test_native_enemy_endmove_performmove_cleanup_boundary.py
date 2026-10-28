@@ -15,6 +15,7 @@ clears Protect/Endure, refreshes the tilemap, or enters ResolveFaints.
 """
 import argparse
 import faulthandler
+import os
 import threading
 from pathlib import Path
 
@@ -425,6 +426,10 @@ def main():
     future_sight_last_state = [None]
     future_sight_callers = []
     future_sight_caller_counts = {}
+    # Resolve bank-local return sites against the built ROM's symbol file.
+    bank_symbols = sorted(
+        (bank, address, label) for label, (bank, address) in symbols.items()
+    )
 
     def report_stalled_variant():
         # Only use Python-side snapshots: reading emulator registers from
@@ -474,7 +479,12 @@ def main():
                             opcodes = data[pos:pos + 3].hex()
                         else:
                             opcodes = "outside ROM"
-                        future_sight_callers.append((caller_bank, return_pc, opcodes, regs.SP))
+                        owner = next(
+                            (name for b, a, name in reversed(bank_symbols)
+                             if b == caller_bank and a <= return_pc - 3),
+                            "unknown",
+                        )
+                        future_sight_callers.append((caller_bank, return_pc, opcodes, regs.SP, owner))
                     if future_sight_repeat_count[0] == 10000:
                         print(
                             "DIAG Future Sight cutoff: callers="
@@ -483,7 +493,10 @@ def main():
                             f"last_state={future_sight_last_state[0]}",
                             flush=True,
                         )
-                        raise RuntimeError("Future Sight callback loop cutoff at 10000 calls")
+                        # PyBoy ignores exceptions raised inside hooks. Exit the
+                        # diagnostic process explicitly so CI cannot spin to
+                        # its five-minute timeout. The report above is flushed.
+                        os._exit(1)
                     if future_sight_repeat_count[0] in (1, 100, 1000):
                         print(
                             f"DIAG GetFutureSightUser repeat "
