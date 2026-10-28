@@ -416,9 +416,20 @@ def main():
         if callback is not None:
             pyboy.hook_register(bank, address, callback, None)
 
+    # Retain a bounded timeline for the first mechanical variant, whose
+    # DoBattle tick stalled in CI #599. Existing callbacks still run normally.
+    diagnostic_hooks = []
+    diagnostic_pc = [None]
+
     def hook(label, callback):
         bank, address = symbols[label]
-        pyboy.hook_register(bank, address, callback, None)
+        def traced(context):
+            if current_case[0] == (292, 130, 21):
+                diagnostic_hooks.append((label, bank, address, regs.PC))
+                if len(diagnostic_hooks) > 40:
+                    del diagnostic_hooks[:-40]
+            callback(context)
+        pyboy.hook_register(bank, address, traced, None)
 
     def invoke(label, max_frames=128):
         bank, target = symbols[label]
@@ -432,12 +443,18 @@ def main():
         # before the workflow's five-minute wall-clock timeout fires.
         faulthandler.dump_traceback_later(30, repeat=False)
         try:
-            for _ in range(max_frames):
+            for frame in range(max_frames):
+                if label == "DoBattle" and current_case[0] == (292, 130, 21):
+                    diagnostic_pc[0] = (frame, regs.PC, regs.SP, mem[addr("hROMBank")])
+                    if frame == 0:
+                        print(f"DIAG variant DoBattle entry frame={frame} PC={regs.PC:04x} SP={regs.SP:04x} bank={mem[addr('hROMBank')]:02x}", flush=True)
                 pyboy.tick(1, False, False)
                 if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                     break
         finally:
             faulthandler.cancel_dump_traceback_later()
+            if label == "DoBattle" and current_case[0] == (292, 130, 21):
+                print(f"DIAG variant last pre-tick (frame, PC, SP, bank)={diagnostic_pc[0]}; last 40 hooks={diagnostic_hooks}", flush=True)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
