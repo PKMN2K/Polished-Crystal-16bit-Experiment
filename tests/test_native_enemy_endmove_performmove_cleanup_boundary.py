@@ -430,6 +430,8 @@ def main():
     item_return_samples = []
     item_entry_count = [0]
     item_return_count = [0]
+    future_ret_counts = {}
+    future_ret_samples = []
     # Resolve bank-local return sites against the built ROM's symbol file.
     bank_symbols = sorted(
         (bank, address, label) for label, (bank, address) in symbols.items()
@@ -444,7 +446,8 @@ def main():
             f"GetFutureSightUser count={future_sight_repeat_count[0]}; "
             f"last callback state={future_sight_last_state[0]}; "
             f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
-            f"entry samples={item_entry_samples}; return samples={item_return_samples}",
+            f"entry samples={item_entry_samples}; return samples={item_return_samples}; "
+            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}",
             flush=True,
         )
 
@@ -498,7 +501,8 @@ def main():
                             f"{sorted(future_sight_caller_counts.items(), key=lambda x: -x[1])[:16]}; "
                             f"last_state={future_sight_last_state[0]}; "
                             f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
-                            f"entry samples={item_entry_samples}; return samples={item_return_samples}",
+                            f"entry samples={item_entry_samples}; return samples={item_return_samples}; "
+                            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}",
                             flush=True,
                         )
                         # PyBoy ignores exceptions raised inside hooks. Exit the
@@ -537,6 +541,39 @@ def main():
                                             tuple(mem[regs.SP:regs.SP + 4])))
 
     pyboy.hook_register(item_bank, return_site, trace_item_return, None)
+
+    # Observe return instructions within GetFutureSightUser, including RET NZ.
+    # Restrict the scan to the next global symbol, not adjacent routines.
+    next_global = min(
+        (address for name, (bank, address) in symbols.items()
+         if bank == future_bank and address > future_address and "." not in name),
+        default=future_address + 96,
+    )
+    assert 0 < next_global - future_address <= 128, (
+        "Unexpected GetFutureSightUser code span", future_address, next_global
+    )
+    future_returns = []
+    for pc in range(future_address + 1, next_global):
+        op = data[future_bank * 0x4000 + pc - 0x4000]
+        if op in (0xC9, 0xC0):  # RET, RET NZ
+            future_returns.append((pc, op))
+    assert 3 <= len(future_returns) <= 10, ("Unexpected return candidates", future_returns)
+
+    def make_future_ret_hook(pc, opcode):
+        def trace_ret(_):
+            if current_case[0] != (292, 130, 21):
+                return
+            future_ret_counts[pc] = future_ret_counts.get(pc, 0) + 1
+            if len(future_ret_samples) < 32:
+                stack = tuple(mem[regs.SP:regs.SP + 6])
+                future_ret_samples.append((pc, opcode, regs.SP, regs.F,
+                                           stack[0] | (stack[1] << 8), stack,
+                                           mem[addr("hROMBank")]))
+        return trace_ret
+
+    for ret_pc, ret_opcode in future_returns:
+        pyboy.hook_register(future_bank, ret_pc,
+                            make_future_ret_hook(ret_pc, ret_opcode), None)
 
     def invoke(label, max_frames=128):
         bank, target = symbols[label]
