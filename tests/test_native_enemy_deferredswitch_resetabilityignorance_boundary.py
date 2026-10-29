@@ -14,6 +14,7 @@ import argparse
 from pathlib import Path
 
 from pyboy import PyBoy
+from pyboy_hook_safety import hook_future_sight_after_push
 
 
 PRESSURE = 43
@@ -420,10 +421,7 @@ def main():
 
     # Observe Future Sight after its first instruction to avoid a PyBoy
     # entry breakpoint which stalled adjacent boundary regression tests.
-    future_bank, future_address = symbols["GetFutureSightUser"]
-    assert data[offset("GetFutureSightUser"):offset("GetFutureSightUser") + 2] == bytes((0xE5, 0xD5))
-    pyboy.hook_register(future_bank, future_address + 1,
-                        lambda context: observe_future_sight(context), None)
+    hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
 
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]

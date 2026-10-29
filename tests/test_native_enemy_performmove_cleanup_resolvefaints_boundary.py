@@ -16,6 +16,7 @@ import argparse
 from pathlib import Path
 
 from pyboy import PyBoy
+from pyboy_hook_safety import hook_future_sight_after_push
 
 
 PRESSURE = 43
@@ -422,10 +423,7 @@ def main():
     # The entry-point breakpoint on GetFutureSightUser stalled the preceding
     # boundary test in PyBoy. Observe its second instruction instead, after
     # the original PUSH HL executes, preserving the existing assertion data.
-    future_bank, future_address = symbols["GetFutureSightUser"]
-    assert data[offset("GetFutureSightUser"):offset("GetFutureSightUser") + 2] == bytes((0xE5, 0xD5))
-    pyboy.hook_register(future_bank, future_address + 1,
-                        lambda _context: observe_future_sight(_context), None)
+    hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
 
     def invoke(label, max_frames=128):
         bank, target = symbols[label]
