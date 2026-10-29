@@ -552,12 +552,27 @@ def main():
     assert 0 < next_global - future_address <= 128, (
         "Unexpected GetFutureSightUser code span", future_address, next_global
     )
+    # Match complete instruction sequences, not arbitrary C9/C0 bytes:
+    # the latter can occur as immediate operands inside this routine.
+    future_code = data[offset("GetFutureSightUser"):
+                       offset("GetFutureSightUser") + next_global - future_address]
+    ret_patterns = (
+        bytes((0x37, 0x3F, 0xC0)),  # SCF; CCF; RET NZ
+        bytes((0xF1, 0xC9)),        # POP AF; RET
+        bytes((0xA7, 0xC0)),        # AND A; RET NZ
+        bytes((0x0F, 0xC9)),        # RRCA; RET
+        bytes((0x37, 0xC9)),        # SCF; RET (offline)
+    )
     future_returns = []
-    for pc in range(future_address + 1, next_global):
-        op = data[future_bank * 0x4000 + pc - 0x4000]
-        if op in (0xC9, 0xC0):  # RET, RET NZ
-            future_returns.append((pc, op))
-    assert 3 <= len(future_returns) <= 10, ("Unexpected return candidates", future_returns)
+    for pattern in ret_patterns:
+        locations = [i for i in range(len(future_code) - len(pattern) + 1)
+                     if future_code[i:i + len(pattern)] == pattern]
+        assert len(locations) == 1, ("Unexpected Future Sight return pattern",
+                                      pattern.hex(), locations)
+        pc = future_address + locations[0] + len(pattern) - 1
+        future_returns.append((pc, pattern[-1]))
+    assert len(set(pc for pc, _ in future_returns)) == 5, future_returns
+    print("DIAG Future Sight return instruction sites", future_returns, flush=True)
 
     def make_future_ret_hook(pc, opcode):
         def trace_ret(_):
