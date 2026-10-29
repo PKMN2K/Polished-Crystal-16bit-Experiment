@@ -555,6 +555,9 @@ def main():
     assert data[entry_offset:entry_offset + 2] == bytes((0xE5, 0xD5))
 
     def trace_future_second_instruction(_):
+        # Record the same logical observation at the second instruction,
+        # avoiding the problematic breakpoint on the routine's first opcode.
+        observe_future_sight(None)
         if current_case[0] != (292, 130, 21):
             return
         future_entry_advanced[0] += 1
