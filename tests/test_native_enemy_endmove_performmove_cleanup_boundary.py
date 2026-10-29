@@ -431,6 +431,8 @@ def main():
     item_entry_count = [0]
     item_return_count = [0]
     future_ret_counts = {}
+    future_entry_advanced = [0]
+    future_entry_samples = []
     future_ret_samples = []
     # Resolve bank-local return sites against the built ROM's symbol file.
     bank_symbols = sorted(
@@ -447,7 +449,9 @@ def main():
             f"last callback state={future_sight_last_state[0]}; "
             f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
             f"entry samples={item_entry_samples}; return samples={item_return_samples}; "
-            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}",
+            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}; "
+            f"entry next-instruction hits={future_entry_advanced[0]}; "
+            f"next-instruction samples={future_entry_samples}",
             flush=True,
         )
 
@@ -502,7 +506,9 @@ def main():
                             f"last_state={future_sight_last_state[0]}; "
                             f"GetUserItem entries={item_entry_count[0]} returns={item_return_count[0]}; "
                             f"entry samples={item_entry_samples}; return samples={item_return_samples}; "
-                            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}",
+                            f"Future Sight RET counts={future_ret_counts}; RET samples={future_ret_samples}; "
+                            f"entry next-instruction hits={future_entry_advanced[0]}; "
+                            f"next-instruction samples={future_entry_samples}",
                             flush=True,
                         )
                         # PyBoy ignores exceptions raised inside hooks. Exit the
@@ -541,6 +547,24 @@ def main():
                                             tuple(mem[regs.SP:regs.SP + 4])))
 
     pyboy.hook_register(item_bank, return_site, trace_item_return, None)
+
+    # Detect CPU progress past the hooked entry point. The routine begins
+    # PUSH HL (E5), immediately followed by PUSH DE (D5). Hooking the
+    # second instruction shows whether PyBoy executes the first opcode.
+    entry_offset = offset("GetFutureSightUser")
+    assert data[entry_offset:entry_offset + 2] == bytes((0xE5, 0xD5))
+
+    def trace_future_second_instruction(_):
+        if current_case[0] != (292, 130, 21):
+            return
+        future_entry_advanced[0] += 1
+        if len(future_entry_samples) < 20:
+            future_entry_samples.append((regs.PC, regs.SP,
+                                         tuple(mem[regs.SP:regs.SP + 4]),
+                                         mem[addr("hROMBank")]))
+
+    pyboy.hook_register(future_bank, future_address + 1,
+                        trace_future_second_instruction, None)
 
     # Observe return instructions within GetFutureSightUser, including RET NZ.
     # Restrict the scan to the next global symbol, not adjacent routines.
