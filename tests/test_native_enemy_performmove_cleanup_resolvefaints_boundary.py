@@ -419,6 +419,14 @@ def main():
         bank, address = symbols[label]
         pyboy.hook_register(bank, address, callback, None)
 
+    # The entry-point breakpoint on GetFutureSightUser stalled the preceding
+    # boundary test in PyBoy. Observe its second instruction instead, after
+    # the original PUSH HL executes, preserving the existing assertion data.
+    future_bank, future_address = symbols["GetFutureSightUser"]
+    assert data[offset("GetFutureSightUser"):offset("GetFutureSightUser") + 2] == bytes((0xE5, 0xD5))
+    pyboy.hook_register(future_bank, future_address + 1,
+                        lambda _context: observe_future_sight(_context), None)
+
     def invoke(label, max_frames=128):
         bank, target = symbols[label]
         mem[0x2000] = bank
@@ -3470,7 +3478,7 @@ def main():
         hook("GetMovePriority", observe_move_priority)
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
-        hook("GetFutureSightUser", observe_future_sight)
+        # Future Sight observation installed at its second opcode above.
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
