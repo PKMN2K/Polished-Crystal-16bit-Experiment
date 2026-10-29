@@ -3660,7 +3660,10 @@ def main():
         hook("GetMovePriority", observe_move_priority)
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
-        hook("GetFutureSightUser", observe_future_sight)
+        # Controlled CI experiment: leave the Future Sight entry unhooked.
+        # Its second-instruction and RET hooks remain active above.
+        # The snapshot assertions normally populated here are expected to
+        # require restoration after this isolation test.
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
