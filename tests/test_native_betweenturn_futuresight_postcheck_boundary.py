@@ -597,7 +597,6 @@ def main():
 
     # Avoid a PyBoy entry breakpoint which stalled earlier battle-boundary
     # tests. Collect the same Future Sight observation after the initial PUSH HL.
-    hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
 
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
@@ -3900,6 +3899,7 @@ def main():
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
         # Future Sight observation installed at its second instruction above.
+        hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)

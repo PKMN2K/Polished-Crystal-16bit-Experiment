@@ -421,7 +421,6 @@ def main():
 
     # Observe Future Sight after its first instruction to avoid a PyBoy
     # entry breakpoint which stalled adjacent boundary regression tests.
-    hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
 
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
@@ -3486,6 +3485,7 @@ def main():
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
         # Future Sight is observed at its second instruction above.
+        hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)

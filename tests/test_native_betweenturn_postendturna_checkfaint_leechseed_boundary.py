@@ -639,7 +639,6 @@ def main():
 
     # Avoid PyBoy's problematic first-opcode Future Sight breakpoint,
     # as established by the preceding boundary regressions.
-    hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
 
     def invoke(label, max_frames=128, stop_flag=None):
         bank, target = symbols[label]
@@ -4014,6 +4013,7 @@ def main():
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
         # Future Sight observed after its initial PUSH HL above.
+        hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
