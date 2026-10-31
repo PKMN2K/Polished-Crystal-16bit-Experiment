@@ -179,8 +179,7 @@ CheckMentalHerb:
 CheckOppositeGender:
 ; Returns c (either mon is genderless), nc|z (same gender), nc|nz (opposite gender).
 ; Don't remove the possibility to check for same gender, Rivalry needs this.
-	ld a, MON_SPECIES
-	call TrueUserPartyAttr
+	farcall GetTrueUserPartySpeciesAndForm
 	ld [wCurPartySpecies], a
 	ld a, MON_GENDER
 	call TrueUserPartyAttr
@@ -196,8 +195,7 @@ CheckOppositeGender:
 
 .got_gender
 	push bc
-	ld a, MON_SPECIES
-	call OpponentPartyAttr
+	farcall GetOpponentPartySpeciesAndForm
 	ld [wCurPartySpecies], a
 	ld a, MON_GENDER
 	call OpponentPartyAttr

@@ -17,13 +17,18 @@ PokemonTableGarbageCollection:
 	___conversion_bitmap_initialize wPokemonIndexTable, MON_TABLE, .set_bit
 	ld a, BANK(wPartyMons)
 	ldh [rSVBK], a
+	; Only persistent player/daycare records follow the save-format marker.
+	; Keep all six slots: the contest hides party members by reducing the count.
+	farcall PokemonDataUsesTransientSpecies
+	jr nz, .legacy_party
 	___conversion_bitmap_check_structs wPartyMons, PARTYMON_STRUCT_LENGTH, PARTY_LENGTH, .set_bit
 	___conversion_bitmap_check_structs wBreedMon1Species, wBreedMon2 - wBreedMon1Species, 2, .set_bit
-	___conversion_bitmap_check_structs wOTPartyMons, PARTYMON_STRUCT_LENGTH, PARTY_LENGTH, .set_bit
+.legacy_party
+	; Roamers and contest winner records already store transient IDs.
 	___conversion_bitmap_check_structs wRoamMon1, wRoamMon2 - wRoamMon1, 3, .set_bit
-	___conversion_bitmap_check_structs wBugContestFirstPlaceMon, wBugContestSecondPlaceMon - wBugContestFirstPlaceMon, 3, .set_bit
-	___conversion_bitmap_check_values .set_bit, wTempMonSpecies, wContestMonSpecies, wBattleMonSpecies, \
-		wEnemyMonSpecies, wOddEggSpecies, wCurSpecies
+	___conversion_bitmap_check_structs wBugContestFirstPlaceMon, wBugContestSecondPlaceMon - wBugContestFirstPlaceMon, 4, .set_bit
+	; Opponent parties, battle/temp/contest mons, Odd Eggs and wCurSpecies
+	; remain legacy and must not pin coincidentally equal conversion slots.
 	pop af
 	ldh [rSVBK], a
 	___conversion_bitmap_free_unused wPokemonIndexTable, MON_TABLE

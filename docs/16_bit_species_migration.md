@@ -423,3 +423,732 @@ check, Professor Elm's evolution calls, script-driven Poképics, Wonder Trade
 restrictions, NPC-trade metadata, the Judge Machine, and poison-step ability
 checks. Egg flags and structural offsets remain direct byte reads because they
 are representation-independent.
+
+Player battle entry now resolves the source party record before publishing
+legacy battle identity. Only the player side uses the persistent-format decoder;
+trainer/link opponent parties retain their legacy representation. The decoded
+form is merged into the copied battle form without changing gender or Egg bits,
+and both temporary battle identity and base-data globals read that result.
+Player HUD base-data access and experience-growth lookup use the same existing
+party decoder, preserving the experience recipient pointer across the call.
+The focused CPU test in `tests/test_battle_party_identity.py` exercises the
+compiled decoder and send-in boundary. Persistent-format activation, opponent
+conversion, catch/write-back auditing, and Newbox migration are still pending.
+
+The shared temporary-Pokémon loader now checks both the persistent format marker
+and source record type. Opponent/link records stay legacy even when the player
+format marker is set, so catch/item and summary consumers do not mistake an
+opponent species byte for a conversion-table slot. Decoding a player record
+merges only species/form bits into `wTempMonForm`, preserving the gender and Egg
+flags copied from the source. The helper lives beside the existing format
+helpers because the original loader's ROM bank has little remaining space.
+`tests/test_tempmon_identity.py` exercises the complete copy and real base-data
+lookup with valid, absent, and partial format markers. Catch insertion and
+conversion-table garbage-collection representation auditing remain pending.
+
+Conversion-table collection now follows the active representation boundaries:
+player/daycare slots are scanned only when the persistent marker is valid;
+roamers and four contest winner/work records remain transient roots. All six
+player slots are scanned because the contest temporarily hides five by changing
+only the party count. Legacy opponent, battle, temporary, contest-catch and Odd
+Egg identities, and legacy species globals, are not slot references. Locks and
+recent allocations remain protected. Contest result memory overlaps unrelated
+scratch buffers, so this checkpoint conservatively retains those four values;
+phase-specific suppression is deferred.
+
+Ordinary catches now copy the legacy wild opponent through a shared destination
+boundary and convert the player record only after the full structure is copied.
+Opponent bytes and the destination's non-identity data remain unchanged. The
+existing nickname, caught-data and ball-effect processing follows the copy.
+Full-party PC delivery remains on the legacy Newbox path. The focused collection
+and catch CPU suite forces table exhaustion and checks live-root preservation,
+slot reclamation and copied identities in both formats; it does not simulate
+the entire interactive capture sequence or enable persistent-format activation.
+
+Lead field-ability lookup now resolves the persistent player identity before
+using the existing personality/form-based ability lookup. It preserves the
+current species/form globals and caller registers. Synchronize's nature
+selection now uses that same lead helper, including its Egg exclusion, as the
+other field-ability paths do.
+
+`TryAddMonToParty` now converts a generated player record only after its legacy
+construction and stat calculation finish. Generated opponent records, including
+wild/trainer parties and gift staging workspaces, remain legacy. Its successful
+return still sets carry after conversion. The lead helper resides with the
+format helpers, with a home-bank entry point, to avoid increasing ROM0 usage.
+The new CPU suite checks lead ability slots/options and executes complete
+player/opponent generation for each of the six target slots. Trade dialog,
+nature distribution, full gameplay and save-upgrade validation remain pending.
+
+Species-dependent held-item checks now use shared user/opponent party identity
+helpers. Player records decode through the persistent marker; opponent records
+stay legacy. Eviolite, non-faithful Metal Powder, and essential-item protection
+therefore compare canonical legacy-compatible species/form pairs instead of
+transient slot numbers. Faithful Metal Powder continues checking the current
+legacy battle identity, preserving its different Transform behavior.
+
+Post-battle ability processing decodes each player's identity before checking
+Natural Cure, Pickup or Honey Gather. Egg filtering remains representation-
+independent. The focused suite executes held-item checks and Natural Cure across
+both formats, both sides and all six slots. It also verifies the unchanged
+player/opponent HP/status write-back routines copy only their intended fields
+and leave species/form and all other party bytes intact. Future Sight's delayed
+attacker and gender-dependent battle identity reads remain to be migrated;
+item acquisition distributions and full battles have not been validated.
+
+
+## PC storage, save envelope and remaining activation boundary
+
+Newbox keeps its existing record size and pointer/allocation protocol. A stored
+species byte of zero tags a native word in `SAVEMON_EXTRA + 1` and `+ 2`; the
+first extra byte retains hypertraining. Zero was not a valid stored legacy
+species (`$0100` is unused). Encoding computes the native ID before the record
+checksum. Decoding checks the checksum before interpreting the tag, validates
+the native range and unused root slot, and sends invalid records through the
+existing Bad Egg path. Old nonzero species records retain the legacy decoder.
+Rewritten entries adopt the new format without scanning all boxes up front.
+
+Party/temp transfers respect direction and source: the player party follows
+its format marker, while temp and opponent parties remain legacy. Mechanical
+form changes, including adding/removing Mewtwo armor, update the transient ID.
+Variant decoding must preserve HL because callers use it as the struct pointer;
+the root lookup formerly overwrote it with the resolved root word.
+
+The conversion table is outside `sGameData`, so the existing save checksum did
+not protect it. The new `$16be` envelope adds a table checksum in unused padding
+and publishes magic only after the table and checksum are copied. A second
+version word in unused, checksummed Pokémon data prevents a torn table header
+from masquerading as an older save. Primary and backup integrity checks run
+before loading their respective records; failed primary checks select backup.
+The `$16bd` legacy table remains loadable for legacy player records. A transient
+player marker without a protected table is rejected rather than guessed at.
+
+Save format 11 accepts version 10 on read. Pokémon-data writers stamp version
+11 before updating records, ensuring older ROMs stop at their version check.
+Existing struct, main-checksum and Newbox addresses remain fixed. This supports
+forward migration; new saves cannot be used with older ROMs.
+
+`MigrateLegacyPlayerPokemonData` is RAM-only and not automatically enabled. It
+converts six party records (including contest-hidden slots) and two daycare
+records, protects intermediate IDs with dedicated locks, publishes the format
+marker last, and clears its locks. It is idempotent. CPU tests force collection
+with an occupied 100-slot table and verify the resulting records and lock state.
+
+The deferred Future Sight user, gender-dependent battle comparisons, Love Ball
+root comparison, Surf identity, stat-wing naming and move-learning form offset
+now use the corresponding decoded identity boundary. Native roaming storage
+also now passes the native BC word to the allocator rather than the destination
+HL address. Tests include high native words for storage, which is deliberately
+not described as a playable high-ID proof.
+
+The remaining architectural limit is the legacy runtime bridge: a byte and bit
+5 of the form can encode only nine root-species bits. The current native catalog
+ends at `$0151`. Full activation still needs native-aware opponent/battle
+consumers, an actual species above `$01ff` with complete data, integration of the
+RAM conversion into load/new-game paths, and full gameplay/save-recovery tests.
+
+
+## Direct native party base-data lookup
+
+The player HUD and experience recipient previously decoded persistent identity
+into legacy globals and then reconstructed a native ID for `GetBaseData`.
+They now retain legacy-global publication for surrounding consumers but obtain
+base data directly through `GetBaseDataFromPokemonDataStruct`.
+
+The shared native reader follows the player/daycare format marker, preserves
+HL/DE, and neither allocates IDs nor changes globals. The base-data wrapper also
+preserves BC and returns carry without touching the buffer for an empty identity.
+Its table lookup uses the stored native word even if the legacy form byte would
+resolve to a different record. This removes a round-trip at these two lookup
+sites; other battle, opponent, naming and presentation consumers remain pending.
+
+`tests/test_native_party_base_data.py` adds 512 CPU cases. It compares the full
+base-data buffer against the compiled ROM records, tests all party/daycare slots
+and marker states, checks metadata/register/global/table preservation, and tests
+empty records. Values above `$01ff` exercise only the native identity reader;
+they are not a substitute for the outstanding playable high-ID proof.
+
+
+## Native base data for the original attacker
+
+The external-user branch of Future Sight STAB now calls
+`GetBaseDataFromTrueUserParty` after publishing the existing legacy globals.
+The helper uses `TrueUserPartyAttr` to select the original attacker and reads
+player identity through the format-aware native reader. Enemy party records
+use `GetNativeSpeciesIDFromLegacyPokemonDataStruct` explicitly, so a transient
+player marker cannot reinterpret an opponent's species byte as a table slot.
+The helper preserves the move-type register and other caller registers/globals.
+Empty identities share the existing no-write/carry behavior.
+
+`tests/test_native_deferred_base_data.py` checks 1,200 lookup cases across both
+sides, six slots, deferred/current users, marker variants, regional/extended
+identities and metadata. It verifies exact compiled base data, source/global/
+table preservation and empty-record behavior. Full damage execution, active
+battle representation migration and a playable species above `$01ff` are still
+outside this checkpoint.
+
+
+## Native active-battler identity and first consumer
+
+The battle runtime now keeps a direct native word for each active battler in
+`wBattleMonNativeSpecies` and `wEnemyMonNativeSpecies`. These words occupy
+bytes that were already reserved as battle scratch, so this change does not
+shift neighboring WRAM addresses. They are native species IDs, not conversion-
+table slots, and therefore do not need to become collection roots.
+
+`SendInUserPkmn` stores the native identity before decoding the existing legacy
+battle species/form fields. Player send-ins resolve through the persistent
+format marker, while opponent records still resolve through the explicit legacy
+reader. This preserves the established battle struct representation while
+creating a 16-bit source for consumers that migrate one at a time.
+
+The first consumer is the send-in base-data lookup.
+`GetBaseDataFromActiveBattleNativeSpecies` selects the player or enemy shadow
+with `hBattleTurn` and loads the native base-data record directly. Existing
+legacy globals remain published for unconverted code. Empty shadows return
+carry and leave the base-data buffer untouched.
+
+The legacy reader also now treats species byte `$00` plus the extended-species
+form bit as species #256 rather than an empty record. A zero species byte is
+empty only when no extended-species identity bit is present.
+
+GitHub Actions run #12 passes all normal, faithful, VC and debug combinations.
+`tests/test_active_battle_native_base_data.py` adds eight focused PyBoy cases,
+and the existing send-in regression test now hooks the new native lookup
+boundary. Those PyBoy tests are committed but were not executed on this head in
+this chat; the last executed full CPU checkpoint remains 5,979 cases per
+normal/debug ROM.
+
+
+## Second active-battle consumer: Safari catch-rate reset
+
+When Safari bait or rock effects expire, the engine must restore the wild
+opponent's normal catch rate from its base data. That path previously rebuilt
+base data from `wEnemyMonSpecies` and `wEnemyMonForm`.
+
+`ResetSafariCatchRateFromEnemyNativeSpecies` now preserves the old publication
+of those legacy fields into `wCurSpecies` and `wCurForm`, but performs the
+actual base-data lookup through `wEnemyMonNativeSpecies`. The new
+`GetBaseDataFromEnemyBattleNativeSpecies` helper is side-specific and does not
+depend on the current `hBattleTurn` value. If the native shadow is empty, it
+returns carry and the existing catch rate is left untouched.
+
+This is intentionally narrower than replacing the enemy battle structure. The
+legacy species/form bytes remain available to all unconverted consumers; the
+Safari catch-rate source alone is now native.
+
+`tests/test_safari_native_catch_rate.py` adds four focused CPU cases covering
+an ordinary species, species #256, a native regional/mechanical identity and an
+empty shadow. Conflicting legacy/native fixtures prove the catch-rate record is
+selected from the native word while the legacy-global side effects remain.
+These new PyBoy cases are committed but were not run in this chat. GitHub
+Actions run #17 passes all eight configured ROM build variants.
+
+
+## Third active-battle consumer: Heavy Ball weight lookup
+
+Heavy Ball previously rebuilt the enemy identity from `wEnemyMonSpecies` and
+`wEnemyMonForm` before looking up body weight. That made its weight threshold
+logic depend on the transitional byte/form representation even though the active
+enemy now has a direct native identity shadow.
+
+`HeavyBallMultiplier` now reads `wEnemyMonNativeSpecies` and calls
+`GetNativeSpeciesWeight`, which uses the one-based native ID directly with
+`GetBodyDataPointerFromNativeIDBC`. The existing weight thresholds and catch-
+rate adjustments are unchanged. A zero native shadow returns without changing
+the current catch rate instead of falling back to a stale legacy identity.
+
+`tests/test_heavy_ball_native_weight.py` covers light, medium and heavy weight
+bands, species #256, Alolan Raichu, deliberately conflicting legacy identity and
+an empty native shadow. GitHub Actions run #21 passed all eight configured ROM
+build variants for the Heavy Ball code head.
+
+
+## Fourth active-battle consumer: ability reset
+
+The active ability reset path still passed the byte-sized battle species into
+the legacy `GetAbility` routine. That meant a mechanically distinct native
+identity could still select its ability table through reconstructed legacy
+species/form state.
+
+`GetAbilityFromNativeIDBC` now accepts a one-based native species ID directly.
+It keeps the existing personality byte as the ability-slot selector, loads the
+ability list from the native base-data record and returns no active ability for
+native ID zero. `ResetPlayerAbility` and `ResetEnemyAbility` read their
+respective native battle shadows and use this helper.
+
+`tests/test_active_battle_native_ability.py` adds focused cases for both battle
+sides, ordinary species, species #256, Alolan Raichu, conflicting legacy
+species bytes and empty native shadows. The battle structs themselves remain
+legacy-compatible; only this consumer's identity source has moved to the native
+word.
+
+
+## Transform synchronization for active native identity
+
+The direct native battle shadows originally represented the identity published
+at send-in. That is insufficient for consumers which intentionally inspect the
+battler's current species after Transform, because Transform already replaces
+the legacy active species/form fields.
+
+`CopyTransformNativeIdentity` now mirrors that operation for the native word.
+When the player transforms, `wEnemyMonNativeSpecies` is copied into
+`wBattleMonNativeSpecies`; when the enemy transforms, the player native word
+is copied into `wEnemyMonNativeSpecies`. The source shadow is unchanged, and
+a zero source remains zero.
+
+This does not alter the original party record or the existing transformed
+substatus. It only keeps the current active-battle native identity parallel to
+the current legacy battle representation. This is a prerequisite for migrating
+current-species consumers such as animation-variation and transformed-species
+checks without incorrectly using the send-in identity.
+
+`tests/test_transform_native_identity.py` covers both transform directions,
+ordinary species, species #256, Alolan Raichu and a zero native shadow.
+
+
+## Native current-species lists for battle animation substitution
+
+`CheckBattleAnimSubstitution` uses curated species lists to swap a move's
+battle animation for particular users. Those lists are already stored as native
+16-bit IDs, but the old path first rebuilt a native ID from the user's legacy
+battle species/form bytes before comparing it.
+
+`IsActiveBattleNativeSpeciesInList` now selects the current move user's
+`wBattleMonNativeSpecies` or `wEnemyMonNativeSpecies` shadow with
+`hBattleTurn` and compares that word directly against the native list. This
+removes a native→legacy→native round-trip from the active battle path and keeps
+the animation check aligned with transformed identity because the preceding
+Transform checkpoint synchronizes the active native shadow.
+
+The helper preserves DE so the caller can keep its candidate replacement
+animation ID there. An empty native shadow never matches. The Fresh Snack/Milk
+Drink, Fury Strikes/Fury Attack and Defense Curl variation checks now use this
+path.
+
+`tests/test_active_native_species_list.py` covers both active sides, ordinary
+and extended IDs, Alolan Raichu, deliberate legacy/native disagreement,
+wrong-side selection guards and empty active native shadows.
+
+
+## Faithful Metal Powder current-species check
+
+Polished Crystal has two intentional Metal Powder behaviors. In non-faithful
+mode, the effect follows Ditto's true party species and continues to apply after
+Ditto transforms. That path remains party-record based and unchanged.
+
+In faithful mode, the rule instead asks whether the opponent's current battle
+species is Ditto. That check previously read the legacy active species byte and
+extended-species form bit. `IsOpponentActiveNativeSpeciesBC` now selects the
+opponent's direct native shadow using `hBattleTurn` and compares the complete
+16-bit native ID. Because Transform synchronizes the active native shadows, a
+non-Ditto transformed into Ditto matches, while a Ditto transformed into
+something else does not.
+
+This helper is intentionally exact rather than root-species based: a different
+high-byte native identity with the same low byte does not compare equal.
+`tests/test_opponent_native_species_match.py` covers both battle turns,
+full-word mismatch, wrong-side guards, conflicting legacy bytes and empty
+native shadows.
+
+
+## Native species-restricted held-item checks
+
+`UserValidBattleItem` controls species-restricted held-item effects such as
+Light Ball, Leek, Lucky Punch, Quick Powder and Thick Club. The old path read
+the current battle species byte and form, then matched a three-byte table record
+containing item + legacy species/form.
+
+The table is now `ValidBattleItemTableNative`, with the same three-byte record
+width but a simpler identity representation: item byte + 16-bit native root
+species ID. The caller selects the current user's `wBattleMonNativeSpecies` or
+`wEnemyMonNativeSpecies` shadow from `hBattleTurn`, resolves that identity
+through `GetRootSpeciesFromNativeIDBC`, and compares the resulting root word.
+
+This remains a current-battle-species rule, not an original-party-species rule.
+Transform therefore changes which species-restricted item effects apply, just as
+the legacy active species/form fields did; the Transform synchronization
+checkpoint ensures the native shadow follows that behavior. Resolving the
+native identity to its root species also preserves the old zero-form wildcard:
+regional/mechanical forms inherit an item effect attached to their root species,
+while unrelated roots do not.
+
+`tests/test_native_species_battle_items.py` covers both active sides, a real
+mechanical-variant/root match, legacy/native disagreement, unrelated roots,
+empty native shadows and wrong-item guards.
+
+
+## Native move-animation cry checkpoint
+
+The move-animation `BattleAnimCmd_Cry` now reads the current native identity of
+its acting battler from the appropriate active-battle shadow. This removes the
+legacy species/form lookup for that command without changing the existing
+four script parameters, cry-track masks, pitch/length adjustments, asynchronous
+playback, or WRAM restoration. Mechanical variants use their root species'
+cry, and empty/egg/reserved identities remain silent. The focused PyBoy test
+is `tests/test_native_move_animation_cry.py`; it is committed but was not
+executed in the chat that introduced this checkpoint. This is still an
+incremental battle bridge, not a persistent-format activation.
+
+
+## Native Transform-animation picture
+
+The active-battle Transform command copies the opposing native species word
+into the acting battler's current native shadow before playing its animation.
+`BattleAnimCmd_Transform` now uses the existing side-specific
+`PreparePlayerBattlePictureIdentity` / `PrepareEnemyBattlePictureIdentity`
+compatibility bridge to select the rendered back/front picture. Mechanical
+variants derive their presentation form from their native identity; cosmetic
+forms are retained only when they resolve to the same native species.
+Legacy temporary species bytes remain available to unconverted callers but
+no longer select Transform's picture. The command keeps the original tile
+destination and WRAM-bank restoration, restores `wCurPartySpecies` as before,
+and retains `wCurForm` for the transformed picture on successful rendering.
+Empty or reserved native identities do not invoke a renderer. Focused PyBoy
+coverage resides in `tests/test_transform_animation_native_picture.py`; it
+stubs the front/back renderer and cannot prove on-screen pixel correctness.
+
+
+## Retired Beat Up animation identity boundary
+
+`BattleAnimCmd_BeatUp` and its `anim_beatup` macro are retained in the
+animation command dispatch, but the move is absent from the current move
+constants and animation pointer table. The former `BattleAnim_BeatUp` script
+is commented out as removed. There is therefore no live move-animation
+caller to migrate at this checkpoint.
+
+If Beat Up is reintroduced, its former animation command cannot safely use
+the active battler's native shadow: the pictured participant may be a
+different member of the attacker's party. The retained command currently
+treats the one-byte `wBattleAnimParam` as a legacy species number and reads
+the active battle mon's form. A future implementation must define a producer
+for the actual contributing party member's full native 16-bit identity and
+form, and a renderer-compatible bridge for that selected member. It must
+preserve the enemy-front/player-back tile destinations and restore the
+temporary renderer globals. No runtime or persistent-record change was
+made as part of this audit.
+
+
+## Native Silph Scope ghost reveal
+
+The initial unrevealed ghost remains the special `GhostFrontpic` while
+`BATTLETYPE_GHOST` is active. When the player has the Silph Scope,
+`BattleIntro` invokes `RevealGhostEnemyFrontpic` to publish the active
+enemy's renderer-compatible species/form from `wEnemyMonNativeSpecies`
+through `PrepareEnemyBattlePictureIdentity`; it then draws the revealed
+front picture to the original `vTiles0` transition tiles. The ghost-to-Pokémon
+animation still runs at its original point.
+
+After the animation, `RecordRevealedGhostEnemySeen` resolves the native
+shadow again before calling `SetSeenMon`. The second resolution avoids
+using renderer globals modified during the animation and ensures the Dex
+is given the revealed appearance's compatible species/form rather than a
+stale pre-battle species with a separate legacy enemy-form byte. Empty and
+reserved native IDs skip picture rendering and seen registration. This is
+a transient rendering/Dex boundary change, not a persistent party save
+format change. `tests/test_native_ghost_reveal_picture.py` stubs renderer
+and Dex calls to test inputs, routing and state; full ghost-battle visuals
+still require in-game validation.
+
+
+## Native enemy send-out temporary-record base data
+
+The selected trainer opponent's canonical native word is published to
+`wEnemyMonNativeSpecies` by `SendInUserPkmn` before the send-out picture
+path runs. `Function_SetEnemyPkmnAndSendOutAnimation` now calls the
+send-out-specific `CopyEnemyBattlePkmnToTempMon` helper instead of redundantly
+calling legacy `GetBaseData` before the general temporary-record copier.
+
+The new helper retains the opponent's legacy species/form and copies the
+complete original opponent party record into `wTempMon` through the shared
+temporary-record body. For a populated native shadow, it obtains base data
+directly through `GetBaseDataFromEnemyBattleNativeSpecies` rather than
+reconstructing a native ID from the legacy byte/form pair. With an empty
+shadow, it takes the existing legacy `GetBaseData` fallback. Neither the
+general temporary-record copier nor any persistent format is changed.
+
+The subsequent `GetMonFrontpic` already resolves the active enemy's
+native battle identity for rendering. Its lower-level sprite preparation
+still has an internal legacy base-data lookup; that broader renderer change
+is separate. `tests/test_native_enemy_sendout_tempmon.py` checks byte-exact
+temporary records and native base data and stubs the legacy loader to
+enforce the new helper's normal-path boundary. Real send-out animations
+and pixel output are not exercised by that CPU test.
+
+The initial implementation placed the send-out helper in the already-full
+bank14 and exceeded its $4000-byte section limit by 11 bytes. The validated
+implementation lives in `engine/16/native_species.asm` in the existing
+`16-bit ID stuff` ROM section and far-calls the legacy
+`GetPkmnSpecies` / `GetPkmnForm` readers and
+`_CopyPkmnToTempMon.copy_data` copy entry. This relocation does not alter
+the shared temporary-record layout. GitHub Actions run #35895629364
+compiled all eight ROM configurations and passed 72 focused enemy send-out
+CPU cases on each normal/debug ROM. The existing focused cry, Transform
+picture and ghost-reveal regressions also passed in that run.
+
+
+## Shared front-picture base-data lookup audit
+
+`engine/gfx/load_pics.asm:_PrepareFrontpic` is a shared renderer used by
+`GetFrontpic`, `PrepareFrontpic` and `PrepareAnimatedFrontpic`. It calls
+legacy `GetBaseData` as a side effect before obtaining size and pixels.
+The size itself comes from `GetPicSize`, which resolves
+`wCurSpecies`/`wCurForm` into `PokemonPicSizes`; the image pointer is
+resolved independently through `GetCosmeticSpeciesAndFormIndex` and
+`PokemonPicPointers`. Neither lookup directly uses `wCurBaseData`.
+
+The renderer cannot simply be changed to read `wEnemyMonNativeSpecies`
+unconditionally. General picture placement (`PrepMonFrontpic`), the trade
+front picture (`GetTrademonFrontpic`), and hatch egg/hatchling pictures
+(`GetEggFrontpic`/`GetHatchlingFrontpic`) also invoke these shared
+routines and have their own source identities. Their legacy base-data
+side effects may matter to the surrounding flow.
+
+In battle, `DropEnemySub` already calls
+`PrepareEnemyBattlePictureIdentity` and
+`GetBaseDataFromEnemyBattleNativeSpecies` before
+`PrepareAnimatedFrontpic`. The shared renderer's subsequent
+`GetBaseData` replaces that exact native base-data buffer through a
+legacy representation round-trip. During front-picture animation,
+`GetFrontpicDims` in `engine/gfx/pic_animation.asm` repeats a legacy
+`GetBaseData` before `GetPicSize`.
+
+A future implementation should expose an **explicit battle-only** front
+picture/dimension contract: preserve the active enemy's native identity for
+base-data side effects while retaining the existing shared renderer
+behavior for menu, trade and hatch calls. Do not infer battle context
+from `wCurPartySpecies`, `hBattleTurn` or the global `wBattleMode`
+alone, since shared picture calls may run in other contexts. Both
+rendering and animation-size paths need coverage. The existing bank14
+section is at its size limit, so avoid adding uncompensated code there.
+This checkpoint is documentation-only; no live renderer behavior changed.
+
+
+## Battle-only native enemy front-picture preparation
+
+The battle enemy's non-ghost sprite path now calls
+`PrepareNativeEnemyBattleAnimatedFrontpic`, in the native species ROM section,
+instead of the general `PrepareAnimatedFrontpic`. This explicit battle entry
+resolves `wEnemyMonNativeSpecies` and the enemy's supported presentation form,
+loads exact native base data, and preserves the original `vTiles2` destination
+and `vTiles3` animated-tile setup. Ghost-frontpic decompression remains a
+separate, unchanged branch.
+
+`_GetNativeFrontpic` in the shared graphics bank reuses the existing
+`_PrepareFrontpic` size/picture-pointer/decompression body but enters after
+the generic `GetBaseData` call. `_GetFrontpic` and all public generic
+front-picture functions still take the original legacy base-data side-effect
+path. The battle-only entry therefore does not replace native base data
+with reconstructed legacy data during front-picture preparation, and menu,
+trade, hatch and other non-battle front pictures retain their existing
+behavior. The extra graphics-bank entry is small because bank14 is nearly
+full; the larger battle wrapper lives outside that bank.
+
+`tests/test_native_enemy_frontpic_renderer.py` exercises the real picture
+preparation with only low-level decompression/tile-copy routines stubbed.
+It checks the native base-data buffer and presentation identity at
+preparation and animated-tile boundaries and verifies that the generic
+renderer still invokes `GetBaseData`. It does not verify displayed pixels.
+
+**Still pending:** `GetFrontpicDims` in the shared picture-animation setup
+independently calls legacy `GetBaseData`. That second call may replace
+the native buffer when an enemy front picture is subsequently animated;
+the next scoped migration must address the battle animation-dimension
+boundary without changing non-battle animations. No save-format or party
+layout change was made by this front-picture preparation step.
+
+
+### Validation of battle-only native enemy front-picture preparation
+
+GitHub Actions run #35899496080 passed for code/test commit
+`9b4a89ad40e0581eff13caef75d8fdc18528942c`: all eight ROM build
+variants and all ten focused regression steps succeeded. PyBoy 2.7.0
+reported 107 native/generic front-picture preparation CPU cases on each
+normal and debug ROM. The existing send-out, ghost-reveal, Transform-picture
+and move-animation-cry regressions also passed. The front-picture fixture
+switches to WRAM bank 1 when inspecting identity/base data at the
+animated-tile hook, then restores its execution bank.
+
+The linker reports two nonfatal unnecessary-farcall warnings in the native
+species helper section; these are not test failures. The real sprite pixels
+and full battle-animation sequence have not yet been validated, and
+`GetFrontpicDims` still has its distinct legacy base-data lookup.
+
+
+## Native enemy battle front-picture animation dimensions
+
+`BattleAnimateFrontpic` now invokes the explicit
+`AnimateNativeEnemyBattleFrontpic` entry. That entry saves the ambient
+legacy presentation globals, resolves the active enemy from
+`wEnemyMonNativeSpecies` through `PrepareEnemyBattlePictureIdentity`,
+and restores the globals after the animation. It retains the existing
+`ANIM_MON_BATTLE_SLOW` command sequence, including the native enemy cry.
+
+The animation setup shares the existing `LoadMonAnimation` record writer
+but passes a **call-entry mode**, not an inferred global battle flag, to
+select `GetNativeEnemyFrontpicDims`. This battle-only dimensions helper
+switches to WRAM bank 1, reloads exact base data through
+`GetBaseDataFromEnemyBattleNativeSpecies`, and then uses the ordinary
+`GetPicSize` result. Reloading matters because send-out effects may run
+between the earlier native picture preparation and the animation. The
+generic `AnimateFrontpic`, `LoadFrontpicAnim`, and `GetFrontpicDims`
+entries still perform their historical legacy `GetBaseData` side effect
+for menu, trade, hatch and other non-battle animations. Empty or reserved
+native enemy IDs skip the dedicated animation entry without changing the
+saved presentation globals.
+
+`tests/test_native_enemy_frontpic_dimensions.py` uses PyBoy CPU
+execution to check native identity and byte-exact base data at animation
+sizing, animation-structure dimensions, legacy-call isolation, two battle
+turn values, and generic animation behavior. Its sprite-tick and pic-size
+entry points are stubbed; it does **not** validate displayed frames,
+timing or visual playback. No saved Pokémon structure was changed.
+
+
+### Validation of native enemy front-picture animation dimensions
+
+GitHub Actions run #35902373237 **passed** for corrected code/test commit
+`ada3437afd49db8a844525322f5dc279b9a41fe5`. RGBDS 1.0.3 built all
+eight ROM configurations, and PyBoy 2.7.0 passed all twelve focused regression
+steps. Each normal/debug ROM passed 108 native/generic animation-dimension
+CPU cases. Its other five focused suites also passed (3,203 cases per ROM).
+There were no CI errors; existing nonfatal unnecessary-farcall linker
+warnings remain.
+
+The first test failed because it patched the animation-tick stub after
+registering its PyBoy hook. The corrected fixture patches before registering
+and accesses `wPokeAnimStruct` in its actual WRAM bank. This validates the
+scoped native identity, base-data and dimension handling, not actual sprite
+pixels, animation timing or complete in-game battles. No save format was
+changed.
+
+
+## Audit of remaining battle front-picture animation call sites
+
+Reviewed the working-branch battle core, battle effect-command helpers,
+return-to-battle Poké Ball screen, battle move effects and related picture
+callers after migrating `AnimateNativeEnemyBattleFrontpic`. The inspected
+live routes are:
+
+- **Trainer send-out:** `Function_SetEnemyPkmnAndSendOutAnimation` calls
+  `GetMonFrontpic` and then `BattleAnimateFrontpic`, which invokes the
+  native enemy animation entry. Its send-out visual effect is a separate
+  battle animation, not a call to generic `AnimateFrontpic`.
+- **Wild encounter:** `LoadTrainerOrWildMonPic` calls `SendInUserPkmn`
+  before `GetFrontpicOrGhostpic`. `BattleStartMessage` then uses
+  `BattleAnimateFrontpic` when the Pokémon can animate. These paths
+  reach native enemy picture preparation and native animation dimensions.
+- **Battle redraws:** the inspected battle menu restores, final-Pokémon
+  slide-in and `_ReturnToBattle_UseBall` reach `GetMonFrontpic`.
+  `BattleCommand_raisesubnoanim` and
+  `BattleCommand_lowersubnoanim` select `GetMonFrontpic` or
+  `DropEnemySub` for the enemy through `CallBattleCore`. They use the
+  native picture path or the intentional substitute-picture branch.
+- **Ghost/substitute exceptions:** `GetFrontpicOrGhostpic` retains the
+  distinct ghost graphic branch; active substitutes may raise the
+  substitute doll instead of drawing the Pokémon. These paths are not
+  opportunities to substitute a generic Pokémon animation.
+
+The generic entry points remain reachable for legitimate **non-battle**
+consumers: `GetTrademonFrontpic`/`AnimateTrademonFrontpic`,
+evolution and hatching, Hall of Fame `HOF_AnimateFrontpic`, and summary
+screen `LoadFrontpicAnim`. The shared
+`LoadMonAnimation`/`GetFrontpicDims` path still has its historical
+legacy base-data side effect by design. The enemy battle entry instead
+selects `LoadNativeEnemyBattleMonAnimation` and
+`GetNativeEnemyFrontpicDims` explicitly.
+
+No additional direct use of generic `AnimateFrontpic` was found in the
+inspected live battle call sites, so this audit makes **no gameplay code
+change**. It does not prove that every indirect or script-triggered
+animation is covered or that frames display correctly. The next focused
+check is the **real sprite decompression and VRAM tile-copy boundary** for
+enemy native roots and regional variants, which the current CPU tests stub.
+
+
+## Unstubbed native enemy front-picture tile-transfer regression
+
+The `tests/test_native_enemy_frontpic_vram.py` regression now enters the
+battle-only `PrepareNativeEnemyBattleAnimatedFrontpic` with the real
+`FarDecompressInB` LZ decoder, `PadFrontpic` padding logic,
+`Get2bpp` VRAM copies and `GetAnimatedFrontpic` animation-tile
+transfer **unstubbed**. It turns the LCD off in PyBoy so the engine
+takes its direct 2bpp transfer route, without VBlank scheduling. The
+test records the actual byte contents of the 7×7 front picture in
+VRAM bank 0 and animation tiles in VRAM bank 1, plus loaded dimensions
+and the canonical native base-data record.
+
+For roots, an extended root, cosmetic forms and two entries from the
+regional-variant identity table, the test compares the native enemy
+path's VRAM bytes against the generic renderer supplied with the
+**same resolved presentation identity**. It intentionally gives the
+generic path a conflicting native enemy shadow to establish that
+menus and other non-battle callers still render from their own
+species/form. It also checks both battle-turn values, legacy lookup
+isolation, actual decoder/tile-copy entry execution and empty/reserved
+native IDs (which must not decode or modify VRAM).
+
+The test checks offscreen VRAM bytes, not LCD palette mapping,
+sprite animation timing, the screen's final pixels or full battle
+playback. All real decode/transfer checks run in the normal and debug
+CI ROMs. No runtime source, persistent identity layout or save-format
+activation is changed by this regression checkpoint.
+
+
+### Validation of unstubbed front-picture decode and VRAM transfer
+
+GitHub Actions run #35929654099 **passed** for corrected test commit
+`629dac56590a65465fcff06ee8e61749aea9d6fb`. RGBDS built all eight
+ROM configurations and both normal/debug real-VRAM regressions passed.
+Each ROM executed 16 native/generic cases with the real LZ decoder,
+front-picture padding and LCD-off `Get2bpp` copies. The existing six
+focused suites also passed, giving 3,219 focused CPU cases per ROM and
+fourteen successful regression steps overall.
+
+The failed exploratory runs were fixture problems. Transfer-register
+capture showed that the animated base frame targets address `$9000`
+while VBK=1—the `vTiles5` address in VRAM bank 1—not the earlier
+`vTiles3`/`vTiles4` capture window. After correcting that window,
+a fixed four-frame timeout sampled execution inside the real
+`_Serve2bppRequest` routine, where that optimized copier intentionally
+uses `SP` as a source pointer. The final fixture switches `rVBK`
+like the hardware path and waits for the trampoline return before
+asserting CPU/stack state.
+
+This confirms byte-for-byte agreement between the native battle renderer
+and the generic renderer for the same presentation identity, including
+regional-form cases, while the battle route retains exact native base
+data and avoids legacy `GetBaseData`. It still does not test the
+LCD-enabled `Request2bpp`/VBlank scheduling path, palettes, final
+screen pixels, animation timing or complete interactive battles.
+
+
+### Validation of LCD-on Request2bpp/VBlank front-picture transfers
+
+`tests/test_native_enemy_frontpic_vblank.py` keeps the LCD enabled and
+redirects each `Get2bpp` call through a small test-only late-scanline
+gate before entering the real `Request2bpp`. This forces the engine to
+queue a pending 2bpp request and complete it through the ordinary VBlank
+`Serve2bppRequest` path instead of the LCD-off direct-copy path. The
+real front-picture LZ decoder, padding, request scheduler, VBlank service
+and VRAM writes execute unchanged.
+
+GitHub Actions run #35930670151 **passed** on CI/test commit
+`5823f6decf56bc399b438a48f9c0375835c3c490`. All eight ROM variants
+built and both normal/debug LCD-on regressions passed. Each ROM executed
+14 native/generic scheduled-transfer cases across root, extended-root,
+cosmetic and regional-variant presentations under both battle-turn
+values. Together with the existing suites this is 3,233 focused CPU
+cases per ROM and sixteen successful regression steps.
+
+The native battle path retained byte-exact native base data, did not call
+legacy `GetBaseData`, generated actual pending Request2bpp work that was
+observed by VBlank, and produced the same final VRAM bytes and picture
+dimensions as the generic renderer supplied with the equivalent visual
+identity. The test uses a RAM trampoline and a test-only Get2bpp redirect;
+those do not change runtime source.
+
+This still does not verify CGB palette output, actual LCD-composited screen
+pixels, human-visible animation timing, or a complete interactive battle.
+The next useful boundary is the battle send-out sequence that combines
+native picture preparation and battle animation state in one execution.

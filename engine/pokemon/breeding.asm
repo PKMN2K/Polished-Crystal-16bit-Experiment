@@ -36,11 +36,8 @@ CheckBreedmonCompatibility:
 
 .breed_ok
 	farcall LoadBreedMon2LegacySpeciesAndForm
-	push bc
 	farcall LoadBreedMon1LegacySpeciesAndForm
-	pop de
-	ld a, c
-	cp e
+	farcall BreedmonRootsMatch
 	ld c, HIGHLY_COMPATIBLE
 	jr z, .compare_ids
 	ld c, MODERATELY_COMPATIBLE
@@ -83,8 +80,7 @@ CheckBreedmonCompatibility:
 ; Ditto is automatically compatible with everything.
 ; If not Ditto, load the breeding groups into b/c and d/e.
 	farcall LoadBreedMon2LegacySpeciesAndForm
-	ld a, c
-	cp DITTO
+	call .IsDitto
 	jr z, .Compatible
 	call GetBaseData
 	ld a, [wBaseEggGroups]
@@ -98,8 +94,7 @@ CheckBreedmonCompatibility:
 
 	push bc
 	farcall LoadBreedMon1LegacySpeciesAndForm
-	ld a, c
-	cp DITTO
+	call .IsDitto
 	jr z, .CompatiblePopBC
 	call GetBaseData
 	pop bc
@@ -135,9 +130,17 @@ CheckBreedmonCompatibility:
 	scf
 	ret
 
-.SetGenderData:
+.IsDitto:
+; The loaded root's species-extension bit distinguishes low-byte aliases.
+	ld a, [wCurForm]
+	and EXTSPECIES_MASK
+	ret nz
 	ld a, [wCurPartySpecies]
 	cp DITTO
+	ret
+
+.SetGenderData:
+	call .IsDitto
 	ld a, 1 << BREEDGEN_DITTO
 	ret z
 	ld a, TEMPMON
@@ -629,8 +632,10 @@ InheritMove:
 
 GetEggFrontpic:
 	push de
-	ld a, MON_FORM
-	call GetPartyParamLocationAndValue
+	; Egg has one generic picture/base-data identity. Do not inherit the
+	; hatchling record's raw form or extension bit: EGG is $ff, so carrying
+	; EXTSPECIES here could reinterpret this lookup as species $01ff.
+	ld a, PLAIN_FORM
 	ld [wCurForm], a
 	ld a, EGG
 	ld [wCurPartySpecies], a
@@ -641,11 +646,9 @@ GetEggFrontpic:
 
 GetHatchlingFrontpic:
 	push de
-	ld a, MON_FORM
+	ld a, MON_SPECIES
 	call GetPartyParamLocationAndValue
-	ld [wCurForm], a
-	ld a, [wCurPartySpecies]
-	ld [wCurSpecies], a
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	call GetBaseData
 	pop de
 	farjp PrepareAnimatedFrontpic
@@ -758,14 +761,25 @@ EggHatch_AnimationSequence:
 	ld [wGlobalAnimXOffset], a
 	call ClearSprites
 	call Hatch_InitShellFragments
+	; GetEggFrontpic leaves the selected party mon's raw form byte in
+	; wCurForm. Restore the authoritative party identity before the hatchling
+	; BG/palette reveal as well as before its later animation.
+	ld a, MON_SPECIES
+	call GetPartyParamLocationAndValue
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	hlcoord 6, 3
 	lb bc, HIGH(vBGMap0), $00 ; Hatchling tiles start at c
 	ld a, [wJumptableIndex]
 	call Hatch_UpdateFrontpicBGMapCenter
 	call Hatch_ShellFragmentLoop
 	call WaitSFX
-	ld a, [wJumptableIndex]
-	ld [wCurPartySpecies], a
+	; GetEggFrontpic leaves the selected party mon's raw form byte in
+	; wCurForm. Re-decode the authoritative party identity before the
+	; hatchling reveal so native mechanical forms and extended roots animate
+	; with the same identity used to prepare the hatchling frontpic.
+	ld a, MON_SPECIES
+	call GetPartyParamLocationAndValue
+	farcall LoadCurSpeciesAndFormFromPokemonDataStruct
 	hlcoord 6, 3
 	lb de, $0, ANIM_MON_HATCH
 	farcall AnimateFrontpic
