@@ -246,9 +246,38 @@ def main():
         if callback is not None:
             pyboy.hook_register(bank, address, callback, None)
 
+    # Diagnostic guard: a PyBoy breakpoint callback may loop inside one
+    # tick(), where the outer frame-count watchdog cannot make progress.
+    from collections import deque
+    recent_hook_events = deque(maxlen=20)
+    hook_event_count = [0]
+    last_hook = [None]
+    repeat_count = [0]
+
     def hook(label, callback):
         bank, address = symbols[label]
-        pyboy.hook_register(bank, address, callback, None)
+
+        def guarded(context):
+            event = (label, regs.PC, regs.SP)
+            hook_event_count[0] += 1
+            recent_hook_events.append(event)
+            if event == last_hook[0]:
+                repeat_count[0] += 1
+            else:
+                last_hook[0] = event
+                repeat_count[0] = 1
+            if repeat_count[0] == 10000 or hook_event_count[0] == 200000:
+                print(
+                    f"DIAG applydamage callback watchdog: case={current_case[0]} "
+                    f"event={event} repeats={repeat_count[0]} "
+                    f"total={hook_event_count[0]} "
+                    f"recent={list(recent_hook_events)}",
+                    flush=True,
+                )
+                raise RuntimeError("ApplyDamage callback watchdog triggered")
+            return callback(context)
+
+        pyboy.hook_register(bank, address, guarded, None)
 
     def invoke(label, max_frames=128):
         print(f"DIAG applydamage: case={current_case[0]} entering {label}", flush=True)
@@ -1501,6 +1530,10 @@ def main():
         count = 0
         for native, species, form in cases:
             setup_case(native, species, form)
+            hook_event_count[0] = 0
+            last_hook[0] = None
+            repeat_count[0] = 0
+            recent_hook_events.clear()
             context = (native, species, form)
 
             invoke("BattleIntro")
