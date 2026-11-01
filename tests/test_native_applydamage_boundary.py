@@ -17,6 +17,8 @@ critical-text handling and later post-hit commands remain outside this
 checkpoint.
 """
 import argparse
+import faulthandler
+import sys
 from pathlib import Path
 
 from pyboy import PyBoy
@@ -249,6 +251,8 @@ def main():
         pyboy.hook_register(bank, address, callback, None)
 
     def invoke(label, max_frames=128):
+        print(f"DIAG applydamage: case={current_case[0]} entering {label}", flush=True)
+        faulthandler.dump_traceback_later(30, repeat=False, file=sys.stderr)
         bank, target = symbols[label]
         mem[0x2000] = bank
         mem[addr("hROMBank")] = bank
@@ -256,10 +260,21 @@ def main():
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        for _ in range(max_frames):
+        for frame in range(max_frames):
+            if frame % 16 == 0:
+                print(
+                    f"DIAG applydamage: case={current_case[0]} label={label} "
+                    f"frame={frame} pc={regs.PC:04x} sp={regs.SP:04x} "
+                    f"reads={len(read_script_calls)} apply={len(applydamage_calls)} "
+                    f"take={len(applydamage_take_damage_calls)} "
+                    f"subtract={len(applydamage_subtract_hp_calls)}",
+                    flush=True,
+                )
             pyboy.tick(1, False, False)
             if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
                 break
+        faulthandler.cancel_dump_traceback_later()
+        print(f"DIAG applydamage: case={current_case[0]} exited {label} pc={regs.PC:04x}", flush=True)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
