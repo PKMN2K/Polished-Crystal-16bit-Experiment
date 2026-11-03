@@ -10,6 +10,9 @@ The following supereffectivetext script byte is replaced with endturn_command,
 so this checkpoint stops immediately after criticaltext.
 """
 import argparse
+import faulthandler
+import sys
+from collections import deque
 from pathlib import Path
 
 from pyboy import PyBoy
@@ -245,11 +248,45 @@ def main():
         if callback is not None:
             pyboy.hook_register(bank, address, callback, None)
 
+    # Observe repeated PyBoy hook events even when tick() never returns.
+    recent_hook_events = deque(maxlen=20)
+    hook_event_count = [0]
+    last_hook = [None]
+    repeat_count = [0]
+    watchdog_reported = [False]
+
     def hook(label, callback):
         bank, address = symbols[label]
-        pyboy.hook_register(bank, address, callback, None)
+
+        def guarded(context):
+            event = (label, regs.PC, regs.SP)
+            hook_event_count[0] += 1
+            recent_hook_events.append(event)
+            if event == last_hook[0]:
+                repeat_count[0] += 1
+            else:
+                last_hook[0] = event
+                repeat_count[0] = 1
+            if not watchdog_reported[0] and (
+                repeat_count[0] >= 10000 or hook_event_count[0] >= 200000
+            ):
+                watchdog_reported[0] = True
+                print(
+                    f"DIAG criticaltext callback watchdog: case={current_case[0]} "
+                    f"event={event} repeats={repeat_count[0]} "
+                    f"total={hook_event_count[0]} "
+                    f"recent={list(recent_hook_events)}",
+                    flush=True,
+                )
+                # PyBoy may swallow hook exceptions; print once and allow
+                # the existing external timeout to end a stuck run.
+            return callback(context)
+
+        pyboy.hook_register(bank, address, guarded, None)
 
     def invoke(label, max_frames=128):
+        print(f"DIAG criticaltext: case={current_case[0]} entering {label}", flush=True)
+        faulthandler.dump_traceback_later(30, repeat=False, file=sys.stderr)
         bank, target = symbols[label]
         mem[0x2000] = bank
         mem[addr("hROMBank")] = bank
@@ -257,10 +294,22 @@ def main():
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        for _ in range(max_frames):
-            pyboy.tick(1, False, False)
-            if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
-                break
+        try:
+            for frame in range(max_frames):
+                if frame % 16 == 0:
+                    print(
+                        f"DIAG criticaltext: case={current_case[0]} label={label} "
+                        f"frame={frame} pc={regs.PC:04x} sp={regs.SP:04x} "
+                        f"reads={len(read_script_calls)} apply={len(applydamage_calls)} "
+                        f"hooks={hook_event_count[0]}",
+                        flush=True,
+                    )
+                pyboy.tick(1, False, False)
+                if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
+                    break
+        finally:
+            faulthandler.cancel_dump_traceback_later()
+        print(f"DIAG criticaltext: case={current_case[0]} exited {label} pc={regs.PC:04x}", flush=True)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             label, hex(regs.PC), hex(regs.SP),
             "reads", len(read_script_calls),
@@ -1551,6 +1600,11 @@ def main():
         count = 0
         for native, species, form in cases:
             setup_case(native, species, form)
+            hook_event_count[0] = 0
+            last_hook[0] = None
+            repeat_count[0] = 0
+            watchdog_reported[0] = False
+            recent_hook_events.clear()
             context = (native, species, form)
 
             invoke("BattleIntro")
