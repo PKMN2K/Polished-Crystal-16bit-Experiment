@@ -1509,15 +1509,17 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        # ResetSubHit begins with LD A, imm8 (3E xx), then JR to
-        # ResetMoveHitState. An entry hook can repeatedly retrigger inside
-        # a single PyBoy tick; observe after the first instruction instead.
+        # ResetSubHit falls through from LD A, imm8 directly into
+        # ResetMoveHitState (PUSH HL; LD HL, imm16). There is no JR.
+        # Observe after PUSH HL, avoiding hooks on the entry instruction
+        # and on the push itself, which can stall a PyBoy tick.
         reset_subhit_offset = offset("ResetSubHit")
+        assert offset("ResetMoveHitState") == reset_subhit_offset + 2
         assert data[reset_subhit_offset] == 0x3E
-        assert data[reset_subhit_offset + 2] == 0x18
+        assert data[reset_subhit_offset + 2:reset_subhit_offset + 4] == bytes((0xE5, 0x21))
         reset_subhit_bank, reset_subhit_addr = symbols["ResetSubHit"]
         pyboy.hook_register(
-            reset_subhit_bank, reset_subhit_addr + 2,
+            reset_subhit_bank, reset_subhit_addr + 3,
             observe_applydamage_reset_subhit, None,
         )
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
