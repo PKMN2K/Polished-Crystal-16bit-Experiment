@@ -77,6 +77,7 @@ NewGame:
 	call ResetWRAM_NotPlus
 _NewGame_FinishSetup:
 	call ResetWRAM
+	farcall InitializeNativePokemonDataForNewGame
 	farcall ClearSavedObjPals
 	ld a, -1
 	ld [wOvercastRandomDay], a

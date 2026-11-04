@@ -43,12 +43,25 @@ _PlayMonCry::
 .done
 	jmp PopBCDEHL
 
+LoadCryFromNativeIDBC::
+; Native mechanical forms share their root species' cry, as in LoadCry.
+	farcall GetRootSpeciesFromNativeIDBC
+	ld a, c
+	and a
+	scf
+	ret z ; empty identity or reserved root $0100
+	inc a
+	scf
+	ret z ; egg has no cry
+	dec bc
+	jr LoadCry.load_index
+
 LoadCry::
 ; Load cry bc.
 
 	call GetCryIndex
 	ret c
-
+.load_index
 	anonbankpush PokemonCries
 
 _LoadCry:
