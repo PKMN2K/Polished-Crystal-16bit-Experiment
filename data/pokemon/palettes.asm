@@ -1,6 +1,9 @@
 PokemonPalettes:
 	indirect_table COLOR_SIZE * 2 * 2, 0
 	indirect_entries NUM_NATIVE_SPECIES, PokemonPaletteData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, PokemonPaletteData, ANNIHILAPE - 0
+endc
 	indirect_table_end
 
 PokemonPaletteData:

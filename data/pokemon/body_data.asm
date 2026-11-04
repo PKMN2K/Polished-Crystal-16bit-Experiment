@@ -8,6 +8,9 @@ PokemonBodyData:
 ; entries correspond to constants/pokemon_constants.asm
 	indirect_table BODY_DATA_SIZE, 1
 	indirect_entries NUM_NATIVE_SPECIES, PokemonBodyDataRecords
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, PokemonBodyDataRecords, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 PokemonBodyDataRecords:

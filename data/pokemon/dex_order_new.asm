@@ -291,4 +291,7 @@ NewPokedexOrder:
 	native_species_entry MEWTWO
 	native_species_entry MEW
 	native_species_entry CELEBI
-	assert_table_length NUM_POKEMON
+if DEF(NATIVE_SPECIES_TEST)
+	native_species_entry WIDE_TEST_SPECIES
+endc
+	assert_table_length NUM_POKEDEX_SPECIES

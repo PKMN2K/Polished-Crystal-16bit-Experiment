@@ -1835,13 +1835,13 @@ SECTION UNION "Attributes", WRAMX
 wDexMons::
 for n, 1, NUM_POKEMON_PADDED + 1
 wDexMon{d:n}::
-wDexMon{d:n}Species:: db
+wDexMon{d:n}Species:: dw
 wDexMon{d:n}Form:: db
 endr
 wDexMonsEnd::
 
 ; Conversion table to get johto dex number from national dex number.
-wDexConversionTable:: ds NUM_SPECIES * 2
+wDexConversionTable:: ds NUM_POKEDEX_SPECIES * 2
 
 
 SECTION UNION "Attributes", WRAMX

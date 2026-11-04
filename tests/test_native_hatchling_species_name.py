@@ -75,6 +75,8 @@ def main():
         tested = 0
         extended_0101_name = None
         for native in range(1, num_records):
+            if native == 0x0100:
+                continue  # Reserved gap: not a hatchling species.
             species = native & 0xFF
             ext = (native >> 8) << 5
 
@@ -108,13 +110,21 @@ def main():
                     extended_0101_name = actual
                 tested += 1
 
+        # The reserved root must return an empty name instead of indexing a
+        # dummy name record or exposing a previous species name.
+        mem[addr("wCurPartySpecies")] = 0
+        mem[addr("wCurForm")] = 0x21
+        mem[addr("wStringBuffer1")] = 0x80
+        invoke()
+        assert mem[addr("wStringBuffer1")] == 0x53
+
         # Explicit anti-alias proof: $0101 (Mismagius) must not use species $0001's name.
         assert extended_0101_name is not None
         one_start = records_start + NAME_RECORD_LENGTH
         assert extended_0101_name != data[one_start:one_start + NAME_RECORD_LENGTH]
 
         print(
-            f"PASS: {tested} hatchling species-name cases across {num_records - 1} native roots; "
+            f"PASS: {tested} hatchling species-name cases across {num_records - 2} supported name roots; "
             "extended-root reconstruction, metadata tolerance, exact name records, "
             "and no low-byte aliasing"
         )

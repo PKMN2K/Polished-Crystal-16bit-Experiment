@@ -1,6 +1,9 @@
 EvolutionMoves::
 	indirect_table 1, 1
 	indirect_entries NUM_NATIVE_SPECIES, EvolutionMovesData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, EvolutionMovesData, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 EvolutionMovesData:

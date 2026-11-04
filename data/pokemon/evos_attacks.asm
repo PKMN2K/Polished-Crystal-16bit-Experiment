@@ -15,7 +15,7 @@ MACRO evo_data
 	REDEF EVOS_ATTACKS_STATE EQU 1
 	db \1 ; evolution type
 	if \1 == EVOLVE_PARTY
-		dp \2, PLAIN_FORM ; parameter
+		native_species_entry \2 ; native party-species parameter
 	else
 		db \2 ; parameter
 	endc
@@ -24,9 +24,9 @@ MACRO evo_data
 		shift
 	endc
 	if _NARG > 3
-		dp \3, \4
+		native_species_form \3, \4
 	else
-		dp \3, PLAIN_FORM
+		native_species_form \3, PLAIN_FORM
 	endc
 ENDM
 
@@ -5915,6 +5915,9 @@ endc
 	learnset 53, GUNK_SHOT ; Sludge Wave → similar move
 
 	evos_attacks Annihilape
+if DEF(NATIVE_SPECIES_TEST)
+	evo_data EVOLVE_LEVEL, 20, WIDE_TEST_SPECIES
+endc
 	learnset 1, SHADOW_CLAW ; Shadow Punch → similar move ; evolution move
 	learnset 1, OUTRAGE
 	learnset 1, RAGE
@@ -5940,3 +5943,14 @@ endc
 	EggEvosAttacks:
 	db -1 ; no more evolutions
 	db -1 ; no more level-up moves
+
+if DEF(NATIVE_SPECIES_TEST)
+NativeWideTestIdentity:
+	native_species_form WIDE_TEST_SPECIES, PLAIN_FORM
+WideTestEvosAttacks:
+	db EVOLVE_LEVEL, 21
+	native_species_form ANNIHILAPE, PLAIN_FORM
+	db -1
+WideTestLearnset:
+	db 1, TACKLE, 20, GROWL, -1
+endc

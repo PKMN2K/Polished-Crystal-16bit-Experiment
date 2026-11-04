@@ -378,7 +378,7 @@ MACRO resolve_trainer_native_species
 	elif _tr_native_form == PALDEAN_FORM && \1 == TAUROS
 		redef _tr_native_species = PALDEAN_TAUROS_COMBAT
 	endc
-	assert _tr_native_species >= 1 && _tr_native_species <= NUM_NATIVE_SPECIES
+	assert (_tr_native_species >= 1 && _tr_native_species <= NUM_NATIVE_SPECIES) || (_tr_native_species >= FIRST_WIDE_SPECIES && _tr_native_species <= LAST_WIDE_SPECIES)
 ENDM
 
 MACRO native_species_entry
@@ -389,6 +389,17 @@ MACRO native_species_entry
 		resolve_trainer_native_species \1, \2
 	endc
 	dw _tr_native_species
+ENDM
+
+MACRO native_species_form
+; Canonical native word followed by presentation form/metadata.
+	if _NARG == 1
+		native_species_entry \1
+		db NO_FORM
+	else
+		native_species_entry \1, \2
+		db (\2) & ~EXTSPECIES_MASK
+	endc
 ENDM
 
 MACRO end_trainer

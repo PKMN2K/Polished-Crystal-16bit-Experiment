@@ -240,7 +240,7 @@ StackDexGraphics:
 	ld a, BANK(wDexConversionTable)
 	ldh [rWBK], a
 	ld de, 0
-	ld bc, NUM_POKEMON + $100 ; "+ $100" simplifies loop iteration
+	ld bc, NUM_POKEDEX_SPECIES + $100 ; "+ $100" simplifies loop iteration
 .conversion_loop
 	push bc
 	ld hl, NewPokedexOrder

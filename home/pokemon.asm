@@ -372,9 +372,7 @@ GetPokedexNumber::
 	call StackCallInBankA
 .Function:
 	push hl
-	ld a, b
-	call ConvertFormToExtendedSpecies
-	ld b, a
+	farcall GetNativeRootFromRuntimeBC
 	ld hl, NewPokedexOrder
 .loop
 	ld a, [hli]
@@ -393,21 +391,7 @@ GetPokedexNumber::
 	ret
 
 GetNationalDexNumber:
-; input: c = species, b = extspecies+form
-; output: bc = natdex number ((256*extspecies + c) - (2*extspecies))
-	ld a, b
-	call ConvertFormToExtendedSpecies
-	ld b, a
-	add a
-	push de
-	ld d, a
-	ld a, c
-	sub d
-	pop de
-	ld c, a
-	ret nc
-	dec b
-	ret
+	farjp _GetNationalDexNumber
 
 ConvertFormToExtendedSpecies::
 ; input: a = form
@@ -469,6 +453,13 @@ GetSpeciesAndFormIndex::
 GetCosmeticSpeciesAndFormIndex::
 ; input: c = species, b = form
 ; output: bc = extended index, carry if anything found
+	farcall IsRuntimeSpeciesAliasBC
+	jr nc, .ordinary
+	farcall GetNativeRootFromRuntimeBC
+	dec bc
+	and a
+	ret
+.ordinary
 	ld hl, CosmeticSpeciesAndFormTable
 ; fallthrough
 GetSpeciesAndFormIndexFromHL::

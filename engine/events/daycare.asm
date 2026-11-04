@@ -684,11 +684,13 @@ DayCare_GenerateEgg:
 	call GetSpeciesAndFormIndex
 	inc bc ; zero-based legacy data index -> one-based native species ID
 	farcall GetEggMovePointerFromNativeIDBC
-	pop bc
 	ld a, BANK(EggSpeciesMoves)
-	call GetFarWord
-	ld a, l
-	inc a
+	farcall ReadNativeSpeciesForm
+	ld h, b
+	ld l, c
+	pop bc
+	ld a, h
+	or l
 	jr nz, .found_preevo
 	ld h, b
 	ld l, c
@@ -1023,6 +1025,7 @@ DayCare_GenerateEgg:
 
 .inherit_mother_unless_samespecies
 	push bc
+	push hl
 	farcall LoadBreedMon1LegacySpeciesAndForm
 	push bc
 	farcall LoadBreedMon2LegacySpeciesAndForm
@@ -1042,6 +1045,7 @@ DayCare_GenerateEgg:
 	call Random
 	and 1
 .use_mother
+	pop hl
 	inc a
 	pop bc
 	call GetParentAddr

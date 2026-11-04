@@ -309,7 +309,8 @@ DayCareStep::
 	ld b, h
 	ld c, l
 	inc bc
-	inc bc ; first two bytes are base evolution
+	inc bc
+	inc bc ; native base species word + form
 	pop hl
 
 	; Check each move slot for the other mon for whether we already know the

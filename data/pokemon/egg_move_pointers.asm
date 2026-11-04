@@ -1,6 +1,9 @@
 EggSpeciesMovesPointers::
 	indirect_table 2, 1
 	indirect_entries NUM_NATIVE_SPECIES, EggSpeciesMovesPointerData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, WideTestEggSpeciesMovesPointer, 0
+endc
 	indirect_table_end
 
 EggSpeciesMovesPointerData:
@@ -354,3 +357,8 @@ EggSpeciesMovesPointerData:
 
 	assert_table_length NUM_NATIVE_SPECIES
 .IndirectEnd:
+
+if DEF(NATIVE_SPECIES_TEST)
+WideTestEggSpeciesMovesPointer:
+	dw WideTestEggSpeciesMoves
+endc

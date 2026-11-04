@@ -74,3 +74,21 @@ MACRO indirect_table_end
 	db 0
 	DEF ___current_indirect_size = 0
 ENDM
+
+MACRO indirect_alias
+; Map one sparse native ID to an existing record, without padding the records.
+; Arguments: native ID, record array, zero-based record offset, optional bank.
+	assert ___current_indirect_size != 0
+	assert \1 >= ___current_indirect_index
+	if \1 > ___current_indirect_index
+		indirect_entries (\1) - 1
+	endc
+	db 1
+	if _NARG == 4
+		db \4
+	else
+		db BANK(\2)
+	endc
+	dw (\2) + (\3) * ___current_indirect_size
+	DEF ___current_indirect_index = (\1) + 1
+ENDM

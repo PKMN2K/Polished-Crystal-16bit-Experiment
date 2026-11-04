@@ -1369,12 +1369,7 @@ GetForgottenMoves::
 	call GetPartyLocation
 	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	farcall GetEvosAttacksPointer
-.skip_evos
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
-	inc a
-	jr nz, .skip_evos
+	farcall SkipEvolutionData
 
 	ld de, wMoveScreenMoves
 	ld c, a

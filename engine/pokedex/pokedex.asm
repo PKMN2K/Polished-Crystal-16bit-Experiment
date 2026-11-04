@@ -439,7 +439,7 @@ Pokedex_GetCursorSpecies:
 	add [hl]
 	ld c, a
 	ld b, 0
-	ld a, 10
+	ld a, 5 * DEXMON_SIZE
 	ld hl, wDexMons
 	rst AddNTimes
 	pop af
@@ -447,10 +447,8 @@ Pokedex_GetCursorSpecies:
 	ld c, a
 	add hl, bc
 	add hl, bc
-	ld a, [hli]
-	ld b, [hl]
-	ld c, a
-	ret
+	add hl, bc
+	farjp ReadNativeDexRecord
 
 Pokedex_MainLoop:
 .loop
@@ -737,9 +735,12 @@ Pokedex_UpdateRow:
 	call Pokedex_GetPosData
 	ld a, BANK(wDexMons)
 	ldh [rWBK], a
-	ld a, [hli]
+	push bc
+	farcall ReadNativeDexRecord
+	ld d, b
+	ld a, c
+	pop bc
 	and a
-	ld d, [hl]
 	push af
 	ld a, BANK(wDexMonTiles)
 	ldh [rWBK], a
@@ -931,9 +932,7 @@ endc
 	ld a, BANK(wDexMons)
 	ldh [rWBK], a
 	push bc
-	ld a, [hli]
-	ld c, a
-	ld b, [hl]
+	farcall ReadNativeDexRecord
 	ld a, BANK(wDexMonTiles)
 	ldh [rWBK], a
 
@@ -1028,7 +1027,7 @@ Pokedex_GetPosData:
 
 .PosTable:
 	; absolute row
-	dw wDexMons, 10, 2
+	dw wDexMons, 5 * DEXMON_SIZE, DEXMON_SIZE
 	dw 1, 5, 1
 
 	; mod-based
@@ -2600,15 +2599,14 @@ Pokedex_GetSearchResults:
 	call Pokedex_IterateSpecies
 	call Pokedex_ConvertFinalEntryToRowCols
 
-	; If the first byte in wDexMons is blank, there was
-	; no search results found, otherwise it'd be 1-254,
-	; signifying a species.
+	; Native ID zero denotes a blank result. Either byte may otherwise be zero.
 	ldh a, [rWBK]
 	push af
 	ld a, BANK(wDexMons)
 	ldh [rWBK], a
-	ld a, [wDexMons]
-	and a
+	ld hl, wDexMons
+	ld a, [hli]
+	or [hl]
 	pop bc ; preserve flags
 	ld a, b
 	ldh [rWBK], a
@@ -2735,29 +2733,31 @@ Pokedex_GetSearchResults:
 	ld hl, wDexMons
 	add hl, de
 	add hl, de
+	add hl, de
 
 	; Don't overwrite unless the entry is blank, or the same
 	; species.
 
-	; Is the entry blank?
-	inc [hl]
-	dec [hl]
+	; Decode only the compared record: the list itself stores native words,
+	; so it never consumes one transient slot per displayed species.
+	push bc
+	push hl
+	farcall ReadNativeDexRecord
+	ld d, b
+	ld e, c
+	pop hl
+	pop bc
+	ld a, e
+	and a
 	jr z, .overwrite_ok
-
-	; Is it the same species?
-	ld a, [hli]
 	cp c
 	jr nz, .next_dexmon
-	ld a, [hld]
+	ld a, d
 	xor b
 	and EXTSPECIES_MASK
 	jr nz, .next_dexmon
-
-	; Overwrite with current species data.
 .overwrite_ok
-	ld a, c
-	ld [hli], a
-	ld [hl], b
+	farcall WriteNativeDexRecord
 	pop hl
 	pop af
 	ldh [rWBK], a
@@ -2875,9 +2875,10 @@ Pokedex_InitData:
 	ld hl, wDexMons
 	add hl, bc
 	add hl, bc
-	ld a, e
-	ld [hli], a
-	ld [hl], d
+	add hl, bc
+	ld b, d
+	ld c, e
+	farcall WriteNativeDexRecord
 	pop af
 	ldh [rWBK], a
 	ret
@@ -2995,19 +2996,15 @@ Pokedex_IterateSpecies:
 ; Iterate in the following order depending on a: 0 (natdex), 1 (johto), 2 (a-z)
 	ld b, 0
 	ld c, b
-	ld de, NUM_POKEMON
+	ld de, NUM_POKEDEX_SPECIES
 	inc d ; to simplify looping checks
-	and a ; cp DEXMODE_OLD
-	jr nz, .species_loop
-	inc c
 .species_loop
 	push de
 	push bc
 	push af
 
-	; Get current species. Native dex-order entries that cannot yet fit
-	; wDexMons' transitional species/form representation are skipped instead of
-	; being truncated through EXTSPECIES.
+	; Convert a native root to a short-lived callback handle. The list stores
+	; the full native word and does not keep these handles alive.
 	call .GetSpeciesID
 	jr c, .next_species
 
@@ -3073,19 +3070,7 @@ Pokedex_IterateSpecies:
 	pop de
 	inc bc
 
-	; If iterating using old order, we need to skip c=255 and c=0
-	and a ; cp DEXMODE_OLD
-	jr nz, .next_species_new_order
 
-	; Skip c=255 and c=0
-	inc c
-	jr nz, .next_species_old_order
-	inc b
-	inc c
-	inc c
-.next_species_old_order
-	dec c
-.next_species_new_order
 	dec e
 	jr nz, .species_loop
 	dec d
@@ -3095,12 +3080,8 @@ Pokedex_IterateSpecies:
 .GetSpeciesID:
 	and a ; cp DEXMODE_OLD
 	jr nz, .new_dex_order
-
-	; Move the 9th bit to extspecies.
-	swap b
-	sla b
-	ret
-
+	farcall NativeSpeciesFromDexOrdinal
+	jr .pack_root
 .new_dex_order
 	push hl
 	dec a ; cp DEXMODE_NEW
@@ -3112,28 +3093,14 @@ Pokedex_IterateSpecies:
 	add hl, bc
 	ld a, [hli]
 	ld c, a
-	ld a, [hl]
-	ld b, a
-	farcall GetRootSpeciesFromNativeIDBC
+	ld b, [hl]
 	pop hl
-
-	; wDexMons and the iterator callbacks still use Polished's transitional
-	; species/form pair. Do not silently truncate a native root above $01ff;
-	; signal the caller to skip it until that list representation is migrated.
-	ld a, b
-	cp 2
-	jr nc, .native_unrepresentable
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	ld b, a
+.pack_root
+	xor a ; iterator adds PLAIN_FORM after this call
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
 	ld a, c
 	and a
-	ret
-.native_unrepresentable
+	ret nz
 	scf
 	ret
 

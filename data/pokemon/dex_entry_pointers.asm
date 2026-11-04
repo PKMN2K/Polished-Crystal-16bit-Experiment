@@ -2,6 +2,9 @@ PokedexDataPointerTable:
 ; entries correspond to constants/pokemon_constants.asm
 	indirect_table 3, 1
 	indirect_entries NUM_NATIVE_SPECIES, PokedexDataPointerRecords
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, PokedexDataPointerRecords, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 PokedexDataPointerRecords:

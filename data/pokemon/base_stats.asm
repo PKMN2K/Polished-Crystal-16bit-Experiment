@@ -43,6 +43,9 @@ ENDM
 BaseData::
 	indirect_table BASE_DATA_SIZE, 1
 	indirect_entries NUM_NATIVE_SPECIES, BaseDataRecords
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, BaseDataRecords, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 BaseDataRecords:

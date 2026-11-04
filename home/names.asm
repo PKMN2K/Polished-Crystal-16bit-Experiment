@@ -62,28 +62,14 @@ GetPartyPokemonName::
 	; fallthrough
 
 GetPokemonName::
-; Get Pokemon name wNamedObjectIndex.
+; wNamedObjectIndex contains a runtime species/form pair, including wide handles.
 	push hl
 	ld hl, wNamedObjectIndex
 	ld a, [hli]
-	ld e, a
-	ld a, [hl]
-	call ConvertFormToExtendedSpecies
-	ld d, a
-	ld b, d
-	ld c, e
-	ld hl, PokemonNames
-	ld a, BANK(PokemonNames)
-	call LoadIndirectPointer
-	ld de, wStringBuffer1
-	push de
-	ld bc, MON_NAME_LENGTH - 1
-	ld a, BANK(PokemonNames)
-	call FarCopyBytes
-	ld h, d
-	ld l, e
-	ld [hl], '@'
-	pop de
+	ld c, a
+	ld b, [hl]
+	farcall GetNativeRootFromRuntimeBC
+	farcall GetPokemonNameFromNativeIDBC
 	pop hl
 	ret
 

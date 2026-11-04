@@ -5,6 +5,9 @@ ENDM
 OverworldMonIconColors::
 	indirect_table 2, 1
 	indirect_entries NUM_UNIQUE_POKEMON, OverworldMonIconColorData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, OverworldMonIconColorData, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 OverworldMonIconColorData:

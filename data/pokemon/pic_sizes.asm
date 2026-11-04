@@ -14,6 +14,9 @@ popc
 PokemonPicSizes::
 	indirect_table 1, 1
 	indirect_entries NUM_UNIQUE_POKEMON, PokemonPicSizeData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, PokemonPicSizeData, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 PokemonPicSizeData:

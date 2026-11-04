@@ -101,7 +101,13 @@ def main():
             regs.E = de & 0xFF
         regs.SP = 0xC0FF
         regs.PC = 0xC100
-        pyboy.tick(10, False, False)
+        # Save recovery includes checksum scans and conversion-table collection.
+        # Stop at the return sink, with a fixed upper bound independent of the
+        # precise compiled routine lengths.
+        for _ in range(40):
+            pyboy.tick(1, False, False)
+            if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
+                break
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (
             name,
             hex(regs.PC),

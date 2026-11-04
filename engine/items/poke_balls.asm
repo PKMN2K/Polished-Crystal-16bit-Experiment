@@ -357,6 +357,7 @@ MoonBallMultiplier:
 	inc hl
 	inc hl
 	inc hl
+	inc hl
 	jr .loop
 
 LoveBallMultiplier:

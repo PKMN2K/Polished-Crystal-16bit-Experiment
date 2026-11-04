@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: incomplete engine port; buildable species migration checkpoint.**
+**Status: incomplete engine port; validated wide-species runtime checkpoint.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -29,8 +29,20 @@ Source commits and SHA-256 hashes of donor reference files are recorded in
   stats, names, evolution/learnset data, graphics and Pokédex data.
 - Native player-party/daycare storage, direct battle identity shadows, and
   Polished's native Newbox storage and conversion-table save integrity envelope.
-- Fresh games initialize native player storage; opponent and several temporary
-  structures still use the legacy runtime representation.
+- Fresh games initialize native player storage. Opponent and temporary records
+  retain their byte/form layout, with explicitly tagged conversion-table handles
+  for wide roots. Native IDs are decoded before names, cries, data and picture
+  lookups; wide identities are not truncated to nine bits.
+- Conversion-table collection protects live wide handles in opponent/link-party
+  workspaces, battle/temporary records and rendering globals. This is local
+  handle lifetime management, not a native link wire protocol.
+- Evolution targets and hatchling records store a native word plus a separate
+  form. Evolution-list readers skip whole records, so an ID byte of `$ff` is
+  not mistaken for a terminator. Party-species evolution parameters use words.
+- Pokédex lists store native root words plus separate form/metadata. List
+  construction and searches do not retain one conversion slot per species.
+- Daycare compatibility preserves the first parent's gender across the second
+  decoder. Form/ball inheritance preserves its selected parent-field pointer.
 - Current upstream's single grass encounter rate, new Battle Tower Bloodmoon
   sets, current map/assets and WRAM layout are retained.
 - Save version 12 is required. Version 10 and both incompatible meanings of
@@ -43,7 +55,7 @@ Source commits and SHA-256 hashes of donor reference files are recorded in
   teams, history rotation and party-to-save/load with Eggs excluded.
 - Reconciled imported assembly with the upstream optimization check while
   retaining the native decoders' register and bank-switching contracts.
-- A single bounded test runner, eight-config CI, and shared opcode-checked hooks
+- A single bounded test runner, eleven-config CI, and shared opcode-checked hooks
   replace unsafe ResetSubHit/GetUserItem entry breakpoints across the suite.
 - Stale tests now use the valid extended root $0101 instead of reserved $0100,
   correct ability-slot bits and supported PyBoy register access. The end-turn
@@ -55,25 +67,45 @@ The exact local build/test results and ROM hashes are recorded in
 `docs/16bit-validation.json`. These are local results; GitHub Actions status must
 be checked separately for the published commit.
 
-A headless boot check reached the Polished Crystal title screen. CPU tests
-exercise compiled routines with synthetic fixtures and, where documented in
-each test, stubbed presentation or unrelated behavior. Passing them does not
-prove a complete playthrough, link compatibility or arbitrary expanded species.
+The normal and debug CPU suites each include 161 test programs. The ordinary
+roster checks include native daycare generation, all 289 Pokédex list entries
+in national/Johto/alphabetical order, cursor selection and cosmetic form cycling.
+
+Three separate `native-test` builds define one real catalog fixture at `$0201`,
+`$02ff` or `$0300`. They reuse Annihilape's art/stats and have explicit native
+evolution and hatchling records. They add no Pokémon to the production roster.
+`tests/fixtures/wide_species.py` uses no ROM stubs and exercises:
+
+- Native encounter-record reading and the full wild generator, plus player and
+  opponent insertion, catching and native battle identity publication.
+- Base data, names, cries, front-picture decompression and battle-picture identity.
+- Full PC encoding/checksum/decoding with stat reconstruction, evolution
+  eligibility/target decoding in both directions, and daycare egg generation.
+- Pokédex construction, cursor lookup and search; primary/backup Pokémon data
+  and conversion-table saves; independent runtime roots under allocator pressure.
+
+These are compiled-routine integration checks with synthetic game state. They
+are not a complete interactive playthrough, an entire wide-species battle, or a
+link compatibility test. Existing battle regressions document any presentation
+or unrelated-behavior stubs in their individual files.
+
+Build a fixture with `make native-test NATIVE_TEST_SPECIES=513` (or 767/768),
+then run `python3 tests/fixtures/wide_species.py polishedcrystal-native-test-3.2.3.gbc`.
+Run `make tidy` between configurations. Production builds leave
+`NUM_WIDE_SPECIES` at zero; adding a roster requires defining native records,
+ordering and any new form/classification data rather than changing a count alone.
 
 ## Remaining work before a completed engine migration
 
-1. Remove the nine-bit legacy projection from live generation, opponent parties,
-   temporary records, evolution/breeding and graphical paths. In particular,
-   `GetLegacySpeciesAndFormFromNativeIDBC` and
-   `PrepareBattlePictureIdentity.pack_legacy_root` still limit representable
-   runtime roots. A 16-bit allocator alone does not remove these limits.
-2. Prove a real catalog species above $01ff through encounter, generation,
-   battle, catching, party, PC, save/load, evolution/breeding and Pokédex use.
-   The current tests of larger raw words establish storage primitives only.
-3. Reconcile link battle/trade serialization with native IDs, and test both peers.
-4. Port the donor's move-ID conversion architecture and all move consumers if
-   the requested full 16-bit engine is to include its expanded move namespace.
-5. Complete interactive gameplay validation and explicit save-import tooling.
+1. Reconcile link battle/trade serialization with native IDs, and test both peers.
+   Runtime handles are local to each conversion table and cannot be sent as
+   authoritative identities.
+2. Port the donor's move-ID conversion architecture and all move consumers for
+   the expanded move namespace.
+3. Validate wide-species gameplay interactively, including a complete battle,
+   evolution animation, hatching, transfers and longer allocator lifetimes.
+4. Extend and test content-specific forms/classification tables for any added
+   roster, and provide explicit save-import tooling if old saves must migrate.
 
-The branch is experimental. Do not treat it as a finished replacement engine
-or as proof that more than 511 playable species can already be added.
+The branch remains experimental. The three high-ID catalog fixtures prove the
+listed paths, not a finished replacement engine or an arbitrary expanded roster.

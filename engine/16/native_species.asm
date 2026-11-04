@@ -12,26 +12,8 @@ GetAbilityFromNativeIDBC::
 ; out: ability in a and b; preserves hl, de and c
 ; Reads the base-data ability bytes through a far pointer so this routine can
 ; live outside ROM0 without disturbing the current base-data buffer.
-	; Never fetch ability data through an invalid native identity.
-	; Preserve BC (including the caller's C) and the personality pointer.
-	ld a, b
-	or c
+	farcall IsValidNativeSpeciesBC
 	jr z, .no_ability
-	ld a, b
-	cp HIGH(NUM_NATIVE_SPECIES + 1)
-	jr c, .check_reserved
-	jr nz, .no_ability
-	ld a, c
-	cp LOW(NUM_NATIVE_SPECIES + 1)
-	jr nc, .no_ability
-.check_reserved
-	ld a, b
-	dec a
-	jr nz, .valid_ability_species
-	ld a, c
-	and a
-	jr z, .no_ability
-.valid_ability_species
 	ld a, [wInitialOptions]
 	and ABILITIES_OPTMASK
 	jr z, .got_ability
@@ -115,6 +97,8 @@ GetRootSpeciesFromNativeIDBC::
 ; Resolve a one-based native species ID to its canonical root.
 ; Reject unsupported IDs before indexing the mechanical-variant table.
 ; in: bc = native species ID; out: bc = root ID, or zero if invalid
+	farcall IsWideNativeSpeciesBC
+	ret c
 	ld a, b
 	cp HIGH(NUM_NATIVE_SPECIES + 1)
 	jr c, .within_catalog
@@ -193,6 +177,13 @@ GetNativeSpeciesIndexFromLegacyForm::
 ; native identity-table ID.
 ; in: c = species, b = form
 ; out: bc = zero-based native species index, carry if a variant was found
+	farcall IsRuntimeSpeciesAliasBC
+	jr nc, .ordinary
+	farcall GetNativeRootFromRuntimeBC
+	dec bc
+	and a
+	ret
+.ordinary
 	ld hl, VariantVisualSpeciesAndFormTable
 	call GetSpeciesAndFormIndexFromHL
 	ret nc
@@ -211,6 +202,17 @@ GetPokedexFlagIndex::
 ; overlays retain their existing block between root species and variants.
 ; in: c = species, b = form
 ; out: de = zero-based physical Pokédex flag index; preserves bc
+	farcall IsRuntimeSpeciesAliasBC
+	jr nc, .ordinary
+	push bc
+	farcall GetNativeRootFromRuntimeBC
+	ld hl, NUM_UNIQUE_POKEMON - FIRST_WIDE_SPECIES
+	add hl, bc
+	ld d, h
+	ld e, l
+	pop bc
+	ret
+.ordinary
 	push bc
 	call GetNativeSpeciesIndexFromLegacyForm
 	jr c, .mechanical_variant
@@ -238,35 +240,10 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	push hl
 	push de
 	push af
-	; The legacy species/form representation has only one extension bit.
-	; If the catalog grows beyond $01ff, this temporary boundary must be
-	; migrated to native words rather than silently making species unreachable.
-	assert NUM_NATIVE_SPECIES <= $01ff
-	; Never wrap native IDs above $01ff into a different legacy species.
-	; Until these callers are migrated to native words, return the invalid
-	; species sentinel (a = b = c = 0) rather than an incorrect identity.
-	ld a, b
-	cp $02
-	jr nc, .unsupported
-	or c
-	jr z, .unsupported ; zero is not a valid one-based native identity
-	; Reject the reserved $0100 root hole and native IDs outside the
-	; defined catalog before indexing the mechanical-variant table.
-	ld a, b
-	cp HIGH(NUM_NATIVE_SPECIES + 1)
-	jr c, .within_catalog
-	jr nz, .unsupported
-	ld a, c
-	cp LOW(NUM_NATIVE_SPECIES + 1)
-	jr nc, .unsupported
-.within_catalog
-	ld a, b
-	dec a
-	jr nz, .valid_native
-	ld a, c
-	and a
+	farcall IsValidNativeSpeciesBC
 	jr z, .unsupported
-.valid_native
+	farcall IsWideNativeSpeciesBC
+	jr c, .root
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .root
@@ -290,18 +267,7 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	call GetRootSpeciesFromNativeIDBC
 .root
 	pop af
-	and ~EXTSPECIES_MASK
-	ld e, a
-	ld a, b
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or e
-	ld b, a
-	ld a, c
+	farcall PackNativeRootForRuntimeBC
 	pop de
 	pop hl
 	ret
@@ -923,30 +889,8 @@ DecodeNativeBoxIdentity::
 	ld b, a
 	or c
 	jr z, .invalid
-	ld a, b
-	cp HIGH(NUM_NATIVE_SPECIES + 1)
-	jr c, .valid
-	jr nz, .invalid
-	ld a, c
-	cp LOW(NUM_NATIVE_SPECIES + 1)
-	jr nc, .invalid
-.valid
-	; $0100 is the unused root slot, not a storable species.
-	ld a, b
-	dec a
-	jr nz, .decode
-	ld a, c
-	and a
+	farcall IsValidNativeSpeciesBC
 	jr z, .invalid
-.decode
-	; Validate that the native root fits the transitional temp structure before
-	; decoding its authoritative mechanical form. Keep the stored word intact.
-	push bc
-	farcall GetRootSpeciesFromNativeIDBC
-	ld a, b
-	cp 2
-	pop bc
-	jr nc, .invalid
 	ld a, [wEncodedTempMonForm]
 	farcall GetLegacySpeciesAndFormFromNativeIDBC
 	ld [wEncodedTempMonSpecies], a
@@ -1137,17 +1081,10 @@ PrepareBattlePictureIdentity:
 	ld a, [hli]
 	ld c, a
 	ld b, [hl]
-	ld a, b
-	or c
+	farcall IsValidNativeSpeciesBC
 	jr z, .invalid
-	; The reserved root $0100 has no renderable legacy species byte.
-	ld a, b
-	dec a
-	jr nz, .valid
-	ld a, c
-	and a
-	jr z, .invalid
-.valid
+	farcall IsWideNativeSpeciesBC
+	jr c, .root
 	ld a, b
 	cp HIGH(NUM_SPECIES)
 	jr c, .root
@@ -1211,27 +1148,9 @@ PrepareBattlePictureIdentity:
 	jp PopBCDEHL
 
 .pack_legacy_root
-; Project a resolved native root into the renderer's transitional species/form
-; globals. Carry marks a root above $01ff so it cannot be silently truncated.
-; in: bc = one-based native root species, a = raw/visual form
-; out: a = c = root species byte, b = encoded form, carry on unrepresentable
-	ld d, a
-	ld a, b
-	cp 2
-	jr nc, .unrepresentable
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or d
-	ld b, a
-	ld a, c
+; BC is a validated root; wide identities use conversion-table handles.
+	farcall PackNativeRootForRuntimeBC
 	and a
-	ret
-.unrepresentable
-	scf
 	ret
 
 GetBaseDataFromActiveBattleNativeSpecies::

@@ -19,6 +19,13 @@ DEF MON_TABLE_CACHE_SIZE             EQU  16
 DEF MON_TABLE_SAVED_RECENT_INDEXES   EQU   8
 DEF MON_TABLE_MINIMUM_RESERVED_INDEX EQU $FD
 
+; Transitional species/form consumers use the unused upper legacy page for
+; handles into the same donor conversion table. A handle is distinguished by
+; EXTSPECIES and this range; its form and gender bits remain independent.
+DEF NATIVE_RUNTIME_ALIAS_BASE EQU $80
+assert NUM_SPECIES < $100 + NATIVE_RUNTIME_ALIAS_BASE + 1
+assert NATIVE_RUNTIME_ALIAS_BASE + MON_TABLE_ENTRIES < EGG
+
 ; Identifies party, opponent-party, and daycare structures whose species byte
 ; contains a conversion-table ID rather than a legacy species byte. This word
 ; lives in existing saved padding after wPartyCount, so enabling the format

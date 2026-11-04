@@ -46,13 +46,18 @@ _PlayMonCry::
 LoadCryFromNativeIDBC::
 ; Native mechanical forms share their root species' cry, as in LoadCry.
 	farcall GetRootSpeciesFromNativeIDBC
-	ld a, c
+	ld a, b
+	or c
+	scf
+	ret z
+	ld a, b
 	and a
+	jr nz, .valid
+	ld a, c
+	cp EGG
 	scf
-	ret z ; empty identity or reserved root $0100
-	inc a
-	scf
-	ret z ; egg has no cry
+	ret z
+.valid
 	dec bc
 	jr LoadCry.load_index
 
@@ -86,22 +91,21 @@ _LoadCry:
 	ret
 
 GetCryIndex::
-; input: c = species, b = form
-; output: bc = base species index
-	ld a, c
-	and a
-	jr z, .no
-	inc c ; cp EGG
-	jr z, .no
-
-	dec c
-	dec c ; slightly faster than dec bc, since we know c != 0
+; input: C=runtime species byte, B=form; output: BC=zero-based native root.
+	farcall GetNativeRootFromRuntimeBC
 	ld a, b
-	call ConvertFormToExtendedSpecies
-	ld b, a
+	or c
+	jr z, .no
+	ld a, b
+	and a
+	jr nz, .valid
+	ld a, c
+	cp EGG
+	jr z, .no
+.valid
+	dec bc
 	and a
 	ret
-
 .no
 	scf
 	ret

@@ -9,6 +9,9 @@ AlphabeticalPokedexOrder:
 	native_species_entry AMBIPOM
 	native_species_entry AMPHAROS
 	native_species_entry ANNIHILAPE
+if DEF(NATIVE_SPECIES_TEST)
+	native_species_entry WIDE_TEST_SPECIES
+endc
 	native_species_entry ARBOK
 	native_species_entry ARCANINE
 	native_species_entry ARIADOS
@@ -291,4 +294,4 @@ AlphabeticalPokedexOrder:
 	native_species_entry YANMEGA
 	native_species_entry ZAPDOS
 	native_species_entry ZUBAT
-	assert_table_length NUM_POKEMON
+	assert_table_length NUM_POKEDEX_SPECIES

@@ -7487,12 +7487,14 @@ _GetNewBaseExp:
 	call GetSpeciesAndFormIndex
 	inc bc ; zero-based legacy data index -> one-based native species ID
 	farcall GetEggMovePointerFromNativeIDBC
-	pop bc
 	ld a, BANK(EggSpeciesMoves)
-	call GetFarWord
-	inc l
+	farcall ReadNativeSpeciesForm
+	ld h, b
+	ld l, c
+	pop bc
+	ld a, h
+	or l
 	jr z, .stage_1_or_nonevolver
-	dec l
 	ld a, l
 	cp c
 	jr nz, .is_evo
@@ -7534,23 +7536,23 @@ _GetNewBaseExp:
 .inc_2
 	inc hl
 	inc hl
+	push bc
 	push hl
 	ld a, BANK(EvosAttacks)
 	call GetFarWord
-	ld d, l
-	ld a, h
+	ld b, h
+	ld c, l
 	pop hl
 	inc hl
 	inc hl
-
-	; NO_FORM should be treated as a wildcard
-	and a ; cp NO_FORM
-	jr z, .any_form
-	cp b
-	jr nz, .evos_loop
-.any_form
-	ld a, d
-	cp c
+	ld a, BANK(EvosAttacks)
+	call GetFarByte
+	inc hl
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld d, b
+	ld e, c
+	pop bc
+	call CompareSpeciesWithDE
 	jr nz, .evos_loop
 
 .stage_1_or_nonevolver

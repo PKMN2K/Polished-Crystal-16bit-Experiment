@@ -59,6 +59,10 @@ MODIFIERS := $(MODIFIERS)-debug
 RGBASMFLAGS += -DDEBUG
 COPYRIGHT += dbg
 endif
+ifeq ($(filter native-test,$(MAKECMDGOALS)),native-test)
+MODIFIERS := $(MODIFIERS)-native-test
+RGBASMFLAGS += -DNATIVE_SPECIES_TEST=$(or $(NATIVE_TEST_SPECIES),513)
+endif
 ifeq ($(filter pocket,$(MAKECMDGOALS)),pocket)
 MODIFIERS :=
 NAME := pkpc
@@ -99,7 +103,7 @@ crystal_obj    := $(rom_obj:.o=.o)
 crystal_vc_obj := $(rom_obj:.o=_vc.o)
 
 .SUFFIXES:
-.PHONY: clean tidy crystal faithful pocket debug monochrome freespace tools bsp huffman vc
+.PHONY: clean tidy crystal faithful pocket debug monochrome freespace tools bsp huffman vc native-test
 .PRECIOUS: %.2bpp %.1bpp
 .SECONDARY:
 .DEFAULT_GOAL: crystal
@@ -110,6 +114,7 @@ monochrome: crystal
 noir: crystal
 hgss: crystal
 debug: crystal
+native-test: crystal
 pocket: crystal
 vc: $$(ROM_NAME).patch
 

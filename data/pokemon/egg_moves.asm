@@ -5,7 +5,7 @@ INCLUDE "data/pokemon/egg_move_pointers.asm"
 EggSpeciesMoves::
 
 BulbasaurEggSpeciesMoves:
-	dp BULBASAUR, PLAIN_FORM
+	native_species_form BULBASAUR, PLAIN_FORM
 	db CHARM
 	db PETAL_DANCE
 	db LIGHT_SCREEN
@@ -14,7 +14,7 @@ BulbasaurEggSpeciesMoves:
 	db $ff
 
 CharmanderEggSpeciesMoves:
-	dp CHARMANDER, PLAIN_FORM
+	native_species_form CHARMANDER, PLAIN_FORM
 	db ANCIENTPOWER
 	db BELLY_DRUM
 	db BITE
@@ -26,7 +26,7 @@ CharmanderEggSpeciesMoves:
 	db $ff
 
 SquirtleEggSpeciesMoves:
-	dp SQUIRTLE, PLAIN_FORM
+	native_species_form SQUIRTLE, PLAIN_FORM
 	db CONFUSION
 	db CRUNCH
 	db FORESIGHT
@@ -36,15 +36,15 @@ SquirtleEggSpeciesMoves:
 	db $ff
 
 CaterpieEggSpeciesMoves:
-	dp CATERPIE, PLAIN_FORM
+	native_species_form CATERPIE, PLAIN_FORM
 	db $ff
 
 WeedleEggSpeciesMoves:
-	dp WEEDLE, PLAIN_FORM
+	native_species_form WEEDLE, PLAIN_FORM
 	db $ff
 
 PidgeyEggSpeciesMoves:
-	dp PIDGEY, PLAIN_FORM
+	native_species_form PIDGEY, PLAIN_FORM
 	db PECK
 	db FEINT_ATTACK
 	db FORESIGHT
@@ -57,7 +57,7 @@ PidgeyEggSpeciesMoves:
 	db $ff
 
 RattataPlainEggSpeciesMoves:
-	dp RATTATA, PLAIN_FORM
+	native_species_form RATTATA, PLAIN_FORM
 	db FURY_STRIKES
 	db REVERSAL
 	db SCREECH
@@ -66,7 +66,7 @@ RattataPlainEggSpeciesMoves:
 	db $ff
 
 RattataAlolanEggSpeciesMoves:
-	dp RATTATA, ALOLAN_FORM
+	native_species_form RATTATA, ALOLAN_FORM
 	db FURY_STRIKES
 	db REVERSAL
 	db SCREECH
@@ -75,7 +75,7 @@ RattataAlolanEggSpeciesMoves:
 	db $ff
 
 SpearowEggSpeciesMoves:
-	dp SPEAROW, PLAIN_FORM
+	native_species_form SPEAROW, PLAIN_FORM
 	db ASTONISH
 	db FEINT_ATTACK
 	db QUICK_ATTACK
@@ -84,7 +84,7 @@ SpearowEggSpeciesMoves:
 	db $ff
 
 EkansEggSpeciesMoves:
-	dp EKANS, NO_FORM
+	native_species_form EKANS, NO_FORM
 	db CRUNCH
 	db DISABLE
 	db PURSUIT
@@ -92,7 +92,7 @@ EkansEggSpeciesMoves:
 	db $ff
 
 SandshrewPlainEggSpeciesMoves:
-	dp SANDSHREW, PLAIN_FORM
+	native_species_form SANDSHREW, PLAIN_FORM
 	db METAL_CLAW
 	db RAPID_SPIN
 	db SAFEGUARD
@@ -101,7 +101,7 @@ SandshrewPlainEggSpeciesMoves:
 	db $ff
 
 SandshrewAlolanEggSpeciesMoves:
-	dp SANDSHREW, ALOLAN_FORM
+	native_species_form SANDSHREW, ALOLAN_FORM
 	db AMNESIA
 	db RAPID_SPIN
 	db SAFEGUARD
@@ -112,7 +112,7 @@ SandshrewAlolanEggSpeciesMoves:
 	db $ff
 
 NidoranFEggSpeciesMoves:
-	dp NIDORAN_F, PLAIN_FORM
+	native_species_form NIDORAN_F, PLAIN_FORM
 	db CHARM
 	db DISABLE
 	db FOCUS_ENERGY
@@ -122,7 +122,7 @@ NidoranFEggSpeciesMoves:
 	db $ff
 
 NidoranMEggSpeciesMoves:
-	dp NIDORAN_M, PLAIN_FORM
+	native_species_form NIDORAN_M, PLAIN_FORM
 	db AMNESIA
 	db CONFUSION
 	db DISABLE
@@ -133,7 +133,7 @@ NidoranMEggSpeciesMoves:
 	db $ff
 
 VulpixPlainEggSpeciesMoves:
-	dp VULPIX, PLAIN_FORM
+	native_species_form VULPIX, PLAIN_FORM
 	db FLAME_CHARGE
 	db DISABLE
 	db FLARE_BLITZ
@@ -146,7 +146,7 @@ VulpixPlainEggSpeciesMoves:
 	db $ff
 
 VulpixAlolanEggSpeciesMoves:
-	dp VULPIX, ALOLAN_FORM
+	native_species_form VULPIX, ALOLAN_FORM
 	db DISABLE
 	db BLIZZARD
 	db HYPNOSIS
@@ -158,7 +158,7 @@ VulpixAlolanEggSpeciesMoves:
 	db $ff
 
 ZubatEggSpeciesMoves:
-	dp ZUBAT, PLAIN_FORM
+	native_species_form ZUBAT, PLAIN_FORM
 	db FEINT_ATTACK
 	db GUST
 	db HYPNOSIS
@@ -170,7 +170,7 @@ ZubatEggSpeciesMoves:
 	db $ff
 
 OddishEggSpeciesMoves:
-	dp ODDISH, PLAIN_FORM
+	native_species_form ODDISH, PLAIN_FORM
 	db CHARM
 	db RAZOR_LEAF
 	db HEALINGLIGHT
@@ -178,7 +178,7 @@ OddishEggSpeciesMoves:
 	db $ff
 
 ParasEggSpeciesMoves:
-	dp PARAS, PLAIN_FORM
+	native_species_form PARAS, PLAIN_FORM
 	db AGILITY
 	db LEECH_SEED
 	db METAL_CLAW
@@ -189,7 +189,7 @@ ParasEggSpeciesMoves:
 	db $ff
 
 VenonatEggSpeciesMoves:
-	dp VENONAT, PLAIN_FORM
+	native_species_form VENONAT, PLAIN_FORM
 	db AGILITY
 	db BATON_PASS
 	db HEALINGLIGHT
@@ -198,7 +198,7 @@ VenonatEggSpeciesMoves:
 	db $ff
 
 DiglettPlainEggSpeciesMoves:
-	dp DIGLETT, PLAIN_FORM
+	native_species_form DIGLETT, PLAIN_FORM
 	db ANCIENTPOWER
 	db FEINT_ATTACK
 	db HEADBUTT
@@ -208,7 +208,7 @@ DiglettPlainEggSpeciesMoves:
 	db $ff
 
 DiglettAlolanEggSpeciesMoves:
-	dp DIGLETT, ALOLAN_FORM
+	native_species_form DIGLETT, ALOLAN_FORM
 	db ANCIENTPOWER
 	db FEINT_ATTACK
 	db HEADBUTT
@@ -218,7 +218,7 @@ DiglettAlolanEggSpeciesMoves:
 	db $ff
 
 MeowthPlainEggSpeciesMoves:
-	dp MEOWTH, PLAIN_FORM
+	native_species_form MEOWTH, PLAIN_FORM
 	db CHARM
 	db HYPNOSIS
 	db AMNESIA
@@ -227,7 +227,7 @@ MeowthPlainEggSpeciesMoves:
 	db $ff
 
 MeowthAlolanEggSpeciesMoves:
-	dp MEOWTH, ALOLAN_FORM
+	native_species_form MEOWTH, ALOLAN_FORM
 	db CHARM
 	db HYPNOSIS
 	db AMNESIA
@@ -236,7 +236,7 @@ MeowthAlolanEggSpeciesMoves:
 	db $ff
 
 MeowthGalarianEggSpeciesMoves:
-	dp MEOWTH, GALARIAN_FORM
+	native_species_form MEOWTH, GALARIAN_FORM
 	db CHARM
 	db HYPNOSIS
 	db AMNESIA
@@ -245,7 +245,7 @@ MeowthGalarianEggSpeciesMoves:
 	db $ff
 
 PsyduckEggSpeciesMoves:
-	dp PSYDUCK, PLAIN_FORM
+	native_species_form PSYDUCK, PLAIN_FORM
 	db CONFUSE_RAY
 	db CROSS_CHOP
 	db ENCORE
@@ -259,7 +259,7 @@ PsyduckEggSpeciesMoves:
 	db $ff
 
 MankeyEggSpeciesMoves:
-	dp MANKEY, PLAIN_FORM
+	native_species_form MANKEY, PLAIN_FORM
 	db ENCORE
 	db FORESIGHT
 	db BULK_UP
@@ -272,7 +272,7 @@ MankeyEggSpeciesMoves:
 	db $ff
 
 GrowlithePlainEggSpeciesMoves:
-	dp GROWLITHE, PLAIN_FORM
+	native_species_form GROWLITHE, PLAIN_FORM
 	db DOUBLE_KICK
 	db FIRE_SPIN
 	db HEALINGLIGHT
@@ -285,7 +285,7 @@ GrowlithePlainEggSpeciesMoves:
 	db $ff
 
 GrowlitheHisuianEggSpeciesMoves:
-	dp GROWLITHE, HISUIAN_FORM
+	native_species_form GROWLITHE, HISUIAN_FORM
 	db DOUBLE_KICK
 	db FIRE_SPIN
 	db HEALINGLIGHT
@@ -298,7 +298,7 @@ GrowlitheHisuianEggSpeciesMoves:
 	db $ff
 
 PoliwagEggSpeciesMoves:
-	dp POLIWAG, PLAIN_FORM
+	native_species_form POLIWAG, PLAIN_FORM
 	db ENCORE
 	db HAZE
 	db SPLASH
@@ -307,7 +307,7 @@ PoliwagEggSpeciesMoves:
 	db $ff
 
 AbraEggSpeciesMoves:
-	dp ABRA, PLAIN_FORM
+	native_species_form ABRA, PLAIN_FORM
 	db BARRIER
 	db ENCORE
 	db LIGHT_SCREEN
@@ -315,7 +315,7 @@ AbraEggSpeciesMoves:
 	db $ff
 
 MachopEggSpeciesMoves:
-	dp MACHOP, PLAIN_FORM
+	native_species_form MACHOP, PLAIN_FORM
 	db BULLET_PUNCH
 	db ENCORE
 	db BULK_UP
@@ -326,7 +326,7 @@ MachopEggSpeciesMoves:
 	db $ff
 
 BellsproutEggSpeciesMoves:
-	dp BELLSPROUT, PLAIN_FORM
+	native_species_form BELLSPROUT, PLAIN_FORM
 	db ENCORE
 	db LEECH_LIFE
 	db SWORDS_DANCE
@@ -336,7 +336,7 @@ BellsproutEggSpeciesMoves:
 	db $ff
 
 TentacoolEggSpeciesMoves:
-	dp TENTACOOL, PLAIN_FORM
+	native_species_form TENTACOOL, PLAIN_FORM
 	db AURORA_BEAM
 	db CONFUSE_RAY
 	db HAZE
@@ -347,17 +347,17 @@ TentacoolEggSpeciesMoves:
 	db $ff
 
 GeodudePlainEggSpeciesMoves:
-	dp GEODUDE, PLAIN_FORM
+	native_species_form GEODUDE, PLAIN_FORM
 	db ROCK_SLIDE
 	db $ff
 
 GeodudeAlolanEggSpeciesMoves:
-	dp GEODUDE, ALOLAN_FORM
+	native_species_form GEODUDE, ALOLAN_FORM
 	db ROCK_SLIDE
 	db $ff
 
 PonytaPlainEggSpeciesMoves:
-	dp PONYTA, PLAIN_FORM
+	native_species_form PONYTA, PLAIN_FORM
 	db CHARM
 	db DOUBLE_KICK
 	db HYPNOSIS
@@ -369,7 +369,7 @@ PonytaPlainEggSpeciesMoves:
 	db $ff
 
 PonytaGalarianEggSpeciesMoves:
-	dp PONYTA, GALARIAN_FORM
+	native_species_form PONYTA, GALARIAN_FORM
 	db CHARM
 	db DOUBLE_KICK
 	db HYPNOSIS
@@ -383,8 +383,8 @@ PonytaGalarianEggSpeciesMoves:
 	db $ff
 
 SlowpokePlainEggSpeciesMoves:
-	dp SLOWPOKE, PLAIN_FORM
-	dp SLOWPOKE, GALARIAN_FORM
+	native_species_form SLOWPOKE, PLAIN_FORM
+	native_species_form SLOWPOKE, GALARIAN_FORM
 	db BELLY_DRUM
 	db FUTURE_SIGHT
 	db STOMP
@@ -393,7 +393,7 @@ SlowpokePlainEggSpeciesMoves:
 	db $ff
 
 SlowpokeGalarianEggSpeciesMoves:
-	dp SLOWPOKE, GALARIAN_FORM
+	native_species_form SLOWPOKE, GALARIAN_FORM
 	db BELLY_DRUM
 	db FUTURE_SIGHT
 	db STOMP
@@ -402,11 +402,11 @@ SlowpokeGalarianEggSpeciesMoves:
 	db $ff
 
 MagnemiteEggSpeciesMoves:
-	dp MAGNEMITE, PLAIN_FORM
+	native_species_form MAGNEMITE, PLAIN_FORM
 	db $ff
 
 FarfetchDGalarianEggSpeciesMoves:
-	dp FARFETCH_D, GALARIAN_FORM
+	native_species_form FARFETCH_D, GALARIAN_FORM
 	db COUNTER
 	db FORESIGHT
 	db GUST
@@ -417,7 +417,7 @@ FarfetchDGalarianEggSpeciesMoves:
 	db $ff
 
 FarfetchDPlainEggSpeciesMoves:
-	dp FARFETCH_D, PLAIN_FORM
+	native_species_form FARFETCH_D, PLAIN_FORM
 	db FORESIGHT
 	db GUST
 	db QUICK_ATTACK
@@ -427,7 +427,7 @@ FarfetchDPlainEggSpeciesMoves:
 	db $ff
 
 DoduoEggSpeciesMoves:
-	dp DODUO, PLAIN_FORM
+	native_species_form DODUO, PLAIN_FORM
 	db FEINT_ATTACK
 	db HAZE
 	db SUPERSONIC
@@ -436,7 +436,7 @@ DoduoEggSpeciesMoves:
 	db $ff
 
 SeelEggSpeciesMoves:
-	dp SEEL, PLAIN_FORM
+	native_species_form SEEL, PLAIN_FORM
 	db DISABLE
 	db LICK
 	db PECK
@@ -447,7 +447,7 @@ SeelEggSpeciesMoves:
 	db $ff
 
 GrimerPlainEggSpeciesMoves:
-	dp GRIMER, PLAIN_FORM
+	native_species_form GRIMER, PLAIN_FORM
 	db HAZE
 	db LICK
 	db MEAN_LOOK
@@ -456,7 +456,7 @@ GrimerPlainEggSpeciesMoves:
 	db $ff
 
 GrimerAlolanEggSpeciesMoves:
-	dp GRIMER, ALOLAN_FORM
+	native_species_form GRIMER, ALOLAN_FORM
 	db HAZE
 	db LICK
 	db MEAN_LOOK
@@ -465,7 +465,7 @@ GrimerAlolanEggSpeciesMoves:
 	db $ff
 
 ShellderEggSpeciesMoves:
-	dp SHELLDER, PLAIN_FORM
+	native_species_form SHELLDER, PLAIN_FORM
 	db BARRIER
 	db BUBBLE_BEAM
 	db RAPID_SPIN
@@ -477,7 +477,7 @@ ShellderEggSpeciesMoves:
 	db $ff
 
 GastlyEggSpeciesMoves:
-	dp GASTLY, PLAIN_FORM
+	native_species_form GASTLY, PLAIN_FORM
 	db ASTONISH
 	db DISABLE
 	db HAZE
@@ -488,7 +488,7 @@ GastlyEggSpeciesMoves:
 	db $ff
 
 OnixEggSpeciesMoves:
-	dp ONIX, PLAIN_FORM
+	native_species_form ONIX, PLAIN_FORM
 	db DEFENSE_CURL
 	db ROCK_SLIDE
 	db EARTHQUAKE
@@ -496,14 +496,14 @@ OnixEggSpeciesMoves:
 	db $ff
 
 DrowzeeEggSpeciesMoves:
-	dp DROWZEE, PLAIN_FORM
+	native_species_form DROWZEE, PLAIN_FORM
 	db BARRIER
 	db LIGHT_SCREEN
 	db BELLY_DRUM
 	db $ff
 
 KrabbyEggSpeciesMoves:
-	dp KRABBY, PLAIN_FORM
+	native_species_form KRABBY, PLAIN_FORM
 	db AGILITY
 	db HAZE
 	db AMNESIA
@@ -513,15 +513,15 @@ KrabbyEggSpeciesMoves:
 	db $ff
 
 VoltorbPlainEggSpeciesMoves:
-	dp VOLTORB, PLAIN_FORM
+	native_species_form VOLTORB, PLAIN_FORM
 	db $ff
 
 VoltorbHisuianEggSpeciesMoves:
-	dp VOLTORB, HISUIAN_FORM
+	native_species_form VOLTORB, HISUIAN_FORM
 	db $ff
 
 ExeggcuteEggSpeciesMoves:
-	dp EXEGGCUTE, PLAIN_FORM
+	native_species_form EXEGGCUTE, PLAIN_FORM
 	db MEGA_DRAIN
 	db HEALINGLIGHT
 	db ANCIENTPOWER
@@ -529,7 +529,7 @@ ExeggcuteEggSpeciesMoves:
 	db $ff
 
 CuboneEggSpeciesMoves:
-	dp CUBONE, PLAIN_FORM
+	native_species_form CUBONE, PLAIN_FORM
 	db ANCIENTPOWER
 	db BELLY_DRUM
 	db DOUBLE_KICK
@@ -541,12 +541,12 @@ CuboneEggSpeciesMoves:
 	db $ff
 
 LickitungEggSpeciesMoves:
-	dp LICKITUNG, PLAIN_FORM
+	native_species_form LICKITUNG, PLAIN_FORM
 	db THRASH
 	db $ff
 
 KoffingEggSpeciesMoves:
-	dp KOFFING, PLAIN_FORM
+	native_species_form KOFFING, PLAIN_FORM
 	db PSYBEAM
 	db SCREECH
 	db DESTINY_BOND
@@ -554,7 +554,7 @@ KoffingEggSpeciesMoves:
 	db $ff
 
 RhyhornEggSpeciesMoves:
-	dp RHYHORN, PLAIN_FORM
+	native_species_form RHYHORN, PLAIN_FORM
 	db CRUNCH
 	db MAGNITUDE
 	db PURSUIT
@@ -565,14 +565,14 @@ RhyhornEggSpeciesMoves:
 	db $ff
 
 TangelaEggSpeciesMoves:
-	dp TANGELA, PLAIN_FORM
+	native_species_form TANGELA, PLAIN_FORM
 	db CONFUSION
 	db AMNESIA
 	db LEECH_SEED
 	db $ff
 
 KangaskhanEggSpeciesMoves:
-	dp KANGASKHAN, PLAIN_FORM
+	native_species_form KANGASKHAN, PLAIN_FORM
 	db DISABLE
 	db FOCUS_ENERGY
 	db FORESIGHT
@@ -581,7 +581,7 @@ KangaskhanEggSpeciesMoves:
 	db $ff
 
 HorseaEggSpeciesMoves:
-	dp HORSEA, PLAIN_FORM
+	native_species_form HORSEA, PLAIN_FORM
 	db AURORA_BEAM
 	db DISABLE
 	db DRAGON_RAGE
@@ -593,7 +593,7 @@ HorseaEggSpeciesMoves:
 	db $ff
 
 GoldeenEggSpeciesMoves:
-	dp GOLDEEN, PLAIN_FORM
+	native_species_form GOLDEEN, PLAIN_FORM
 	db AQUA_TAIL
 	db HYDRO_PUMP
 	db PSYBEAM
@@ -601,11 +601,11 @@ GoldeenEggSpeciesMoves:
 	db $ff
 
 StaryuEggSpeciesMoves:
-	dp STARYU, PLAIN_FORM
+	native_species_form STARYU, PLAIN_FORM
 	db $ff
 
 ScytherEggSpeciesMoves:
-	dp SCYTHER, PLAIN_FORM
+	native_species_form SCYTHER, PLAIN_FORM
 	db BATON_PASS
 	db BUG_BUZZ
 	db REVERSAL
@@ -616,7 +616,7 @@ ScytherEggSpeciesMoves:
 	db $ff
 
 PinsirEggSpeciesMoves:
-	dp PINSIR, PLAIN_FORM
+	native_species_form PINSIR, PLAIN_FORM
 	db FEINT_ATTACK
 	db FURY_STRIKES
 	db QUICK_ATTACK
@@ -624,11 +624,11 @@ PinsirEggSpeciesMoves:
 	db $ff
 
 MagikarpEggSpeciesMoves:
-	dp MAGIKARP, NO_FORM
+	native_species_form MAGIKARP, NO_FORM
 	db $ff
 
 LaprasEggSpeciesMoves:
-	dp LAPRAS, PLAIN_FORM
+	native_species_form LAPRAS, PLAIN_FORM
 	db AURORA_BEAM
 	db DRAGON_DANCE
 	db FORESIGHT
@@ -637,16 +637,16 @@ LaprasEggSpeciesMoves:
 	db $ff
 
 EeveeEggSpeciesMoves:
-	dp EEVEE, PLAIN_FORM
+	native_species_form EEVEE, PLAIN_FORM
 	db CHARM
 	db $ff
 
 PorygonEggSpeciesMoves:
-	dp PORYGON, PLAIN_FORM
+	native_species_form PORYGON, PLAIN_FORM
 	db $ff
 
 OmanyteEggSpeciesMoves:
-	dp OMANYTE, PLAIN_FORM
+	native_species_form OMANYTE, PLAIN_FORM
 	db AURORA_BEAM
 	db BUBBLE_BEAM
 	db HAZE
@@ -658,7 +658,7 @@ OmanyteEggSpeciesMoves:
 	db $ff
 
 KabutoEggSpeciesMoves:
-	dp KABUTO, PLAIN_FORM
+	native_species_form KABUTO, PLAIN_FORM
 	db AURORA_BEAM
 	db BUBBLE_BEAM
 	db CONFUSE_RAY
@@ -671,7 +671,7 @@ KabutoEggSpeciesMoves:
 	db $ff
 
 AerodactylEggSpeciesMoves:
-	dp AERODACTYL, PLAIN_FORM
+	native_species_form AERODACTYL, PLAIN_FORM
 	db FORESIGHT
 	db PURSUIT
 	db STEEL_WING
@@ -679,7 +679,7 @@ AerodactylEggSpeciesMoves:
 	db $ff
 
 DratiniEggSpeciesMoves:
-	dp DRATINI, PLAIN_FORM
+	native_species_form DRATINI, PLAIN_FORM
 	db EXTREMESPEED ; requires Dragon Shrine Dratini
 	db HAZE
 	db SUPERSONIC
@@ -688,7 +688,7 @@ DratiniEggSpeciesMoves:
 	db $ff
 
 ChikoritaEggSpeciesMoves:
-	dp CHIKORITA, PLAIN_FORM
+	native_species_form CHIKORITA, PLAIN_FORM
 	db LEECH_SEED
 	db VINE_WHIP
 	db ANCIENTPOWER
@@ -699,7 +699,7 @@ ChikoritaEggSpeciesMoves:
 	db $ff
 
 CyndaquilEggSpeciesMoves:
-	dp CYNDAQUIL, PLAIN_FORM
+	native_species_form CYNDAQUIL, PLAIN_FORM
 	db DOUBLE_KICK
 	db EXTRASENSORY
 	db FLARE_BLITZ
@@ -712,7 +712,7 @@ CyndaquilEggSpeciesMoves:
 	db $ff
 
 TotodileEggSpeciesMoves:
-	dp TOTODILE, PLAIN_FORM
+	native_species_form TOTODILE, PLAIN_FORM
 	db DRAGON_DANCE
 	db METAL_CLAW
 	db CRUNCH
@@ -725,7 +725,7 @@ TotodileEggSpeciesMoves:
 	db $ff
 
 SentretEggSpeciesMoves:
-	dp SENTRET, PLAIN_FORM
+	native_species_form SENTRET, PLAIN_FORM
 	db CHARM
 	db FOCUS_ENERGY
 	db PURSUIT
@@ -736,7 +736,7 @@ SentretEggSpeciesMoves:
 	db $ff
 
 HoothootEggSpeciesMoves:
-	dp HOOTHOOT, PLAIN_FORM
+	native_species_form HOOTHOOT, PLAIN_FORM
 	db AGILITY
 	db FEINT_ATTACK
 	db NIGHT_SHADE
@@ -747,7 +747,7 @@ HoothootEggSpeciesMoves:
 	db $ff
 
 LedybaEggSpeciesMoves:
-	dp LEDYBA, PLAIN_FORM
+	native_species_form LEDYBA, PLAIN_FORM
 	db DIZZY_PUNCH
 	db ENCORE
 	db PSYBEAM
@@ -758,7 +758,7 @@ LedybaEggSpeciesMoves:
 	db $ff
 
 SpinarakEggSpeciesMoves:
-	dp SPINARAK, PLAIN_FORM
+	native_species_form SPINARAK, PLAIN_FORM
 	db BATON_PASS
 	db DISABLE
 	db MEGAHORN
@@ -771,7 +771,7 @@ SpinarakEggSpeciesMoves:
 	db $ff
 
 ChinchouEggSpeciesMoves:
-	dp CHINCHOU, PLAIN_FORM
+	native_species_form CHINCHOU, PLAIN_FORM
 	db AGILITY
 	db HAZE
 	db PSYBEAM
@@ -781,7 +781,7 @@ ChinchouEggSpeciesMoves:
 	db $ff
 
 PichuEggSpeciesMoves:
-	dp PICHU, PLAIN_FORM
+	native_species_form PICHU, PLAIN_FORM
 	db DISARM_VOICE
 	db DOUBLE_SLAP
 	db ENCORE
@@ -789,7 +789,7 @@ PichuEggSpeciesMoves:
 	db $ff
 
 CleffaEggSpeciesMoves:
-	dp CLEFFA, PLAIN_FORM
+	native_species_form CLEFFA, PLAIN_FORM
 	db CALM_MIND
 	db BELLY_DRUM
 	db AMNESIA
@@ -798,14 +798,14 @@ CleffaEggSpeciesMoves:
 	db $ff
 
 IgglybuffEggSpeciesMoves:
-	dp IGGLYBUFF, PLAIN_FORM
+	native_species_form IGGLYBUFF, PLAIN_FORM
 	db FEINT_ATTACK
 	db PERISH_SONG
 	db MOONBLAST
 	db $ff
 
 TogepiEggSpeciesMoves:
-	dp TOGEPI, PLAIN_FORM
+	native_species_form TOGEPI, PLAIN_FORM
 	db EXTRASENSORY
 	db FORESIGHT
 	db FUTURE_SIGHT
@@ -815,7 +815,7 @@ TogepiEggSpeciesMoves:
 	db $ff
 
 NatuEggSpeciesMoves:
-	dp NATU, PLAIN_FORM
+	native_species_form NATU, PLAIN_FORM
 	db DRILL_PECK
 	db FEINT_ATTACK
 	db HAZE
@@ -826,7 +826,7 @@ NatuEggSpeciesMoves:
 	db $ff
 
 MareepEggSpeciesMoves:
-	dp MAREEP, PLAIN_FORM
+	native_species_form MAREEP, PLAIN_FORM
 	db AGILITY
 	db REFLECT
 	db MUD_SLAP
@@ -838,30 +838,30 @@ MareepEggSpeciesMoves:
 	db $ff
 
 HoppipEggSpeciesMoves:
-	dp HOPPIP, PLAIN_FORM
+	native_species_form HOPPIP, PLAIN_FORM
 	db ENCORE
 	db SEED_BOMB
 	db $ff
 
 AipomEggSpeciesMoves:
-	dp AIPOM, PLAIN_FORM
+	native_species_form AIPOM, PLAIN_FORM
 	db COUNTER
 	db PURSUIT
 	db $ff
 
 SunkernEggSpeciesMoves:
-	dp SUNKERN, PLAIN_FORM
+	native_species_form SUNKERN, PLAIN_FORM
 	db $ff
 
 YanmaEggSpeciesMoves:
-	dp YANMA, PLAIN_FORM
+	native_species_form YANMA, PLAIN_FORM
 	db FEINT_ATTACK
 	db LEECH_LIFE
 	db REVERSAL
 	db $ff
 
 WooperPlainEggSpeciesMoves:
-	dp WOOPER, PLAIN_FORM
+	native_species_form WOOPER, PLAIN_FORM
 	db COUNTER
 	db DOUBLE_KICK
 	db ENCORE
@@ -872,7 +872,7 @@ WooperPlainEggSpeciesMoves:
 	db $ff
 
 WooperPaldeanEggSpeciesMoves:
-	dp WOOPER, PALDEAN_FORM
+	native_species_form WOOPER, PALDEAN_FORM
 	db COUNTER
 	db DOUBLE_KICK
 	db ENCORE
@@ -883,7 +883,7 @@ WooperPaldeanEggSpeciesMoves:
 	db $ff
 
 MurkrowEggSpeciesMoves:
-	dp MURKROW, PLAIN_FORM
+	native_species_form MURKROW, PLAIN_FORM
 	db CONFUSE_RAY
 	db DRILL_PECK
 	db PERISH_SONG
@@ -895,14 +895,14 @@ MurkrowEggSpeciesMoves:
 	db $ff
 
 MisdreavusEggSpeciesMoves:
-	dp MISDREAVUS, PLAIN_FORM
+	native_species_form MISDREAVUS, PLAIN_FORM
 	db DESTINY_BOND
 	db NASTY_PLOT
 	db SCREECH
 	db $ff
 
 GirafarigEggSpeciesMoves:
-	dp GIRAFARIG, PLAIN_FORM
+	native_species_form GIRAFARIG, PLAIN_FORM
 	db DOUBLE_KICK
 	db FORESIGHT
 	db FUTURE_SIGHT
@@ -914,7 +914,7 @@ GirafarigEggSpeciesMoves:
 	db $ff
 
 PinecoEggSpeciesMoves:
-	dp PINECO, PLAIN_FORM
+	native_species_form PINECO, PLAIN_FORM
 	db PIN_MISSILE
 	db SWIFT
 	db REFLECT
@@ -922,7 +922,7 @@ PinecoEggSpeciesMoves:
 	db $ff
 
 DunsparceEggSpeciesMoves:
-	dp DUNSPARCE, NO_FORM
+	native_species_form DUNSPARCE, NO_FORM
 	db AGILITY
 	db ASTONISH
 	db BITE
@@ -933,7 +933,7 @@ DunsparceEggSpeciesMoves:
 	db $ff
 
 GligarEggSpeciesMoves:
-	dp GLIGAR, PLAIN_FORM
+	native_species_form GLIGAR, PLAIN_FORM
 	db AGILITY
 	db BATON_PASS
 	db METAL_CLAW
@@ -943,7 +943,7 @@ GligarEggSpeciesMoves:
 	db $ff
 
 SnubbullEggSpeciesMoves:
-	dp SNUBBULL, PLAIN_FORM
+	native_species_form SNUBBULL, PLAIN_FORM
 	db FEINT_ATTACK
 	db LEER
 	db METRONOME
@@ -955,7 +955,7 @@ SnubbullEggSpeciesMoves:
 	db $ff
 
 QwilfishEggSpeciesMoves:
-	dp QWILFISH, PLAIN_FORM
+	native_species_form QWILFISH, PLAIN_FORM
 	db BUBBLE_BEAM
 	db HAZE
 	db SUPERSONIC
@@ -964,11 +964,11 @@ QwilfishEggSpeciesMoves:
 	db $ff
 
 QwilfishHisuianEggSpeciesMoves:
-	dp QWILFISH, HISUIAN_FORM
+	native_species_form QWILFISH, HISUIAN_FORM
 	db $ff
 
 ShuckleEggSpeciesMoves:
-	dp SHUCKLE, PLAIN_FORM
+	native_species_form SHUCKLE, PLAIN_FORM
 	db ROLLOUT
 	db ACID
 	db KNOCK_OFF
@@ -977,14 +977,14 @@ ShuckleEggSpeciesMoves:
 	db $ff
 
 HeracrossEggSpeciesMoves:
-	dp HERACROSS, PLAIN_FORM
+	native_species_form HERACROSS, PLAIN_FORM
 	db ROCK_BLAST
 	db DEFENSE_CURL
 	db PURSUIT
 	db $ff
 
 SneaselEggSpeciesMoves:
-	dp SNEASEL, PLAIN_FORM
+	native_species_form SNEASEL, PLAIN_FORM
 	db BITE
 	db FORESIGHT
 	db PURSUIT
@@ -995,11 +995,11 @@ SneaselEggSpeciesMoves:
 	db $ff
 
 SneaselHisuianEggSpeciesMoves:
-	dp SNEASEL, HISUIAN_FORM
+	native_species_form SNEASEL, HISUIAN_FORM
 	db $ff
 
 TeddiursaEggSpeciesMoves:
-	dp TEDDIURSA, PLAIN_FORM
+	native_species_form TEDDIURSA, PLAIN_FORM
 	db BELLY_DRUM
 	db CROSS_CHOP
 	db CRUNCH
@@ -1015,13 +1015,13 @@ TeddiursaEggSpeciesMoves:
 	db $ff
 
 SlugmaEggSpeciesMoves:
-	dp SLUGMA, PLAIN_FORM
+	native_species_form SLUGMA, PLAIN_FORM
 	db SMOKESCREEN
 	db CURSE
 	db $ff
 
 SwinubEggSpeciesMoves:
-	dp SWINUB, PLAIN_FORM
+	native_species_form SWINUB, PLAIN_FORM
 	db AVALANCHE
 	db BITE
 	db TAKE_DOWN
@@ -1033,7 +1033,7 @@ SwinubEggSpeciesMoves:
 	db $ff
 
 CorsolaPlainEggSpeciesMoves:
-	dp CORSOLA, PLAIN_FORM
+	native_species_form CORSOLA, PLAIN_FORM
 	db BARRIER
 	db CONFUSE_RAY
 	db HAZE
@@ -1047,7 +1047,7 @@ CorsolaPlainEggSpeciesMoves:
 	db $ff
 
 CorsolaGalarianEggSpeciesMoves:
-	dp CORSOLA, GALARIAN_FORM
+	native_species_form CORSOLA, GALARIAN_FORM
 	db BARRIER
 	db CONFUSE_RAY
 	db HAZE
@@ -1061,7 +1061,7 @@ CorsolaGalarianEggSpeciesMoves:
 	db $ff
 
 RemoraidEggSpeciesMoves:
-	dp REMORAID, PLAIN_FORM
+	native_species_form REMORAID, PLAIN_FORM
 	db SPLASH
 	db HAZE
 	db OCTAZOOKA
@@ -1074,7 +1074,7 @@ RemoraidEggSpeciesMoves:
 	db $ff
 
 DelibirdEggSpeciesMoves:
-	dp DELIBIRD, PLAIN_FORM
+	native_species_form DELIBIRD, PLAIN_FORM
 	db AURORA_BEAM
 	db DESTINY_BOND
 	db ICE_PUNCH
@@ -1085,14 +1085,14 @@ DelibirdEggSpeciesMoves:
 	db $ff
 
 SkarmoryEggSpeciesMoves:
-	dp SKARMORY, PLAIN_FORM
+	native_species_form SKARMORY, PLAIN_FORM
 	db DRILL_PECK
 	db PURSUIT
 	db BRAVE_BIRD
 	db $ff
 
 HoundourEggSpeciesMoves:
-	dp HOUNDOUR, PLAIN_FORM
+	native_species_form HOUNDOUR, PLAIN_FORM
 	db DESTINY_BOND
 	db FIRE_SPIN
 	db PURSUIT
@@ -1103,7 +1103,7 @@ HoundourEggSpeciesMoves:
 	db $ff
 
 PhanpyEggSpeciesMoves:
-	dp PHANPY, PLAIN_FORM
+	native_species_form PHANPY, PLAIN_FORM
 	db FOCUS_ENERGY
 	db PLAY_ROUGH
 	db WATER_GUN
@@ -1115,7 +1115,7 @@ PhanpyEggSpeciesMoves:
 	db $ff
 
 StantlerEggSpeciesMoves:
-	dp STANTLER, PLAIN_FORM
+	native_species_form STANTLER, PLAIN_FORM
 	db BITE
 	db DOUBLE_KICK
 	db EXTRASENSORY
@@ -1123,7 +1123,7 @@ StantlerEggSpeciesMoves:
 	db $ff
 
 TyrogueEggSpeciesMoves:
-	dp TYROGUE, PLAIN_FORM
+	native_species_form TYROGUE, PLAIN_FORM
 	db BULLET_PUNCH
 	db HI_JUMP_KICK
 	db MACH_PUNCH
@@ -1132,13 +1132,13 @@ TyrogueEggSpeciesMoves:
 	db $ff
 
 SmoochumEggSpeciesMoves:
-	dp SMOOCHUM, PLAIN_FORM
+	native_species_form SMOOCHUM, PLAIN_FORM
 	db BULK_UP
 	db NASTY_PLOT
 	db $ff
 
 ElekidEggSpeciesMoves:
-	dp ELEKID, PLAIN_FORM
+	native_species_form ELEKID, PLAIN_FORM
 	db BARRIER
 	db CROSS_CHOP
 	db KARATE_CHOP
@@ -1146,7 +1146,7 @@ ElekidEggSpeciesMoves:
 	db $ff
 
 MagbyEggSpeciesMoves:
-	dp MAGBY, PLAIN_FORM
+	native_species_form MAGBY, PLAIN_FORM
 	db BARRIER
 	db BELLY_DRUM
 	db CROSS_CHOP
@@ -1158,14 +1158,14 @@ MagbyEggSpeciesMoves:
 	db $ff
 
 MiltankEggSpeciesMoves:
-	dp MILTANK, PLAIN_FORM
+	native_species_form MILTANK, PLAIN_FORM
 	db DIZZY_PUNCH
 	db REVERSAL
 	db SEISMIC_TOSS
 	db $ff
 
 LarvitarEggSpeciesMoves:
-	dp LARVITAR, PLAIN_FORM
+	native_species_form LARVITAR, PLAIN_FORM
 	db DRAGON_DANCE
 	db FOCUS_ENERGY
 	db PURSUIT
@@ -1176,7 +1176,7 @@ LarvitarEggSpeciesMoves:
 	db $ff
 
 AzurillEggSpeciesMoves:
-	dp AZURILL, PLAIN_FORM
+	native_species_form AZURILL, PLAIN_FORM
 	db BELLY_DRUM
 	db FORESIGHT
 	db FUTURE_SIGHT
@@ -1188,19 +1188,19 @@ AzurillEggSpeciesMoves:
 	db $ff
 
 WynautEggSpeciesMoves:
-	dp WYNAUT, PLAIN_FORM
+	native_species_form WYNAUT, PLAIN_FORM
 	db CHARM
 	db ENCORE
 	db $ff
 
 BonslyEggSpeciesMoves:
-	dp BONSLY, PLAIN_FORM
+	native_species_form BONSLY, PLAIN_FORM
 	db DEFENSE_CURL
 	db EXPLOSION
 	db $ff
 
 MimeJrEggSpeciesMoves:
-	dp MIME_JR_, PLAIN_FORM
+	native_species_form MIME_JR_, PLAIN_FORM
 	db CONFUSE_RAY
 	db FUTURE_SIGHT
 	db HYPNOSIS
@@ -1209,12 +1209,12 @@ MimeJrEggSpeciesMoves:
 	db $ff
 
 HappinyEggSpeciesMoves:
-	dp HAPPINY, PLAIN_FORM
+	native_species_form HAPPINY, PLAIN_FORM
 	db HEAL_BELL
 	db $ff
 
 MantykeEggSpeciesMoves:
-	dp MANTYKE, PLAIN_FORM
+	native_species_form MANTYKE, PLAIN_FORM
 	db HAZE
 	db MIRROR_COAT
 	db SPLASH
@@ -1223,7 +1223,7 @@ MantykeEggSpeciesMoves:
 	db $ff
 
 MunchlaxEggSpeciesMoves:
-	dp MUNCHLAX, PLAIN_FORM
+	native_species_form MUNCHLAX, PLAIN_FORM
 	db CHARM
 	db COUNTER
 	db CURSE
@@ -1233,4 +1233,12 @@ MunchlaxEggSpeciesMoves:
 	db $ff
 
 NoEggSpeciesMoves:
+	dw 0 ; no hatchling species
+	db NO_FORM
 	db $ff
+
+if DEF(NATIVE_SPECIES_TEST)
+WideTestEggSpeciesMoves:
+	native_species_form WIDE_TEST_SPECIES, PLAIN_FORM
+	db TACKLE, $ff
+endc

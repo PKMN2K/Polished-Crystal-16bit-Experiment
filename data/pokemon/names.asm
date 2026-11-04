@@ -1,6 +1,9 @@
 PokemonNames::
 	indirect_table MON_NAME_LENGTH - 1, 0
 	indirect_entries NUM_SPECIES, PokemonNameRecords
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, PokemonNameRecords, ANNIHILAPE - 0
+endc
 	indirect_table_end
 
 PokemonNameRecords:

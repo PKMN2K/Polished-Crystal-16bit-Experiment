@@ -96,7 +96,7 @@ CheckHowToEvolve:
 
 	ld a, [wLinkMode]
 	and a
-	jmp nz, .dont_evolve_2
+	jmp nz, .skip_method
 
 	ld a, b
 	cp EVOLVE_ITEM
@@ -105,7 +105,7 @@ CheckHowToEvolve:
 	ld a, [wForceEvolution]
 	assert EVOLVE_LEVEL == 1
 	cp EVOLVE_LEVEL + 1
-	jmp nc, .dont_evolve_2
+	jmp nc, .skip_method
 
 	ld a, b
 	cp EVOLVE_CRIT
@@ -244,9 +244,9 @@ CheckHowToEvolve:
 
 .party
 	ld a, [hli]
-	ld e, a ; species
+	ld e, a ; native species low
 	ld a, [hli]
-	ld d, a ; ext species + form
+	ld d, a ; native species high
 	push hl
 	ld hl, wPartyMon1Species
 	ld a, [wPartyCount]
@@ -255,9 +255,15 @@ CheckHowToEvolve:
 	push bc
 	push de
 	ld de, MON_FORM - MON_SPECIES
-	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
+	farcall GetNativeSpeciesIDFromPokemonDataStruct
+	farcall GetRootSpeciesFromNativeIDBC
 	pop de
-	call CompareSpeciesWithDE
+	ld a, b
+	cp d
+	jr nz, .party_no_match
+	ld a, c
+	cp e
+.party_no_match
 	pop bc
 	jr z, .party_ok
 .party_next
@@ -360,16 +366,21 @@ endr
 	ld [wCurPartyLevel], a
 
 	ld a, [hli]
-	ld [wEvolutionNewSpecies], a
-	ld a, [hl]
 	ld c, a
+	ld a, [hli]
+	ld b, a ; native target word
+	ld a, [hl]
+	ld d, a
 	and FORM_MASK
 	ld a, [wTempMonForm]
 	jr z, .keep_old_form
 	and ~SPECIESFORM_MASK
 .keep_old_form
 	and ~EXTSPECIES_MASK
-	or c
+	or d
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld [wEvolutionNewSpecies], a
+	ld a, b
 	ld [wEvolutionNewForm], a
 	ld a, [wCurPartyMon]
 	ld hl, wPartyMonNicknames
@@ -380,11 +391,17 @@ endr
 	and a
 	ret
 
+.skip_method
+	ld a, b
+	farcall SkipEvolutionEntry
+	jmp .loop
+
 .dont_evolve_1
 	inc hl
 .dont_evolve_2
 	inc hl
 .dont_evolve_3
+	inc hl
 	inc hl
 	inc hl
 	jmp .loop
@@ -604,10 +621,7 @@ LearnEvolutionMove:
 	; don't teach move already learned at this level
 	pop bc
 	call GetEvosAttacksPointer
-.skip_evos
-	ld a, [hli]
-	inc a
-	jr nz, .skip_evos
+	farcall SkipEvolutionData
 
 .check_level_moves
 	ld a, [hli]
@@ -648,10 +662,7 @@ LearnLevelMoves:
 	ld b, a
 	call GetEvosAttacksPointer
 
-.skip_evos
-	ld a, [hli]
-	inc a
-	jr nz, .skip_evos
+	farcall SkipEvolutionData
 
 .find_move
 	ld a, [hli]
@@ -701,10 +712,7 @@ FillMoves:
 	push de
 	push bc
 	call GetEvosAttacksPointer
-.GoToAttacks:
-	ld a, [hli]
-	inc a
-	jr nz, .GoToAttacks
+	farcall SkipEvolutionData
 	jr .GetLevel
 
 .NextMove:
@@ -891,13 +899,10 @@ GetEvolutionData:
 	jr .copy_string
 
 .get_mon_name:
-	ld a, [hli] ; parameter 1 low (species)
-	ld e, a
-	ld a, [hl] ; parameter 1 high (ext species/form)
-	ld hl, wNamedObjectIndex+1
-	ld [hld], a
-	ld [hl], e
-	call GetPokemonName
+	ld a, [hli] ; native party-species parameter
+	ld c, a
+	ld b, [hl]
+	farcall GetPokemonNameFromNativeIDBC
 .copy_string:
 	ld de, wStringBuffer1
 	ld hl, wStringBuffer4
@@ -918,10 +923,7 @@ GetNextMove:
 	ret
 .not_egg
 	call GetEvosAttacksPointer
-.skip_evos
-	ld a, [hli]
-	inc a
-	jr nz, .skip_evos
+	farcall SkipEvolutionData
 .find_move
 	ld a, [hli]
 	inc a

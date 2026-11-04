@@ -19,7 +19,9 @@ CheckBreedmonCompatibility:
 	ld [wTempMonGender], a
 	call .SetGenderData
 	ld b, a
+	push bc
 	farcall LoadBreedMon2LegacySpeciesAndForm
+	pop bc
 	ld a, [wBreedMon2Gender]
 	ld [wTempMonGender], a
 	call .SetGenderData
@@ -561,12 +563,7 @@ InheritLevelMove:
 	ld b, a
 	; bc = index
 	farcall GetEvosAttacksPointer
-.loop
-	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
-	inc a
-	jr nz, .loop
+	farcall SkipEvolutionData
 .loop2
 	ld a, BANK(EvosAttacks)
 	call GetFarByte
@@ -593,6 +590,7 @@ InheritEggMove:
 	call GetSpeciesAndFormIndex
 	inc bc ; zero-based legacy data index -> one-based native species ID
 	farcall GetEggMovePointerFromNativeIDBC
+	inc hl
 	inc hl
 	inc hl
 .loop

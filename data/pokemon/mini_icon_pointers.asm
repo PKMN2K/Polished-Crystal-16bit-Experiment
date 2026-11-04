@@ -5,6 +5,9 @@ ENDM
 MiniIconPointers:
 	indirect_table 7, 1
 	indirect_entries NUM_UNIQUE_POKEMON, MiniIconPointerData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, MiniIconPointerData, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 MiniIconPointerData:

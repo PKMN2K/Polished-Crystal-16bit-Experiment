@@ -1,6 +1,9 @@
 BitmasksPointers:
 	indirect_table 2, 1
 	indirect_entries NUM_UNIQUE_POKEMON, BitmasksPointerData
+if DEF(NATIVE_SPECIES_TEST)
+	indirect_alias WIDE_TEST_SPECIES, BitmasksPointerData, ANNIHILAPE - 1
+endc
 	indirect_table_end
 
 BitmasksPointerData:
