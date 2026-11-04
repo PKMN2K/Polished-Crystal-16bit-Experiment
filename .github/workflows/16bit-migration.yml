@@ -28,6 +28,8 @@ jobs:
           - { name: debug-vc, flags: 'debug vc', tests: false }
           - { name: faithful-debug-vc, flags: 'faithful debug vc', tests: false }
           - { name: native-0201, flags: 'native-test NATIVE_TEST_SPECIES=513', tests: false, fixture: true }
+          - { name: native-02fd, flags: 'native-test NATIVE_TEST_SPECIES=765', tests: false, fixture: true }
+          - { name: native-02fe, flags: 'native-test NATIVE_TEST_SPECIES=766', tests: false, fixture: true }
           - { name: native-02ff, flags: 'native-test NATIVE_TEST_SPECIES=767', tests: false, fixture: true }
           - { name: native-0300, flags: 'native-test NATIVE_TEST_SPECIES=768', tests: false, fixture: true }
     steps:
@@ -64,6 +66,7 @@ jobs:
         run: |
           roms=(polishedcrystal-native-test-*.gbc)
           python tests/fixtures/wide_species.py "${roms[0]}"
+          python tests/test_native_link_packets.py "${roms[0]}"
       - name: Preserve build and test evidence
         if: always()
         uses: actions/upload-artifact@v4

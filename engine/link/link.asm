@@ -76,41 +76,7 @@ Gen2ToGen2LinkComms:
 	call PlayMusic
 
 	call Link_CopyRandomNumbers
-	ld hl, wOTPartyData
-	call Link_FindFirstNonControlCharacter_SkipZero
-	ld de, wLinkData
-	ld bc, wLinkPlayerDataEnd - wLinkPlayerName
-	call Link_CopyOTData
-
-	ld de, wPlayerTrademon
-	ld hl, wLinkPatchList1
-	ld c, 2
-.loop1
-	ld a, [de]
-	inc de
-	and a
-	jr z, .loop1
-	cp SERIAL_PREAMBLE_BYTE
-	jr z, .loop1
-	cp SERIAL_NO_DATA_BYTE
-	jr z, .loop1
-	cp SERIAL_PATCH_LIST_PART_TERMINATOR
-	jr z, .next1
-	push hl
-	push bc
-	ld b, 0
-	dec a
-	ld c, a
-	add hl, bc
-	ld [hl], SERIAL_NO_DATA_BYTE
-	pop bc
-	pop hl
-	jr .loop1
-
-.next1
-	ld hl, wLinkPatchList2
-	dec c
-	jr nz, .loop1
+	call Link_UnpackPartyData
 
 	ld a, [wLinkMode]
 	cp LINK_TRADECENTER
@@ -205,21 +171,8 @@ Gen2ToGen2LinkComms:
 	ld [de], a
 
 .skip_mail
-	ld hl, wLinkPlayerName
-	ld de, wOTPlayerName
-	ld bc, NAME_LENGTH
-	rst CopyBytes
-
-	ld a, [hli]
-	ld [wOTPartyCount], a
-
-	ld de, wOTPlayerID
-	ld bc, 2
-	rst CopyBytes
-
-	ld de, wOTPartyMons
-	ld bc, wOTPartyDataEnd - wOTPartyMons
-	rst CopyBytes
+	call Link_LoadOTParty
+	jp c, LinkTimeout
 
 	ld e, MUSIC_NONE
 	call PlayMusic
@@ -457,7 +410,7 @@ Link_PrepPartyData_Gen2:
 	rst CopyBytes
 
 	ld hl, wPartyMon1Species
-	call .SerializePartyMons
+	call Link_SerializePartyMons
 
 	ld hl, wPartyMonOTs
 	ld bc, PARTY_LENGTH * NAME_LENGTH
@@ -563,13 +516,185 @@ Link_PrepPartyData_Gen2:
 	ld [de], a
 	ret
 
-.SerializePartyMons:
-; Copy party records into the existing legacy link format. The wire layout is
-; unchanged; only a transient persistent identity is decoded at this boundary.
-; in/out: hl = source/end, de = destination/end
-	ld b, PARTY_LENGTH
-.serialize_loop
+Link_UnpackPartyData:
+; Remove serial padding and restore escaped $fe bytes before native decoding.
+	ld hl, wOTPartyData
+	call Link_FindFirstNonControlCharacter_SkipZero
+	ld de, wLinkData
+	ld bc, wLinkPlayerDataEnd - wLinkPlayerName
+	call Link_CopyOTData
+
+	ld de, wPlayerTrademon
+	ld hl, wLinkPatchList1
+	ld c, 2
+.loop1
+	ld a, [de]
+	inc de
+	and a
+	jr z, .loop1
+	cp SERIAL_PREAMBLE_BYTE
+	jr z, .loop1
+	cp SERIAL_NO_DATA_BYTE
+	jr z, .loop1
+	cp SERIAL_PATCH_LIST_PART_TERMINATOR
+	jr z, .next1
+	push hl
 	push bc
+	ld b, 0
+	dec a
+	ld c, a
+	add hl, bc
+	ld [hl], SERIAL_NO_DATA_BYTE
+	pop bc
+	pop hl
+	jr .loop1
+
+.next1
+	ld hl, wLinkPatchList2
+	dec c
+	jr nz, .loop1
+	ret
+
+Link_LoadOTParty:
+; Validate the entire packet before allocating any local runtime aliases.
+; Native wire records have no EXTSPECIES bit, so collection cannot mistake
+; an unconverted identity for a handle. Clear the raw serial receive buffer
+; before allocation as it is not aligned to the OT party's runtime fields.
+	call Link_ValidateNativeParty
+	ret c
+	ld hl, wOTPartyMons
+	ld bc, PARTYMON_STRUCT_LENGTH * PARTY_LENGTH
+	xor a
+	call ByteFill
+	call Link_DecodeNativeParty
+	ld hl, wLinkPlayerName
+	ld de, wOTPlayerName
+	ld bc, NAME_LENGTH
+	rst CopyBytes
+
+	ld a, [hli]
+	ld [wOTPartyCount], a
+
+	ld de, wOTPlayerID
+	ld bc, 2
+	rst CopyBytes
+
+	ld de, wOTPartyMons
+	ld bc, wOTPartyDataEnd - wOTPartyMons
+	rst CopyBytes
+
+	and a
+	ret
+
+Link_ValidateNativeParty:
+; Carry for an unsupported native ID, invalid count, or non-wire form metadata.
+	ld a, [wLinkPartyCount]
+	dec a
+	cp PARTY_LENGTH
+	jr nc, .invalid
+	inc a
+	ld d, a
+	ld e, PARTY_LENGTH
+	ld hl, wLinkPlayerPartyMon1Species
+.loop
+	push hl
+	ld bc, MON_UNUSED - MON_SPECIES
+	add hl, bc
+	ld b, [hl]
+	pop hl
+	ld c, [hl]
+	push hl
+	push bc
+	ld bc, MON_FORM - MON_SPECIES
+	add hl, bc
+	bit MON_EXTSPECIES_F, [hl]
+	pop bc
+	pop hl
+	jr nz, .invalid
+	ld a, d
+	and a
+	jr z, .empty
+	farcall IsValidNativeSpeciesBC
+	jr z, .invalid
+	; Eggs retain their underlying native species and use MON_IS_EGG_F.
+	ld a, b
+	and a
+	jr nz, .next_active
+	ld a, c
+	cp EGG
+	jr z, .invalid
+.next_active
+	dec d
+	jr .next
+.empty
+	ld a, b
+	or c
+	jr nz, .invalid
+.next
+	ld bc, PARTYMON_STRUCT_LENGTH
+	add hl, bc
+	dec e
+	jr nz, .loop
+	and a
+	ret
+.invalid
+	scf
+	ret
+
+Link_DecodeNativeParty:
+; Convert the validated buffer in place; each completed slot becomes a GC root.
+	ld a, [wLinkPartyCount]
+	ld e, a
+	ld hl, wLinkPlayerPartyMon1Species
+.loop
+	push hl
+	ld bc, MON_UNUSED - MON_SPECIES
+	add hl, bc
+	ld b, [hl]
+	ld [hl], 0
+	pop hl
+	ld c, [hl]
+	push hl
+	push bc
+	ld bc, MON_FORM - MON_SPECIES
+	add hl, bc
+	ld a, [hl]
+	pop bc
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld [hl], b
+	pop hl
+	ld [hl], c
+	ld bc, PARTYMON_STRUCT_LENGTH
+	add hl, bc
+	dec e
+	jr nz, .loop
+	; Ignore residual non-identity bytes in unused incoming slots.
+	ld a, [wLinkPartyCount]
+	cpl
+	add PARTY_LENGTH + 1
+	ret z
+	ld e, a
+.clear_unused
+	ld bc, PARTYMON_STRUCT_LENGTH
+	xor a
+	call ByteFill
+	dec e
+	jr nz, .clear_unused
+	ret
+
+Link_SerializePartyMons:
+; Wire v6 retains the fixed party packet size: native low byte in MON_SPECIES,
+; high byte in MON_UNUSED, and cosmetic/egg/gender metadata in MON_FORM.
+; EXTSPECIES belongs only to local runtime identities and is never transmitted.
+; in/out: hl = source/end, de = destination/end
+	ld a, [wPartyCount]
+	ld c, a
+	ld b, PARTY_LENGTH
+.loop
+	push bc
+	ld a, c
+	and a
+	jr z, .empty
 	push hl
 	push de
 	ld bc, PARTYMON_STRUCT_LENGTH
@@ -579,27 +704,44 @@ Link_PrepPartyData_Gen2:
 	push hl
 	push de
 	ld de, MON_FORM - MON_SPECIES
-	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
+	farcall GetNativeSpeciesIDFromPokemonDataStruct
 	pop hl
 	ld [hl], c
 	push bc
-	ld bc, MON_FORM - MON_SPECIES
+	ld bc, MON_UNUSED - MON_SPECIES
 	add hl, bc
-	ld a, [hl]
-	and ~SPECIESFORM_MASK
 	pop bc
-	or b
-	ld [hl], a
-	ld bc, PARTYMON_STRUCT_LENGTH - (MON_FORM - MON_SPECIES)
+	ld [hl], b
+	ld bc, MON_FORM - MON_UNUSED
+	add hl, bc
+	res MON_EXTSPECIES_F, [hl]
+	ld bc, PARTYMON_STRUCT_LENGTH - MON_FORM
 	add hl, bc
 	ld d, h
 	ld e, l
 	pop hl
+	jr .next
+.empty
+	push hl
+	ld h, d
+	ld l, e
+	ld bc, PARTYMON_STRUCT_LENGTH
+	xor a
+	call ByteFill
+	ld d, h
+	ld e, l
+	pop hl
+.next
 	ld bc, PARTYMON_STRUCT_LENGTH
 	add hl, bc
 	pop bc
+	ld a, c
+	and a
+	jr z, .next_slot
+	dec c
+.next_slot
 	dec b
-	jr nz, .serialize_loop
+	jr nz, .loop
 	ret
 
 Link_CopyOTData:

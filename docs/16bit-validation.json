@@ -1,9 +1,9 @@
 {
-  "performed_on": "2026-11-04 UTC",
+  "performed_on": "2026-11-04T04:41:12.133491+00:00",
   "location": "local",
-  "baseline_commit": "78acbacc5043224a7c119a01629cc724a8d9c009",
-  "scope": "Wide native runtime handles, native evolution/hatchling records, native Pok\u00e9dex lists and daycare register preservation.",
-  "github_actions": "Local evidence only. Check Actions separately for the published branch head.",
+  "baseline_commit": "7a4f1a3d66580e832ae7dff2f65404ec5d8d1ac8",
+  "scope": "Native species link protocol 6, peer-local alias reconstruction and trade-animation garbage-collection roots.",
+  "github_actions": "Local evidence only. The published commit runs eight production configurations and five native fixtures; check Actions separately for that exact head.",
   "toolchain": {
     "rgbds": "1.0.4",
     "pyboy": "2.7.0",
@@ -20,7 +20,7 @@
         "polishedcrystal-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-3.2.3.gbc": "ecca7670c5577b028ad982d4a94cbb7886ea8613304bc25ecab12afba09b7c6f"
+        "polishedcrystal-3.2.3.gbc": "8f1766429faac505e648f51874a165c0f36f75e68b3f618fec13b254f83381d2"
       }
     },
     {
@@ -35,122 +35,7 @@
         "polishedcrystal-debug-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-debug-3.2.3.gbc": "4596b5a4981bd5466f77b33a40afb6514f37216e4e878bdb819884005c77d704"
-      }
-    },
-    {
-      "name": "faithful",
-      "flags": [
-        "faithful"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-faithful-3.2.3.gbc",
-        "polishedcrystal-faithful-3.2.3.map",
-        "polishedcrystal-faithful-3.2.3.sym"
-      ],
-      "roms": {
-        "polishedcrystal-faithful-3.2.3.gbc": "e1fae22ca77cbd002f4798a4645cf5dabc32b739144f7548c59e86adf983ff02"
-      }
-    },
-    {
-      "name": "faithful-debug",
-      "flags": [
-        "faithful",
-        "debug"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-faithful-debug-3.2.3.gbc",
-        "polishedcrystal-faithful-debug-3.2.3.map",
-        "polishedcrystal-faithful-debug-3.2.3.sym"
-      ],
-      "roms": {
-        "polishedcrystal-faithful-debug-3.2.3.gbc": "c61c213f4cde46a928d438ef7fd947bc691ca797a375fe1ab498cac4027b6383"
-      }
-    },
-    {
-      "name": "vc",
-      "flags": [
-        "vc"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-3.2.3.gbc",
-        "polishedcrystal-3.2.3.map",
-        "polishedcrystal-3.2.3.patch",
-        "polishedcrystal-3.2.3.sym",
-        "polishedcrystal-3.2.3_vc.gbc",
-        "polishedcrystal-3.2.3_vc.map",
-        "polishedcrystal-3.2.3_vc.sym"
-      ],
-      "roms": {
-        "polishedcrystal-3.2.3.gbc": "ecca7670c5577b028ad982d4a94cbb7886ea8613304bc25ecab12afba09b7c6f",
-        "polishedcrystal-3.2.3_vc.gbc": "36157ac3fbe1cc40055862a766614f370d984a0ef388cfe1682eeebd610e09e3"
-      }
-    },
-    {
-      "name": "faithful-vc",
-      "flags": [
-        "faithful",
-        "vc"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-faithful-3.2.3.gbc",
-        "polishedcrystal-faithful-3.2.3.map",
-        "polishedcrystal-faithful-3.2.3.patch",
-        "polishedcrystal-faithful-3.2.3.sym",
-        "polishedcrystal-faithful-3.2.3_vc.gbc",
-        "polishedcrystal-faithful-3.2.3_vc.map",
-        "polishedcrystal-faithful-3.2.3_vc.sym"
-      ],
-      "roms": {
-        "polishedcrystal-faithful-3.2.3.gbc": "e1fae22ca77cbd002f4798a4645cf5dabc32b739144f7548c59e86adf983ff02",
-        "polishedcrystal-faithful-3.2.3_vc.gbc": "56f3ab6ef077c35f5c2a6008f1c91dbf5f87606283c6a7f0606c9fc365a8d2a7"
-      }
-    },
-    {
-      "name": "debug-vc",
-      "flags": [
-        "debug",
-        "vc"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-debug-3.2.3.gbc",
-        "polishedcrystal-debug-3.2.3.map",
-        "polishedcrystal-debug-3.2.3.patch",
-        "polishedcrystal-debug-3.2.3.sym",
-        "polishedcrystal-debug-3.2.3_vc.gbc",
-        "polishedcrystal-debug-3.2.3_vc.map",
-        "polishedcrystal-debug-3.2.3_vc.sym"
-      ],
-      "roms": {
-        "polishedcrystal-debug-3.2.3.gbc": "4596b5a4981bd5466f77b33a40afb6514f37216e4e878bdb819884005c77d704",
-        "polishedcrystal-debug-3.2.3_vc.gbc": "98bd0322bf5ddcb358acbcddd1526f1599160c5f7d97a0fc3f98442d7889d4b3"
-      }
-    },
-    {
-      "name": "faithful-debug-vc",
-      "flags": [
-        "faithful",
-        "debug",
-        "vc"
-      ],
-      "returncode": 0,
-      "artifacts": [
-        "polishedcrystal-faithful-debug-3.2.3.gbc",
-        "polishedcrystal-faithful-debug-3.2.3.map",
-        "polishedcrystal-faithful-debug-3.2.3.patch",
-        "polishedcrystal-faithful-debug-3.2.3.sym",
-        "polishedcrystal-faithful-debug-3.2.3_vc.gbc",
-        "polishedcrystal-faithful-debug-3.2.3_vc.map",
-        "polishedcrystal-faithful-debug-3.2.3_vc.sym"
-      ],
-      "roms": {
-        "polishedcrystal-faithful-debug-3.2.3.gbc": "c61c213f4cde46a928d438ef7fd947bc691ca797a375fe1ab498cac4027b6383",
-        "polishedcrystal-faithful-debug-3.2.3_vc.gbc": "9c6b1dbf30adbd2101da174c4e40a13add76b02bfd045dc4a72c952ec0566306"
+        "polishedcrystal-debug-3.2.3.gbc": "4c821f37a52918637cd34acc26934000bea6032072327848164ec14ce792f1c5"
       }
     },
     {
@@ -161,7 +46,29 @@
       ],
       "returncode": 0,
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "4b4fb433b3e85a0f4ab9027af51777debb004bd6122ee57b6617985d21cdad80"
+        "polishedcrystal-native-test-3.2.3.gbc": "a3c4484817c96be7efcb38494e03c38df61d47364969b4eb6075abf9148b7c83"
+      }
+    },
+    {
+      "name": "native-02fd",
+      "flags": [
+        "native-test",
+        "NATIVE_TEST_SPECIES=765"
+      ],
+      "returncode": 0,
+      "roms": {
+        "polishedcrystal-native-test-3.2.3.gbc": "f6783b660be6d2c53613d5f6299daf1c62f6a0c546ba90b454ef714f3d37dea2"
+      }
+    },
+    {
+      "name": "native-02fe",
+      "flags": [
+        "native-test",
+        "NATIVE_TEST_SPECIES=766"
+      ],
+      "returncode": 0,
+      "roms": {
+        "polishedcrystal-native-test-3.2.3.gbc": "3bdb74bb50a5f970ea00095f62951a1b1599ee8fe948c0cd4617cb1ef93b9c00"
       }
     },
     {
@@ -172,7 +79,7 @@
       ],
       "returncode": 0,
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "6bdf56c152cc2374c37cd638e8aa63804f6ff6cb93798ca94bd22f856c0eb4cf"
+        "polishedcrystal-native-test-3.2.3.gbc": "4f9f6acdf26ec681ae8e8f3503f49d2c0f95843cb8e3b15c71e59a7d382a7244"
       }
     },
     {
@@ -183,63 +90,76 @@
       ],
       "returncode": 0,
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "cef5792658b1682b2dfb6208476ee42f068e5ac39404590ef09b233d62755660"
+        "polishedcrystal-native-test-3.2.3.gbc": "e5d52adccacd296abe99e31bda390af3eb7e16af673a0ac1196e26eb0efc7b28"
       }
     }
   ],
   "cpu_regressions": {
     "normal": {
-      "programs": 161,
-      "passed": 161,
+      "programs": 162,
+      "passed": 162,
       "failed": 0,
       "returncode": 0
     },
     "debug": {
-      "programs": 161,
-      "passed": 161,
+      "programs": 162,
+      "passed": 162,
       "failed": 0,
       "returncode": 0
     }
   },
+  "native_link": {
+    "protocol_version": 6,
+    "minimum_trade_version": 6,
+    "rom_stubs": false,
+    "peers": "Two independent PyBoy instances with different conversion-table allocation histories.",
+    "transport": "Harness copies outgoing serial buffers to the other peer; real ROM packet builders, patch encoders/decoders and native import execute unchanged.",
+    "transfers_per_rom": 48,
+    "tested_roms": [
+      "normal",
+      "debug",
+      "native-0201",
+      "native-02fd",
+      "native-02fe",
+      "native-02ff",
+      "native-0300"
+    ],
+    "coverage": [
+      "Party sizes 1 through 6, trade and battle rooms, native and legacy player input layouts; original party records unchanged by serialization.",
+      "Full native species words, canonical regional forms, cosmetic forms, egg/gender metadata, all remaining party bytes, player ID, OT names and nicknames.",
+      "Real serial patch-list round trips for control bytes 0xfd, 0xfe and 0xff, including player ID and both patch-list segments.",
+      "Real received-party battle identity publication, OT-to-temp copy and persistent party insertion after trade.",
+      "Zeroed inactive slots; 15 malformed-packet cases reject invalid counts, zero/Egg/reserved/unsupported IDs in first and last slots, wire EXTSPECIES and nonempty inactive identities.",
+      "Rejected packets leave destination records and conversion-table bytes unchanged.",
+      "Both room types reject older incompatible protocols; compatible version 6 succeeds.",
+      "Every wide fixture forces collection on its first received wide allocation from a full local table.",
+      "Four isolated trade-animation identity roots each survive 229 distinct allocations in every wide fixture."
+    ]
+  },
   "native_catalog_fixtures": {
     "ids": [
       "0x0201",
+      "0x02fd",
+      "0x02fe",
       "0x02ff",
       "0x0300"
     ],
     "rom_stubs": false,
     "production_roster_unchanged": true,
     "coverage": [
-      "Compiled native encounter record and full wild generator; player/opponent insertion and catch-copy conversion",
-      "Native battle identity publication, base data, names, cries, front-picture decompression and battle-picture preparation",
-      "Complete PC encoding, checksum and decoding with live stat reconstruction",
-      "Evolution eligibility and target decoding in both directions across 0x01ff; record scanning across 0xff bytes",
-      "Complete daycare egg generation using native hatchling records",
-      "Pok\u00e9dex list construction, cursor lookup and alphabetical search",
-      "Primary and backup Pok\u00e9mon-data/conversion-table persistence",
-      "Five independent runtime roots preserved through 210 distinct allocator insertions each"
+      "Existing wide-species integration: generation/catching, native battle identity, names/stats/cries/pictures, PC serialization, evolution, daycare, Pokedex and primary/backup saves.",
+      "Native link transfers at 0x0201, 0x02fd, 0x02fe, 0x02ff and 0x0300."
     ]
   },
-  "existing_roster_regressions": [
-    "Native daycare same/opposite-gender compatibility, baby/regional/cosmetic identities, inherited balls and PP",
-    "All 289 Pok\u00e9dex roots in national/Johto/alphabetical orders, every cursor position and cosmetic form changes",
-    "Prior 159 test programs, including 291 Hall of Fame cases per ROM"
-  ],
-  "harness_corrections": [
-    "Reserved 0x0100 name lookup expects an empty string; it is not a supported hatchling",
-    "Save recovery uses a bounded return-sink loop instead of a fixed ten-frame deadline",
-    "Removed the diagnostic-only HasUserFainted entry hook that repeatedly fired without CPU progress; state assertions remain"
-  ],
   "static_checks": {
     "optimization_findings": 0,
     "unsafe_entry_hooks": 0,
     "git_diff_check": "passed"
   },
-  "boot_smoke": "Normal ROM reached the Polished Crystal title screen after 3600 emulator frames; no ROM stubs.",
   "limitations": [
-    "Wide fixtures are synthetic catalog entries reusing existing art/stats; no full interactive wide-species battle or playthrough claimed.",
-    "Expanded move IDs and native link serialization remain unported.",
-    "New forms and classification data require content-specific extension and tests.",
-    "New save required; save version 12 only. No old-save upgrade tool."
+    "Cable interrupts/timing, physical hardware or wireless VC compatibility, complete trade animation, mail delivery and a complete linked battle are not emulated by the buffer-transfer tests.",
+    "Expanded move IDs remain unported.",
+    "Wide fixtures reuse existing art/stats; no full interactive wide-species playthrough or arbitrary expanded roster is claimed.",
+    "Content-specific forms/classification extensions and old-save import remain separate work. Save version 12 is unchanged."
   ]
 }

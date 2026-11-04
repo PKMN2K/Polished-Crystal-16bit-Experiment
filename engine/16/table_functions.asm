@@ -82,6 +82,10 @@ endr
 	runtime_species_root wBattleMonSpecies, wBattleMonForm
 	runtime_species_root wEnemyMonSpecies, wEnemyMonForm
 	runtime_species_root wTempMonSpecies, wTempMonForm
+	runtime_species_root wPlayerTrademonSpecies, wPlayerTrademonForm
+	runtime_species_root wOTTrademonSpecies, wOTTrademonForm
+	runtime_species_root wLinkTradeSendmonSpecies, wLinkTradeSendmonForm
+	runtime_species_root wLinkTradeGetmonSpecies, wLinkTradeGetmonForm
 	runtime_species_root wContestMonSpecies, wContestMonForm
 	runtime_species_root wOddEggSpecies, wOddEggForm
 	runtime_species_root wCurSpecies, wCurForm

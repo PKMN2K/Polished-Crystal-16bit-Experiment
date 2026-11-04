@@ -58,10 +58,11 @@ else
 endc
 
 ; this game's link version
-DEF LINK_VERSION EQU 5
+DEF LINK_VERSION EQU 6
 ; This is the minimum link version allowed for trading
-; Older versions use a different party patch-list origin.
-DEF LINK_MIN_TRADE_VERSION EQU 5
+; Version 6 sends native species words in MON_SPECIES/MON_UNUSED and clears
+; EXTSPECIES on the wire. Older clients interpret these bytes as local IDs.
+DEF LINK_MIN_TRADE_VERSION EQU 6
 
 ; PerformLinkChecks error codes
 	const_def
