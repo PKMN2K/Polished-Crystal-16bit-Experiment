@@ -1,0 +1,1342 @@
+{
+  "performed_on": "2026-11-04T13:38:19.372880+00:00",
+  "baseline_commit": "366978c4b149645008687cdf40983674935babf6",
+  "scope": "Joypad-only serial trade, both animations, linked battle with reversed clock roles, battery saves and cold Continue on two SameBoy CGB E systems.",
+  "emulator": {
+    "repository": "https://github.com/LIJI32/SameBoy.git",
+    "commit": "ea667ad79aa28409f034b1fd6da7304e1844750d",
+    "model": "CGB E",
+    "boot_rom": "SameBoy open-source cgb_boot.bin",
+    "license": "MIT; see the pinned source LICENSE"
+  },
+  "boot_rom_sha256": "f767b8e7e510a255f81328c89dba6e0c996b370e1bc86aebb8584a7da47a5bba",
+  "fixture": {
+    "flags": [
+      "native-test",
+      "NATIVE_TEST_SPECIES=767",
+      "native_move_test=1",
+      "NATIVE_TEST_MOVE=64769",
+      "native_link_test=1"
+    ],
+    "rom_sha256": "d81a5b95df1e4f77d5fd367f9c1693b02fd6e677f08c3eacd9b1339f31c8f652"
+  },
+  "production_rom": {
+    "byte_identical_to_baseline": true,
+    "sha256": "35ad3e0a2caa90e3d02c5aa7ecd1cab7084b5ab6c9d55014d1bb86d0bfa12187"
+  },
+  "additional_checks": {
+    "wide_species_integration": "passed",
+    "native_move_ids": "passed",
+    "native_packet_transfers": 48,
+    "native_packet_transfer_failures": 0,
+    "symbolic_move_sites_audited": 8672,
+    "byte_only_move_boundaries": 0,
+    "git_diff_check": "passed"
+  },
+  "playable_link": {
+    "passed": true,
+    "input": "joypad only",
+    "transport": "SameBoy serial bit callbacks",
+    "power_on_offset_8mhz_ticks": 35112,
+    "checkpoints": [
+      {
+        "name": "prepared",
+        "frame": 8550,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              1,
+              9,
+              7
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              },
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0x4c05",
+            "map": [
+              20,
+              1,
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "name": "trade-room",
+        "frame": 10270,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 1832,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0x46fb",
+            "map": [
+              20,
+              2,
+              8,
+              11
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              },
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0x62",
+            "map": [
+              20,
+              2,
+              8,
+              11
+            ]
+          }
+        ]
+      },
+      {
+        "name": "trade-parties",
+        "frame": 11050,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 12640,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0x471e",
+            "map": [
+              20,
+              2,
+              7,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              },
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0x682",
+            "map": [
+              20,
+              2,
+              10,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "name": "trade-confirmation",
+        "frame": 11614,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 14272,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              2,
+              7,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              },
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0x4696",
+            "map": [
+              20,
+              2,
+              10,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "name": "traded",
+        "frame": 14854,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 23912,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0x769",
+            "map": [
+              20,
+              2,
+              7,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0x4714",
+            "map": [
+              20,
+              2,
+              10,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "name": "trade-exited",
+        "frame": 16066,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 24792,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0x75fa",
+            "map": [
+              20,
+              1,
+              9,
+              7
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 16,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              1,
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "name": "battle-room",
+        "frame": 18058,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 24792,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              3,
+              8,
+              11
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 1848,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              3,
+              8,
+              11
+            ]
+          }
+        ]
+      },
+      {
+        "name": "battle-started",
+        "frame": 19858,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 24792,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              3,
+              10,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 7504,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              3,
+              7,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "name": "battle-completed",
+        "frame": 28636,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 24800,
+            "clock_collision_warnings": 0,
+            "connection": 1,
+            "pc": "0x522a",
+            "map": [
+              20,
+              3,
+              10,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 12488,
+            "clock_collision_warnings": 0,
+            "connection": 2,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              3,
+              7,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "name": "saved",
+        "frame": 30364,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 24808,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0xdd4",
+            "map": [
+              20,
+              1,
+              13,
+              7
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 12496,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0x4fd3",
+            "map": [
+              20,
+              1,
+              13,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cold-continue",
+        "frame": 31252,
+        "peers": [
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 129,
+                "exp": 125,
+                "id": "5ca6",
+                "dvs": "92ce36",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 10,
+                "form": 161,
+                "exp": 1000,
+                "id": "c63b",
+                "dvs": "ae1c17",
+                "moves": [
+                  33,
+                  64769,
+                  0,
+                  0
+                ],
+                "pp": [
+                  35,
+                  25,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0x269a",
+            "map": [
+              20,
+              1,
+              13,
+              8
+            ]
+          },
+          {
+            "party": [
+              {
+                "species": 25,
+                "level": 5,
+                "form": 1,
+                "exp": 125,
+                "id": "c63b",
+                "dvs": "e15ea7",
+                "moves": [
+                  84,
+                  43,
+                  45,
+                  0
+                ],
+                "pp": [
+                  30,
+                  30,
+                  40,
+                  0
+                ]
+              },
+              {
+                "species": 767,
+                "level": 20,
+                "form": 33,
+                "exp": 8000,
+                "id": "5ca6",
+                "dvs": "2dfd2a",
+                "moves": [
+                  33,
+                  45,
+                  64769,
+                  0
+                ],
+                "pp": [
+                  35,
+                  40,
+                  25,
+                  0
+                ]
+              }
+            ],
+            "serial_bits": 0,
+            "clock_collision_warnings": 0,
+            "connection": 255,
+            "pc": "0x5c9a",
+            "map": [
+              20,
+              1,
+              13,
+              8
+            ]
+          }
+        ]
+      }
+    ],
+    "independent_wide_species_handles": [
+      2,
+      1
+    ],
+    "observed_animation_commands": [
+      23,
+      21
+    ],
+    "both_peers_used_native_ember": true,
+    "battle_records": [
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  "battery_files": {
+    "peer-0.sav": {
+      "size": 32816,
+      "sha256": "cb6c797f24ad9ca1d283e1ff16516d68768a303b2f3c6041dcedd4e22d4de7af"
+    },
+    "peer-1.sav": {
+      "size": 32816,
+      "sha256": "a10d7349dde26b44640c46d3afd78037cc73b1c12b24b0ff099216bf4be46fd3"
+    },
+    "post-trade-peer-0.sav": {
+      "size": 32816,
+      "sha256": "d0eecd9284e4396f5c72d0d4bb932f1be8ba7073a6da7d10888d62e199a83e1c"
+    },
+    "post-trade-peer-1.sav": {
+      "size": 32816,
+      "sha256": "49557a90b81111966ec4f79657b8c69565083fad6d8c39135db8c576f5590115"
+    }
+  },
+  "limits": [
+    "Physical hardware and cable have not been tested.",
+    "Mail trading remains disabled by the existing receptionist policy.",
+    "This scenario does not replace a full interactive playthrough."
+  ]
+}

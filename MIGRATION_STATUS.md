@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: native species and move-ID port integrated; wild/trainer battles, capture, PC/daycare transfers, move learning, evolution, hatching and cold save reload validated. Full playthrough and linked hardware/emulator validation remain.**
+**Status: native species and move-ID port integrated; wild/trainer battles, capture, PC/daycare transfers, move learning, evolution, hatching, linked-emulator trades/battles and cold save reload validated. Full playthrough and physical hardware validation remain.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -11,6 +11,9 @@ Branch: `migration/danielolivaw-16bit` in
 - Requested donor: `DanielOlivaw/pokecrystal16@ace283e879e8dd683fc0ccc26e8b85e70dc72313`.
 - Compatible Polished adapters reused from `migration/battle-party-readers@f2089e9e6580c0113217c13db4bdee4ec39db28c`.
 - Toolchain: RGBDS 1.0.4, PyBoy 2.7.0, Python 3.12; Pillow 13.0.0 for gameplay screenshots.
+- Linked emulator: `LIJI32/SameBoy@ea667ad79aa28409f034b1fd6da7304e1844750d`,
+  including its open-source CGB boot ROM. `tools/build_link_emulator.py` pins the
+  source revision; SameBoy's core and boot ROM use the Expat/MIT license.
 
 The donor shares the original aaaaaa123456789/pokecrystal16 index architecture.
 Conversion-table macros, bank-safe home wrappers, table allocation and indirect
@@ -118,13 +121,14 @@ bits are rejected before destination records or either allocator are changed.
 
 ## Verification
 
-`docs/16bit-lifecycle-validation.json` records the latest local results and exact
-ROM hashes. `docs/16bit-gameplay-validation.json` and `docs/16bit-validation.json`
-retain the earlier encounter and move-ID phase evidence. GitHub Actions status
+`docs/16bit-link-validation.json` records the linked-emulator results and exact
+ROM hashes. `docs/16bit-lifecycle-validation.json`,
+`docs/16bit-gameplay-validation.json` and `docs/16bit-validation.json`
+retain the earlier lifecycle, encounter and move-ID phase evidence. GitHub Actions status
 must be checked separately for the published
-commit. CI covers 23 configurations: eight production combinations, five
-species fixtures, eight move fixtures, one combined fixture and one playable
-gameplay fixture. Normal and debug each run 166 CPU test programs. Static audits
+commit. CI covers 24 configurations: eight production combinations, five
+species fixtures, eight move fixtures, one combined fixture and two playable
+gameplay/link fixtures. Normal and debug each run 166 CPU test programs. Static audits
 reject byte-only symbolic move boundaries and known unsafe emulator entry
 hooks; the upstream optimization check remains enabled.
 
@@ -164,8 +168,9 @@ Wide fixtures force collection while receiving and check independent roots.
 The high-ID fixtures include serial control bytes in both halves of an ID.
 
 The checks above execute compiled routines with synthetic game state. The
-link harness transports buffers; it does not simulate cable interrupts, timing,
-the complete trade animation, mail delivery or a complete linked battle.
+packet harness transports buffers; it does not simulate cable interrupts, timing,
+the complete trade animation, mail delivery or a complete linked battle. The
+separate SameBoy fixture below covers the playable cable flows.
 Existing battle regressions document their presentation/unrelated-behavior
 stubs. Shared opcode-checked observation helpers avoid emulator breakpoint
 loops without replacing the observed battle routines.
@@ -206,6 +211,29 @@ screenshots, battery files and a structured checkpoint log. Test-only trainer,
 learnset and bedroom content is absent from production builds; no save/link format
 changes are introduced by this phase.
 
+`tests/fixtures/native_link.py` and its small C adapter run two independent
+SameBoy CGB-E systems, advancing each CPU by at most one instruction before
+its peer. The cable uses SameBoy's serial bit callbacks and the game's serial
+interrupts; no party buffers are transported by the test. A quarter-frame
+power-on offset avoids artificially locking the two LCDs and their VBlank-driven
+clock-master negotiation to exactly the same phase.
+
+The fixture boots two new games, gives different parties through test-only
+bedroom scripts, and walks through the unchanged Cable Club receptionists.
+It exercises protocol checks, admission saves, both full trade animations,
+post-trade saves, leaving and reconnecting to the Colosseum with reversed clock
+roles, a complete battle using native Ember on both sides, and cold Continue
+from battery files. Assertions cover independent species handles, native IDs,
+forms, levels, EXP, DVs, original trainer IDs, PP restoration and persistent
+win/loss records. Screenshots and structured checkpoints accompany the saves.
+There are no CPU hooks, memory/register writes, ROM patches or emulator save states.
+The complete local run took 31,252 emulated frames. A normal production rebuild
+is byte-identical to the preceding commit; this phase adds validation only.
+
+Polished Crystal's existing receptionist explicitly rejects Pokémon carrying
+mail. This restriction is unchanged; delivery of mail is not claimed as covered.
+The test-only gifts and shortcut are absent from production builds.
+
 Example fixture builds (run `make tidy` between configurations):
 
 ```sh
@@ -219,12 +247,17 @@ make tidy
 make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_gameplay_test=1
 python3 -m pip install pyboy==2.7.0 Pillow==13.0.0
 python3 tests/fixtures/native_gameplay.py polishedcrystal-native-test-3.2.3.gbc
+make tidy
+make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_link_test=1
+python3 tools/build_link_emulator.py
+python3 tests/fixtures/native_link.py polishedcrystal-native-test-3.2.3.gbc --boot build/sameboy/build/bin/BootROMs/cgb_boot.bin
 ```
 
 ## Remaining work before a completed migration
 
-1. Validate protocol 7 over an actual cable or a linked emulator pair, including
-   a complete trade/animation, mail delivery and linked battle.
+1. Validate protocol 7 on physical hardware and an actual cable. The linked
+   emulator now covers complete trade animations and a complete battle; mail
+   trading remains disabled by the existing game policy.
 2. Extend joypad-driven coverage to daycare breeding/egg collection, long allocator
    lifetimes across many distinct identities, additional gameplay systems and a
    full playthrough. Gift-Egg hatching is covered; it is not breeding UI coverage.

@@ -48,6 +48,9 @@ PlayersHousePoster:
 	describedecoration 0
 
 PlayersHouseRadio:
+if DEF(NATIVE_LINK_TEST)
+	sjumpfwd NativeLinkScenario
+endc
 if DEF(NATIVE_GAMEPLAY_TEST)
 	sjumpfwd NativeGameplayScenario
 endc
@@ -412,4 +415,8 @@ InitialRadioText4:
 
 if DEF(NATIVE_GAMEPLAY_TEST)
 INCLUDE "tests/fixtures/native_gameplay.asm"
+endc
+
+if DEF(NATIVE_LINK_TEST)
+INCLUDE "tests/fixtures/native_link.asm"
 endc

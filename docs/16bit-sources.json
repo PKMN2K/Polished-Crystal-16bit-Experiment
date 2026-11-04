@@ -23,5 +23,12 @@
     "commit": "f2089e9e6580c0113217c13db4bdee4ec39db28c"
   },
   "rgbds": "1.0.4",
+  "linked_emulator": {
+    "repository": "LIJI32/SameBoy",
+    "commit": "ea667ad79aa28409f034b1fd6da7304e1844750d",
+    "model": "CGB E",
+    "boot_rom": "SameBoy open-source cgb_boot.bin",
+    "license": "Expat/MIT"
+  },
   "scope": "Native species and move ID infrastructure for the existing Polished roster. Move runtime handles follow the donor; compact ROM streams, native save/PC/link words and catalog ordinals adapt it to the existing 2 MiB MBC3/32 KiB SRAM format. Content expansion and hardware playthrough validation remain separate."
 }

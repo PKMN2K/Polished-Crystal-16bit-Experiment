@@ -42,6 +42,7 @@ jobs:
           - { name: move-feff, flags: 'native_move_test=1 NATIVE_TEST_MOVE=65279', tests: false, moves: true }
           - { name: combined-02ff-fffe, flags: 'native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=65534', tests: false, fixture: true, moves: true }
           - { name: gameplay-02ff-fd01, flags: 'native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_gameplay_test=1', tests: false, fixture: true, moves: true, gameplay: true }
+          - { name: linked-02ff-fd01, flags: 'native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_link_test=1', tests: false, fixture: true, moves: true, linked: true }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -62,8 +63,11 @@ jobs:
         if: matrix.tests || matrix.fixture || matrix.moves
         run: python -m pip install pyboy==2.7.0
       - name: Install gameplay screenshot dependency
-        if: matrix.gameplay
+        if: matrix.gameplay || matrix.linked
         run: python -m pip install Pillow==13.0.0
+      - name: Build pinned SameBoy cable emulator
+        if: matrix.linked
+        run: python tools/build_link_emulator.py
       - name: Audit move ID boundaries
         run: python tools/audit_move_ids.py
       - name: Audit hook safety
@@ -98,6 +102,12 @@ jobs:
         run: |
           roms=(polishedcrystal-native-test-*.gbc)
           python tests/fixtures/native_gameplay.py "${roms[0]}"
+      - name: Joypad serial trade, battle and cold reload
+        if: matrix.linked
+        shell: bash
+        run: |
+          roms=(polishedcrystal-native-test-*.gbc)
+          timeout 15m python tests/fixtures/native_link.py "${roms[0]}" --boot build/sameboy/build/bin/BootROMs/cgb_boot.bin
       - name: Preserve build and test evidence
         if: always()
         uses: actions/upload-artifact@v4
