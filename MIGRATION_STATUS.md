@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: native species and move-ID port integrated; gameplay and hardware validation remain.**
+**Status: native species and move-ID port integrated; fresh-game battle, capture and cold save reload validated. Broader gameplay and hardware validation remain.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -52,6 +52,12 @@ are recorded in `docs/16bit-sources.json`.
 - Opponent party/name copies now resolve each source address explicitly; the
   new link sidecar means those arrays no longer share one offset from the
   player arrays. The relearner supplies the explicit species-to-form offset.
+- Scripted wild encounters allocate wide runtime aliases through the shared
+  native species/form decoder. Folding the native high byte into the form had
+  turned species `$02ff` into byte `$ff` with an incorrect Egg flag.
+- Post-battle berry conversion preserves its party counter across species
+  decoding. The overwritten counter could scan beyond the party or leave a
+  completed battle stuck after the experience message.
 
 ## Formats and compatibility
 
@@ -102,12 +108,14 @@ bits are rejected before destination records or either allocator are changed.
 
 ## Verification
 
-`docs/16bit-validation.json` records local results and exact ROM hashes. GitHub
-Actions status must be checked separately for the published commit. CI covers
-22 configurations: eight production combinations, five species fixtures, eight
-move fixtures and one combined fixture. Normal and debug each run 163 CPU test
-programs. Static audits reject byte-only symbolic move boundaries and known
-unsafe emulator entry hooks; the upstream optimization check remains enabled.
+`docs/16bit-gameplay-validation.json` records this phase's local results and
+exact ROM hashes; `docs/16bit-validation.json` retains the earlier move-ID phase
+evidence. GitHub Actions status must be checked separately for the published
+commit. CI covers 23 configurations: eight production combinations, five
+species fixtures, eight move fixtures, one combined fixture and one playable
+gameplay fixture. Normal and debug each run 165 CPU test programs. Static audits
+reject byte-only symbolic move boundaries and known unsafe emulator entry
+hooks; the upstream optimization check remains enabled.
 
 Five species-only `native-test` builds define one catalog fixture at `$0201`,
 `$02fd`, `$02fe`, `$02ff` or `$0300`, reusing Annihilape's art/stats with explicit
@@ -132,8 +140,9 @@ move above the old Struggle boundary. Production builds add no moves.
   wide and ordinary aliases must produce equal damage.
 - Wide egg/level inheritance, evolution parameter names, evolution-move
   duplicate detection, relearner and TM compatibility, special egg insertion,
-  trainers, Battle Tower, unique wild moves and script readers. Gift insertion
-  is observed before its naming UI; the full gift UI is not exercised.
+  trainers, Battle Tower, unique wild moves and script readers. These routine
+  tests observe gift insertion before its naming UI. The gameplay fixture below
+  also exercises the gift UI.
 
 `tests/test_native_link_packets.py` runs two independent emulator instances
 with different species and move tables. Each normal/debug/fixture ROM executes
@@ -143,12 +152,29 @@ shadow publication and post-trade persistent insertion run without ROM stubs.
 Wide fixtures force collection while receiving and check independent roots.
 The high-ID fixtures include serial control bytes in both halves of an ID.
 
-These are compiled-routine integration checks with synthetic game state. The
+The checks above execute compiled routines with synthetic game state. The
 link harness transports buffers; it does not simulate cable interrupts, timing,
 the complete trade animation, mail delivery or a complete linked battle.
 Existing battle regressions document their presentation/unrelated-behavior
 stubs. Shared opcode-checked observation helpers avoid emulator breakpoint
 loops without replacing the observed battle routines.
+
+`tests/test_scripted_native_encounters.py` checks all supported ordinary and
+mechanical variant identities, cosmetic forms, script parameter advancement,
+and preservation of a pending wide encounter during garbage collection.
+`tests/test_native_post_battle.py` checks exact traversal of party sizes 1–6 in
+both storage formats, including mixed species and all-Shuckle parties. Both
+regressions fail on the preceding move-ID commit.
+
+`tests/fixtures/native_gameplay.py` boots a new game and reaches a test-only
+bedroom radio event with species `$02ff` and move `$fd01` (Ember). Joypad input
+drives the gift UI, a complete battle victory, a second encounter caught with a
+Master Ball, the Save menu, and Continue in a new emulator instance using only
+cartridge SRAM/RTC. It verifies both native battle identities, move use and PP,
+experience gains, both captured/gifted party records, and overworld movement
+after reload. It uses no CPU hooks, memory/register writes, ROM patches or
+emulator save states. CI preserves screenshots, battery files and a structured
+checkpoint log. The fixture adds no event or WRAM byte to production builds.
 
 Example fixture builds (run `make tidy` between configurations):
 
@@ -159,14 +185,17 @@ make tidy
 make native_move_test=1 NATIVE_TEST_MOVE=64769
 python3 tests/test_native_move_ids.py polishedcrystal-3.2.3.gbc
 python3 tests/test_native_link_packets.py polishedcrystal-3.2.3.gbc
+make tidy
+make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_gameplay_test=1
+python3 tests/fixtures/native_gameplay.py polishedcrystal-native-test-3.2.3.gbc
 ```
 
 ## Remaining work before a completed migration
 
 1. Validate protocol 7 over an actual cable or a linked emulator pair, including
    a complete trade/animation, mail delivery and linked battle.
-2. Validate wide species and moves interactively through complete battles,
-   learning/evolution/hatching animations, transfers and long allocator lifetimes.
+2. Extend joypad-driven coverage to trainer battles, learning/evolution/hatching
+   animations, PC/daycare transfers, long allocator lifetimes and a full playthrough.
 3. Add and test the intended expanded roster/move content and any corresponding
    forms/classification tables. Provide explicit save-import tooling if older
    saves must migrate.

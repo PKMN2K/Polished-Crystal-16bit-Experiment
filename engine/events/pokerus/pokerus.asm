@@ -103,6 +103,7 @@ GivePokerusAndConvertBerries:
 	ld b, c
 	ld hl, wPartyMon1Species
 .berries_loop
+	push bc ; species decoding returns bc; preserve the remaining party count
 	push hl
 	ld de, MON_FORM - MON_SPECIES
 	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
@@ -127,6 +128,7 @@ GivePokerusAndConvertBerries:
 .no_berry_juice
 	ld de, PARTYMON_STRUCT_LENGTH - 1
 	add hl, de
+	pop bc
 	dec c
 	jr nz, .berries_loop
 	ret

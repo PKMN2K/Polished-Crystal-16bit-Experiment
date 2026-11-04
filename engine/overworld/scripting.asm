@@ -1213,20 +1213,9 @@ Script_loadwildmon:
 	call GetScriptByte
 	ld b, a
 	call GetScriptByte
-	push af
-	farcall GetRootSpeciesFromNativeIDBC
-	ld a, c
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
 	ld [wTempWildMonSpecies], a
-	pop af
-	ld e, a
 	ld a, b
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or e
 	ld [wWildMonForm], a
 	call GetScriptByte
 	ld [wCurPartyLevel], a

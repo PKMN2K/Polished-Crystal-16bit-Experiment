@@ -1,0 +1,328 @@
+{
+  "performed_on": "2026-11-04T07:42:25.913296+00:00",
+  "baseline_commit": "60e7733a6d33fc58d124b8ac7956fecf3b66483e",
+  "builds": [
+    {
+      "name": "gameplay-02ff-fd01",
+      "flags": [
+        "native-test",
+        "NATIVE_TEST_SPECIES=767",
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=64769",
+        "native_gameplay_test=1"
+      ],
+      "rom_sha256": {
+        "polishedcrystal-native-test-3.2.3.gbc": "b24c01a22876c9ee01d16eb09b9f64dd8407625744555d38a710330857356180"
+      }
+    },
+    {
+      "name": "normal",
+      "flags": [],
+      "rom_sha256": {
+        "polishedcrystal-3.2.3.gbc": "087a50870890edd59d0597d79f10d5c14365453085fe6055d5f11958da20efd5"
+      }
+    },
+    {
+      "name": "debug",
+      "flags": [
+        "debug"
+      ],
+      "rom_sha256": {
+        "polishedcrystal-debug-3.2.3.gbc": "29b4b449307c82225e8a175ff65c6f2f6c9f993d4843306e9b9ddd65d0a8e96a"
+      }
+    }
+  ],
+  "cpu_regressions": {
+    "normal": {
+      "programs": 165,
+      "passed": 165,
+      "returncode": 0
+    },
+    "debug": {
+      "programs": 165,
+      "passed": 165,
+      "returncode": 0
+    }
+  },
+  "fixtures": {
+    "gameplay-02ff-fd01": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_scripted_native_encounters.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_post_battle.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/fixtures/native_gameplay.py",
+        "returncode": 0
+      }
+    ]
+  },
+  "scope": "Fix scripted native encounters and post-battle party traversal; validate New Game, gift, complete wild battle, capture, UI save and cold Continue with joypad input.",
+  "toolchain": {
+    "rgbds": "1.0.4",
+    "pyboy": "2.7.0",
+    "python": "3.12"
+  },
+  "gameplay": {
+    "species": "0x2ff",
+    "move": "0xfd01",
+    "input": "joypad only",
+    "checkpoints": [
+      {
+        "name": "new-game",
+        "frame": 3690,
+        "party": []
+      },
+      {
+        "name": "gift-battle",
+        "frame": 5025,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "battle-won",
+        "frame": 6585,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8135,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "captured",
+        "frame": 8975,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "saved",
+        "frame": 9425,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cold-continue",
+        "frame": 10130,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    ],
+    "frames": 10130,
+    "result": "passed",
+    "source": "tests/fixtures/native_gameplay.py",
+    "artifact_directory": "build/native-gameplay-final/gameplay-02ff-fd01/results/"
+  },
+  "regressions": [
+    {
+      "test": "tests/test_scripted_native_encounters.py",
+      "normal_cases": 337,
+      "wide_cases": 338,
+      "baseline_failure": "$02ff decoded as $00ff; form $41 set the Egg bit",
+      "pending_wide_gc": true
+    },
+    {
+      "test": "tests/test_native_post_battle.py",
+      "cases": 24,
+      "baseline_failure": "one-member party visited three records in the first legacy case; full wide battle also hung in berry cleanup",
+      "formats": [
+        "legacy",
+        "native"
+      ],
+      "party_sizes": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    }
+  ],
+  "audits": {
+    "symbolic_move_sites": 8668,
+    "byte_only_boundaries": 0,
+    "unsafe_entry_hooks": 0,
+    "optimizer_findings": 0
+  },
+  "compatibility": {
+    "save_version": 13,
+    "link_protocol": 7,
+    "format_change_in_this_phase": false
+  },
+  "github_actions": "Local evidence only: normal/debug and the combined playable fixture were built here. The published commit must separately pass all 23 migration configurations and Optimize.",
+  "limits": [
+    "no full playthrough or trainer-battle UI coverage",
+    "no evolution/hatching/learning animation or PC/daycare UI coverage in this phase",
+    "no physical cable or linked-emulator serial timing validation",
+    "no added production roster/move content or old-save importer"
+  ],
+  "source_sha256": {
+    ".github/workflows/16bit-migration.yml": "03d82a7be87beaf18ed4d17f90f79e0ada476f7b8b4f5d78828b3db672d9600f",
+    "Makefile": "b2498c02e5c26f70cef1435c764baced045a597e7081bbf86a78a17b842998f9",
+    "engine/events/pokerus/pokerus.asm": "39597d03c8dbe64d17f64ed8e560c2242af2eb01ce1599551c68ddcf302945b9",
+    "engine/overworld/scripting.asm": "66e7e840bb705333340d8b3b6d7c42f42f9cf85f7f545c2c217d90562b53176d",
+    "macros/scripts/events.asm": "2f6c70e9431d5cfa871693537207bd665fd9afc20112c4f3152e102401867f5b",
+    "maps/PlayersHouse2F.asm": "559a59906f82ba89a8676dc4899ab57d63970a571df135631165f71efa3a4932",
+    "ram/wram0.asm": "2e8fab561b3f2d665bca51f0e0f45f8130d1e4e54f9428da1c1e48c2328a5a8a",
+    "tests/fixtures/native_gameplay.asm": "6d7b38a8cf04cf192fdf11c1c773a3e4510142738a7306e2e9fc9329f3f3915d",
+    "tests/fixtures/native_gameplay.py": "79dff19d2b44630dbbfaf60f47803203a53bd3a0f1c883a87d508c2cc07c730b",
+    "tests/test_native_post_battle.py": "62617eac815161d7d246e0d5bd4a22e8e259942e162a0bbe5a5b711eb7ec32f3",
+    "tests/test_scripted_native_encounters.py": "52a73ae529bcc15b6a67f217e078a29834dfaa697e0750066fc26f28557676d0"
+  }
+}

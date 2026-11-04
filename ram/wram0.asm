@@ -1525,3 +1525,8 @@ wTempEnemyMonForm:: db
 wEnemyMonCatchRate:: db
 wEnemyMonBaseExp:: db
 wEnemyMonEnd::
+
+if DEF(NATIVE_GAMEPLAY_TEST)
+SECTION "Native gameplay fixture", WRAM0
+wNativeGameplayStage:: db
+endc

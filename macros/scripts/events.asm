@@ -658,7 +658,7 @@ ENDM
 
 	const loadwildmon_command
 MACRO loadwildmon
-	assert \1 >= 1 && \1 <= NUM_NATIVE_SPECIES
+	assert (\1 >= 1 && \1 <= NUM_NATIVE_SPECIES) || (NUM_WIDE_SPECIES && \1 >= FIRST_WIDE_SPECIES && \1 <= LAST_WIDE_SPECIES)
 	db loadwildmon_command
 	if _NARG == 3
 		dw \1 ; native pokemon ID

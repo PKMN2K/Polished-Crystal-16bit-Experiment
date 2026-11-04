@@ -1,0 +1,184 @@
+"""Fresh boot, gift, wide-move battle, capture and cold Continue using only joypad input.
+
+Requires native_gameplay_test=1, NATIVE_TEST_SPECIES=767, NATIVE_TEST_MOVE=64769.
+No CPU hooks, memory/register writes, ROM patches or emulator save states.
+"""
+import argparse
+from io import BytesIO
+import json
+from pathlib import Path
+import re
+from pyboy import PyBoy
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('rom', type=Path)
+    ap.add_argument('--output', type=Path, default=Path('build/test-results/gameplay'))
+    args = ap.parse_args()
+    args.output.mkdir(parents=True, exist_ok=True)
+    syms = {}
+    for line in args.rom.with_suffix('.sym').read_text().splitlines():
+        fields = line.split()
+        if len(fields) == 2 and ':' in fields[0]:
+            syms[fields[1]] = tuple(int(x, 16) for x in fields[0].split(':'))
+    assert 'wNativeGameplayStage' in syms, 'build with native_gameplay_test=1'
+    rom = args.rom.read_bytes()
+    chars = {}
+    for line in (Path(__file__).resolve().parents[2] / 'constants/charmap.asm').read_text().splitlines():
+        match = re.match(r'\s*charmap "([^"]+)",\s+\$([0-9a-f]+)', line, re.I)
+        if match and len(match[1]) == 1: chars[int(match[2], 16)] = match[1]
+    def constant(label):
+        bank, at = syms[label]
+        start = bank * 0x4000 + at % 0x4000
+        return int.from_bytes(rom[start:start+2], 'little')
+    species, move = constant('NativeWideTestIdentity'), constant('NativeWideMoveTestIdentity')
+    assert (species, move) == (0x02ff, 0xfd01)
+    p = None
+    frames = 0
+    evidence = {'species': hex(species), 'move': hex(move), 'input': 'joypad only', 'checkpoints': []}
+    def boot(ram=None, rtc=None):
+        game = PyBoy(BytesIO(rom), ram_file=ram, rtc_file=rtc,
+                     window='null', sound_emulated=False, cgb=True, log_level='ERROR')
+        game.set_emulation_speed(0)
+        return game
+    def read(label, size=1, offset=0):
+        bank, at = syms[label]; at += offset
+        if 0xd000 <= at < 0xe000 or 0xa000 <= at < 0xc000:
+            return bytes(p.memory[bank, at:at+size])
+        return bytes(p.memory[at:at+size])
+    def byte(label): return read(label)[0]
+    def word(label): return int.from_bytes(read(label, 2), 'little')
+    def native(table, handle):
+        return int.from_bytes(read(table, 2, (handle-1)*2), 'little') if handle else 0
+    def party():
+        return [{'species': native('wPokemonIndexTableEntries', byte(f'wPartyMon{i}Species')),
+                 'form': byte(f'wPartyMon{i}Form'),
+                 'level': byte(f'wPartyMon{i}Level'),
+                 'exp': int.from_bytes(read(f'wPartyMon{i}Exp', 3), 'big'),
+                 'moves': [native('wMoveIndexTableEntries', h) for h in read(f'wPartyMon{i}Moves', 4)],
+                 'pp': list(read(f'wPartyMon{i}PP', 4))}
+                for i in range(1, byte('wPartyCount')+1)]
+    def text():
+        tiles = read('wTilemap', 360)
+        return '\n'.join(''.join(chars.get(x, ' ') for x in tiles[row:row+20]) for row in range(0, 360, 20))
+    def tick(n=60):
+        nonlocal frames
+        assert frames + n <= 90000, 'gameplay frame budget exceeded'
+        p.tick(n, True, False); frames += n
+    def press(key, n=60, hold=3):
+        p.button(key, hold); tick(n)
+    def checkpoint(name):
+        p.screen.image.save(str(args.output / (name + '.png')))
+        evidence['checkpoints'].append({'name': name, 'frame': frames, 'party': party()})
+        print('PASS', name, 'frame', frames, flush=True)
+    def until(description, predicate, action, limit=400):
+        for _ in range(limit):
+            if predicate(): return
+            action(text())
+        raise AssertionError(description + ' timed out\n' + text())
+    def in_room(): return byte('wMapGroup') == 24 and byte('wMapNumber') == 5
+    def dialog(t):
+        if 'Shift' in t and 'End' in t:
+            press('start', 30); press('a')
+        elif 'nickname' in t.lower() and 'Yes' in t and 'No' in t:
+            press('b')
+        else: press('a')
+    def initial(t):
+        if 'Natures' in t and 'Abilities' in t: press('start')
+        else: dialog(t)
+    def battle_identity():
+        assert word('wBattleMonNativeSpecies') == species
+        assert word('wEnemyMonNativeSpecies') == species
+    try:
+        p = boot()
+        until('New Game', in_room, initial)
+        tick(180)
+        assert word('wPokemonDataFormat') == 0x16bc and word('wMoveDataFormat') == 0x16bd
+        assert byte('wPartyCount') == 0
+        checkpoint('new-game')
+        press('up', 45, 15)
+        assert byte('wPlayerMapY') == 6
+        press('a')
+        until('gift and battle entrance', lambda: 'Fight' in text() and 'Bag' in text(), dialog)
+        battle_identity()
+        gifted = party()
+        assert len(gifted) == 1 and gifted[0]['species'] == species
+        assert gifted[0]['moves'] == [33, 45, move, 0], gifted
+        checkpoint('gift-battle')
+        used_ember = False
+        def fight(t):
+            nonlocal used_ember
+            if 'Ember!' in t: used_ember = True
+            if 'Tackle' in t and 'Growl' in t and 'Ember' in t:
+                battle_identity()
+                rows = t.splitlines()
+                target = next(i for i, row in enumerate(rows) if 'Ember' in row)
+                cursor = next((i for i, row in enumerate(rows) if '▶' in row), None)
+                assert cursor is not None, t
+                press('down' if cursor < target else 'up' if cursor > target else 'a')
+            else: dialog(t)
+        until('wide move battle victory', lambda: byte('wNativeGameplayStage') == 2, fight)
+        won = party()
+        assert used_ember, 'wide Ember use was not observed'
+        assert won[0]['pp'][2] < gifted[0]['pp'][2]
+        assert won[0]['exp'] > gifted[0]['exp'] and byte('wBattleResult') & 15 == 0
+        checkpoint('battle-won')
+        until('second encounter', lambda: 'Fight' in text() and 'Bag' in text(), dialog)
+        battle_identity()
+        press('down', 20); press('a', 90)
+        until('ball pocket', lambda: 'Master Ball' in text(), lambda _: press('right'), limit=8)
+        press('a'); press('a')
+        until('capture and cleanup', lambda: byte('wNativeGameplayStage') == 3, dialog)
+        until('scenario text closes', lambda: byte('wScriptMode') == 0, lambda _: press('b'))
+        assert byte('wBattleMode') == 0 and byte('wBattleResult') & 0x40
+        caught = party()
+        assert len(caught) == 2 and all(mon['species'] == species for mon in caught), caught
+        assert caught[0]['moves'] == gifted[0]['moves'] and caught[1]['level'] == 5
+        checkpoint('captured')
+        press('start', 90)
+        until('Save selection', lambda: any('▶Save' in row for row in text().splitlines()),
+              lambda _: press('down', 20), limit=10)
+        press('a')
+        until('saved message', lambda: 'saved' in text().lower() and 'the game.' in text().lower(), dialog)
+        tick(180)
+        before = party()
+        checkpoint('saved')
+        ram, rtc = BytesIO(), BytesIO()
+        p.stop(save=True, ram_file=ram, rtc_file=rtc); p = None
+        (args.output / 'scenario.ram').write_bytes(ram.getvalue())
+        (args.output / 'scenario.rtc').write_bytes(rtc.getvalue())
+        assert len(ram.getvalue()) == 32768
+        ram.seek(0); rtc.seek(0)
+        p = boot(ram, rtc)
+        saw_continue = False
+        def continuing(t):
+            nonlocal saw_continue
+            if 'Continue' in t: saw_continue = True
+            if in_room() and 'Badges' not in t:
+                press('down', 45, 15)
+            else:
+                press('a')
+        # Loading the save publishes map IDs before the Continue confirmation.
+        # Require actual overworld movement to prove confirmation and map entry.
+        until('cold Continue and movement',
+              lambda: in_room() and byte('wPlayerMapY') == 7, continuing)
+        tick(180)
+        assert saw_continue, 'save was not offered by the main menu'
+        assert word('wPokemonDataFormat') == 0x16bc and word('wMoveDataFormat') == 0x16bd
+        assert party() == before, ('cold reload changed party', before, party())
+        checkpoint('cold-continue')
+        evidence['frames'] = frames
+        evidence['result'] = 'passed'
+        (args.output / 'summary.json').write_text(json.dumps(evidence, indent=2)+'\n')
+        print('PASS fresh New Game, scripted gift, complete wide-Ember battle, Master Ball capture, UI save and cold Continue; joypad only')
+    except BaseException as error:
+        if p:
+            p.screen.image.save(str(args.output / 'failure.png'))
+            (args.output / 'failure.txt').write_text(str(error)+'\n'+text()+'\n'+repr(party()))
+        raise
+    finally:
+        if p: p.stop(save=False)
+
+
+if __name__ == '__main__': main()

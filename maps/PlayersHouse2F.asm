@@ -48,6 +48,9 @@ PlayersHousePoster:
 	describedecoration 0
 
 PlayersHouseRadio:
+if DEF(NATIVE_GAMEPLAY_TEST)
+	sjumpfwd NativeGameplayScenario
+endc
 
 if DEF(DEBUG)
 	opentext
@@ -403,3 +406,7 @@ InitialRadioText4:
 	text "#mon!"
 	line "#mon Channel…"
 	done
+
+if DEF(NATIVE_GAMEPLAY_TEST)
+INCLUDE "tests/fixtures/native_gameplay.asm"
+endc

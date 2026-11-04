@@ -66,6 +66,9 @@ endif
 ifeq ($(native_move_test),1)
 RGBASMFLAGS += -DNATIVE_MOVE_TEST=$(or $(NATIVE_TEST_MOVE),257)
 endif
+ifeq ($(native_gameplay_test),1)
+RGBASMFLAGS += -DNATIVE_GAMEPLAY_TEST
+endif
 ifeq ($(filter pocket,$(MAKECMDGOALS)),pocket)
 MODIFIERS :=
 NAME := pkpc
