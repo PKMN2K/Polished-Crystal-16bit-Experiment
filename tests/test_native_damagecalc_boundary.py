@@ -14,6 +14,7 @@ variation, animation and HP application remain outside this checkpoint.
 This proves both active native 16-bit identities survive the real base damage
 formula and that the validated damagestats outputs flow into damagecalc.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
 import argparse
 from pathlib import Path
 
@@ -1078,7 +1079,7 @@ def main():
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        hook_user_item_after_future_sight(pyboy, symbols, data, offset, observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)

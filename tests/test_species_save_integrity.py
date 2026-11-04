@@ -46,7 +46,7 @@ def main():
     try:
         m[0xff50] = 1
         m[0xffff] = m[0xff0f] = m[0xff40] = 0
-        for version in (10, 11):
+        for version in (12,):
             reset()
             sram('sSaveVersion')
             at = addr('sSaveVersion')
@@ -54,6 +54,23 @@ def main():
             call('VerifyGameVersion')
             assert r.F & 0x80
             count += 1
+        # Both upstream and the previous experiment used version 11, but their
+        # layouts differ. Verify the actual comparison rejects both old version
+        # numbers. Replace only the mismatch UI with a recognizable return.
+        reject_bank, reject_at = syms['VerifyGameVersion.needs_upgrade']
+        reject_bytes = [m[reject_bank, reject_at + i] for i in range(3)]
+        for i, byte in enumerate((0x3e, 0xee, 0xc9)):
+            m[reject_bank, reject_at + i] = byte
+        for version in (10, 11, 13, 0xffff):
+            reset()
+            sram('sSaveVersion')
+            at = addr('sSaveVersion')
+            m[at:at+2] = list(version.to_bytes(2, 'big'))
+            call('VerifyGameVersion')
+            assert r.A == 0xee, ('accepted incompatible save', version)
+            count += 1
+        for i, byte in enumerate(reject_bytes):
+            m[reject_bank, reject_at + i] = byte
         for marker in (0, 0x00bc, 0x1600):
             for pressure in (False, True):
                 for metadata in (0, 0x40, 0x80, 0xc0):
@@ -120,7 +137,7 @@ def main():
                 m[0xff70] = 1
                 call('SavePokemonData' if prefix == 's' else 'SaveBackupPokemonData')
                 sram('sSaveVersion')
-                assert list(m[addr('sSaveVersion'):addr('sSaveVersion')+2]) == [0, 11]
+                assert list(m[addr('sSaveVersion'):addr('sSaveVersion')+2]) == [0, 12]
                 call(save)
                 sram(prefix+'PokemonData')
                 at = addr(prefix+'PokemonData') + addr('wPokemonDataFormat')-addr('wPokemonData')

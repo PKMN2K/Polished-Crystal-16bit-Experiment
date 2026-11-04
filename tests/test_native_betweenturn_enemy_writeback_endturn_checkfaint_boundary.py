@@ -11,6 +11,8 @@ return. Verify it restores enemy party HP from the active enemy battle record,
 preserves both native identities, and verify the assembled next end-turn
 operation is the .endturn_loop CheckFaint call.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
+from pyboy_hook_safety import hook_reset_subhit_after_push
 import argparse
 from pathlib import Path
 
@@ -4969,6 +4971,9 @@ def main():
             [0xFE, 24, 0x20, 0x03, 0x3E, 23, 0xC9, 0xAF, 0xC9],
             observe_accuracy_random,
         )
+        # CheckSpeed uses BattleRandom directly for ties, bypassing the range
+        # helper above. Keep the equal-speed end-turn ordering deterministic.
+        install_stub("BattleRandom", [0xAF, 0xC9])
 
         # HP arithmetic and the applydamage survival checks remain real.
         # Stop only at post-subtraction HUD and held-item recovery boundaries;
@@ -5015,7 +5020,7 @@ def main():
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        hook_user_item_after_future_sight(pyboy, symbols, data, offset, observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)
@@ -5035,7 +5040,7 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        hook_reset_subhit_after_push(pyboy, symbols, data, offset, observe_applydamage_reset_subhit)
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
         hook("GetOpponentItem", observe_applydamage_item)
         hook("TakeDamage", observe_applydamage_take_damage)
@@ -5282,8 +5287,10 @@ def main():
                     (25, native, 0, 1, 1, 1),
                     (25, native, 0, 2, 2, 2),
                 ], ("second-turn identities/counters", context, battle_menu_snapshots)
+                # CheckFaint preserves the final healing-item side. Equal speeds
+                # may choose either side first, so the last side is not always zero.
                 assert endturn_tail_tilemap_calls == [
-                    (25, native, 0, 0, 0, 83, 0, 83),
+                    (25, native, healing_items_do_it_calls[-1][2], 0, 0, 83, 0, 83),
                 ], ("end-turn tail", context, endturn_tail_tilemap_calls)
                 assert endturn_direct_enemy_writeback_seen[0], context
                 for label in (
@@ -5330,8 +5337,10 @@ def main():
                 "non-fainting tail to the next BattleTurn loop",
                 context,
             )
+            # CheckFaint preserves the final healing-item side. Equal speeds
+            # may choose either side first, so the last side is not always zero.
             assert endturn_tail_tilemap_calls == [
-                (25, native, 0, 0, 0, 83, 0, 83),
+                (25, native, healing_items_do_it_calls[-1][2], 0, 0, 83, 0, 83),
             ], (
                 "final CheckFaint did not reach the tilemap boundary with "
                 "preserved native non-fainting state",

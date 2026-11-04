@@ -15,6 +15,7 @@ The following moveanim script byte is replaced with endturn_command, so random
 damage variation completes while move animation and HP application remain
 outside this checkpoint.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
 import argparse
 from pathlib import Path
 
@@ -1207,7 +1208,7 @@ def main():
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        hook_user_item_after_future_sight(pyboy, symbols, data, offset, observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)

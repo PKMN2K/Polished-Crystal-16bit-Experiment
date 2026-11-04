@@ -1,32 +1,18 @@
 LoadWildMonData:
 	call _GrassWildmonLookup
-	jr c, .copy
-	ld hl, wMornEncounterRate
-	xor a
-	ld [hli], a ; morn rate
-	ld [hli], a ; day rate
-	ld [hli], a ; nite rate
-	ld [hl], a  ; eve rate
-	jr .done_copy
-
-.copy
-	inc hl
-	inc hl
-	ld de, wMornEncounterRate
-	ld bc, 3
-	ld a, [wWildMonDataBank]
-	call FarCopyBytes
-	ld a, [wNiteEncounterRate]
-	ld [de], a ; eve rate = nite rate
-.done_copy
+	call .get_rate
+	ld [wGrassEncounterRate], a
 	call _WaterWildmonLookup
+	call .get_rate
+	ld [wWaterEncounterRate], a
+	ret
+
+.get_rate:
 	ld a, 0 ; no-optimize a = 0
-	jr nc, .no_copy
+	ret nc
 	inc hl
 	inc hl
 	call GetWildDataByte
-.no_copy
-	ld [wWaterEncounterRate], a
 	ret
 
 GetWildLocations:
@@ -185,16 +171,12 @@ TryWildEncounter::
 	ret
 
 GetMapEncounterRate:
-	ld hl, wMornEncounterRate
 	call CheckOnWater
-	ld a, wWaterEncounterRate - wMornEncounterRate
+	ld a, [wWaterEncounterRate]
 	jr z, .ok
-	ld a, [wTimeOfDay]
+	ld a, [wGrassEncounterRate]
 .ok
-	ld c, a
-	ld b, 0
-	add hl, bc
-	ld b, [hl]
+	ld b, a
 	ret
 
 ApplyMusicEffectOnEncounterRate::

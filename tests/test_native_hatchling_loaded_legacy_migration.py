@@ -158,9 +158,9 @@ def main():
         mem[addr("wOptions3")] = 0xFF
         mem[addr("wDexCacheValid")] = 1
 
-        # Serialize an actual legacy primary save envelope. SavePokemonData
+        # Serialize a current-schema primary save with legacy species records. SavePokemonData
         # stamps the current envelope/version, so patch only those compatibility
-        # markers back to the accepted version-10 legacy representation, then
+        # markers to legacy record encoding within the current version-12 schema, then
         # recompute the real game-data checksum.
         invoke("SavePlayerData")
         invoke("SavePokemonData")
@@ -172,7 +172,7 @@ def main():
         mem[saved_data + format_delta:saved_data + format_delta + 2] = [0, 0]
         mem[saved_data + table_format_delta:saved_data + table_format_delta + 2] = [0, 0]
         mem[0x4000] = symbols["sSaveVersion"][0]
-        mem[addr("sSaveVersion"):addr("sSaveVersion") + 2] = [0, 10]
+        mem[addr("sSaveVersion"):addr("sSaveVersion") + 2] = [0, 12]
         mem[0x4000] = symbols["sPokemonIndexTableMagic"][0]
         mem[addr("sPokemonIndexTableMagic"):addr("sPokemonIndexTableMagic") + 2] = [0, 0]
         invoke("SaveChecksum")

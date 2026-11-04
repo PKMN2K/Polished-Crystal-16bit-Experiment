@@ -12,6 +12,7 @@ entry, verify the inactive passes preserve battle state, and stop at the
 following UpdateBattleMonInParty entry only after the real end-turn cleanup
 instructions clear both FLINCHED bits.
 """
+from pyboy_hook_safety import hook_reset_subhit_after_push
 import argparse
 from pathlib import Path
 
@@ -5024,7 +5025,7 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        hook_reset_subhit_after_push(pyboy, symbols, data, offset, observe_applydamage_reset_subhit)
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
         hook("GetOpponentItem", observe_applydamage_item)
         hook("TakeDamage", observe_applydamage_take_damage)

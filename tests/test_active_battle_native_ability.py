@@ -66,11 +66,11 @@ def main():
         )
 
         for label, shadow, legacy, personality, out in sides:
-            for native in (25, 256, alolan_raichu):
+            for native in (25, 257, alolan_raichu):
                 # Deliberately conflict the legacy byte species with the native
-                # identity. Ability slot 1 is selected by a zero personality byte.
+                # identity. Ability slot 1 is encoded by ABILITY_1 ($20), not zero.
                 memory[addr(legacy)] = 150
-                memory[addr(personality)] = 0
+                memory[addr(personality)] = 0x20
                 memory[addr(personality) + 1] = 0
                 memory[addr(shadow):addr(shadow) + 2] = list(native.to_bytes(2, "little"))
                 memory[addr(out)] = 0xA5
@@ -89,7 +89,7 @@ def main():
             # An empty native shadow must not fall back to the legacy byte
             # species; it resolves to no active ability.
             memory[addr(legacy)] = 150
-            memory[addr(personality)] = 0
+            memory[addr(personality)] = 0x20
             memory[addr(personality) + 1] = 0
             memory[addr(shadow):addr(shadow) + 2] = [0, 0]
             memory[addr(out)] = 0xA5

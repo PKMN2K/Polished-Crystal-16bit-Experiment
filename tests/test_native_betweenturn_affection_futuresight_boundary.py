@@ -11,6 +11,8 @@ HandleFutureSight entry before its body executes, while preserving native
 identity, PP, Pressure, party HP, damage bookkeeping, wMoveState,
 wBattleEnded, wEnemyFleeing, and weather state.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
+from pyboy_hook_safety import hook_reset_subhit_after_push
 import argparse
 from pathlib import Path
 
@@ -3845,7 +3847,7 @@ def main():
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        hook_user_item_after_future_sight(pyboy, symbols, data, offset, observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)
@@ -3865,7 +3867,7 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        hook_reset_subhit_after_push(pyboy, symbols, data, offset, observe_applydamage_reset_subhit)
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
         hook("GetOpponentItem", observe_applydamage_item)
         hook("TakeDamage", observe_applydamage_take_damage)

@@ -52,6 +52,11 @@ def main():
             start = addr('wPokemonIndexTableEntries') + 12
             m[start:start + 2] = list((native or species).to_bytes(2, 'little'))
             m[0xFF70] = 1
+        # The faithful Metal Powder rule checks current battle identity;
+        # ordinary mode checks the original party identity. Seed both views.
+        shadow = 'wEnemyMonNativeSpecies' if enemy else 'wBattleMonNativeSpecies'
+        active_native = native or (armored if species == 150 and (form & 31) == 2 else species)
+        m[addr(shadow):addr(shadow) + 2] = list(active_native.to_bytes(2, 'little'))
         return at
     def call(name, bc=100):
         bank, target = symbols[name]

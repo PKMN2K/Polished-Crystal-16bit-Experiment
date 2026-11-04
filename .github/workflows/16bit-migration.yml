@@ -1,0 +1,68 @@
+name: 16-bit migration
+
+on:
+  push:
+    branches: [migration/danielolivaw-16bit]
+  pull_request:
+    branches: [migration/danielolivaw-16bit]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: normal, flags: '', tests: true }
+          - { name: debug, flags: debug, tests: true }
+          - { name: faithful, flags: faithful, tests: false }
+          - { name: faithful-debug, flags: 'faithful debug', tests: false }
+          - { name: vc, flags: vc, tests: false }
+          - { name: faithful-vc, flags: 'faithful vc', tests: false }
+          - { name: debug-vc, flags: 'debug vc', tests: false }
+          - { name: faithful-debug-vc, flags: 'faithful debug vc', tests: false }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y bison libpng-dev
+      - name: Install RGBDS 1.0.4
+        run: |
+          git clone --depth 1 --branch v1.0.4 https://github.com/gbdev/rgbds.git /tmp/rgbds
+          make -C /tmp/rgbds -j2
+          sudo make -C /tmp/rgbds install
+      - name: Build
+        env:
+          BUILD_FLAGS: ${{ matrix.flags }}
+        run: make -j2 $BUILD_FLAGS
+      - name: Install CPU test dependency
+        if: matrix.tests
+        run: python -m pip install pyboy==2.7.0
+      - name: Audit hook safety
+        if: matrix.tests
+        run: python tools/audit_future_sight_hooks.py --strict
+      - name: CPU regressions
+        if: matrix.tests
+        shell: bash
+        run: |
+          roms=(polishedcrystal-*.gbc)
+          python tools/run_migration_tests.py "${roms[0]}" --jobs 2 --timeout 90
+      - name: Preserve build and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-${{ matrix.name }}-${{ github.sha }}
+          path: |
+            polishedcrystal-*.gbc
+            polishedcrystal-*.sym
+            polishedcrystal-*.map
+            polishedcrystal-*.patch
+            build/test-results/

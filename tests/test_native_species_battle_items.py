@@ -69,14 +69,14 @@ def main():
         memory[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
-        regs.BC = 0x1234
-        regs.DE = 0x5678
+        regs.B, regs.C = 0x12, 0x34
+        regs.D, regs.E = 0x56, 0x78
         regs.HL = 0xC222
         regs.SP, regs.PC = 0xC0FF, 0xC100
         pyboy.tick(8, False, False)
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF)
-        assert regs.BC == 0x1234
-        assert regs.DE == 0x5678
+        assert (regs.B << 8 | regs.C) == 0x1234
+        assert (regs.D << 8 | regs.E) == 0x5678
         assert regs.HL == 0xC222
         assert memory[addr("hROMBank")] == bank
         assert memory[0xFF70] & 7 == 1

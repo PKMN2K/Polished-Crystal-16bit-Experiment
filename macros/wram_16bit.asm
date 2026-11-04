@@ -1,3 +1,4 @@
+; Species-index infrastructure from pokecrystal16; see docs/16bit-sources.json.
 MACRO ___wram_conversion_table
 	; in:
 	; 1: name of the table; will be prefixed to all definitions

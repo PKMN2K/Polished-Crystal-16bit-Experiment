@@ -17,8 +17,9 @@ DEF SAVE_CHECK_VALUE_2     EQU 127
 DEF SAVE_CHECK_VALUE_1_OLD EQU 99 ; check digit before save version 7
 
 ; save file version
-DEF LEGACY_SPECIES_SAVE_VERSION EQU 10
-DEF SAVE_VERSION EQU 11
+; This branch starts a distinct save format. Upstream and the older experiment
+; both used version 11 for different layouts, so neither is accepted implicitly.
+DEF SAVE_VERSION EQU 12
 
 ; time of day boundaries
 DEF MORN_HOUR EQU  5 ; 5 AM - 9 AM (4 hours)

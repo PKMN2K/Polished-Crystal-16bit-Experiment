@@ -45,8 +45,8 @@ ENDM
 
 	map_attributes EcruteakCity, ECRUTEAK_CITY, $5
 	connection south, Route37, ROUTE_37, 5
-	connection west, Route38, ROUTE_38, 5
-	connection east, Route42, ROUTE_42, 9
+	connection west, Route38, ROUTE_38, 6
+	connection east, Route42, ROUTE_42, 7
 
 	map_attributes MahoganyTown, MAHOGANY_TOWN, $71
 	connection north, Route43, ROUTE_43, 0
@@ -133,12 +133,12 @@ ENDM
 	connection south, Route36, ROUTE_36, -3
 
 	map_attributes Route38, ROUTE_38, $5
-	connection west, Route39, ROUTE_39, -8
-	connection east, EcruteakCity, ECRUTEAK_CITY, -5
+	connection west, Route39, ROUTE_39, -9
+	connection east, EcruteakCity, ECRUTEAK_CITY, -6
 
 	map_attributes Route39, ROUTE_39, $5
 	connection south, OlivineCity, OLIVINE_CITY, -5
-	connection east, Route38, ROUTE_38, 8
+	connection east, Route38, ROUTE_38, 9
 
 	map_attributes Route40, ROUTE_40, $35
 	connection south, Route41, ROUTE_41, -15
@@ -151,7 +151,7 @@ ENDM
 
 	map_attributes Route42, ROUTE_42, $5
 	connection south, VioletOutskirts, VIOLET_OUTSKIRTS, 5
-	connection west, EcruteakCity, ECRUTEAK_CITY, -9
+	connection west, EcruteakCity, ECRUTEAK_CITY, -7
 	connection east, MahoganyTown, MAHOGANY_TOWN, 0
 
 	map_attributes Route43, ROUTE_43, $5
@@ -163,15 +163,15 @@ ENDM
 
 	map_attributes Route45, ROUTE_45, $71
 	connection north, BlackthornCity, BLACKTHORN_CITY, 2
-	connection west, Route46, ROUTE_46, 37
+	connection west, Route46, ROUTE_46, 39
 
 	map_attributes Route46, ROUTE_46, $5
 	connection south, Route29, ROUTE_29, -10
-	connection east, Route45, ROUTE_45, -37
+	connection east, Route45, ROUTE_45, -39
 
 	map_attributes PewterCity, PEWTER_CITY, $f
 	connection south, Route2North, ROUTE_2_NORTH, 5
-	connection east, Route3, ROUTE_3, 6
+	connection east, Route3, ROUTE_3, 4
 
 	map_attributes Route2North, ROUTE_2_NORTH, $f
 	connection north, PewterCity, PEWTER_CITY, -5
@@ -321,7 +321,7 @@ ENDM
 	map_attributes CeruleanCity, CERULEAN_CITY, $f
 	connection north, Route24, ROUTE_24, 0
 	connection south, Route5, ROUTE_5, 5
-	connection west, Route4, ROUTE_4, 1
+	connection west, Route4, ROUTE_4, 2
 	connection east, Route9, ROUTE_9, 3
 
 	map_attributes Route24, ROUTE_24, $2c
@@ -336,10 +336,10 @@ ENDM
 	connection west, Route25, ROUTE_25, 1
 
 	map_attributes Route3, ROUTE_3, $2c
-	connection west, PewterCity, PEWTER_CITY, -6
+	connection west, PewterCity, PEWTER_CITY, -4
 
 	map_attributes Route4, ROUTE_4, $2c
-	connection east, CeruleanCity, CERULEAN_CITY, -1
+	connection east, CeruleanCity, CERULEAN_CITY, -2
 
 	map_attributes Route8, ROUTE_8, $2c
 	connection west, SaffronCity, SAFFRON_CITY, -4
@@ -575,7 +575,7 @@ ENDM
 	map_attributes ValeriesHouse, VALERIES_HOUSE, $0
 	map_attributes EcruteakCherishBallHouse, ECRUTEAK_CHERISH_BALL_HOUSE, $0
 	map_attributes EcruteakDestinyKnotHouse, ECRUTEAK_DESTINY_KNOT_HOUSE, $0
-	map_attributes EcruteakShrineOutside, ECRUTEAK_SHRINE_OUTSIDE, $5
+	map_attributes EcruteakShrineOutside, ECRUTEAK_SHRINE_OUTSIDE, $82
 	map_attributes EcruteakShrineInside, ECRUTEAK_SHRINE_INSIDE, $0
 	map_attributes BlackthornGym1F, BLACKTHORN_GYM_1F, $0
 	map_attributes BlackthornGym2F, BLACKTHORN_GYM_2F, $0
@@ -602,7 +602,8 @@ ENDM
 	map_attributes CeruleanBerryPowderHouse, CERULEAN_BERRY_POWDER_HOUSE, $0
 	map_attributes CeruleanCoupleHouse, CERULEAN_COUPLE_HOUSE, $0
 	map_attributes CeruleanWaterShowSpeechHouse, CERULEAN_WATER_SHOW_SPEECH_HOUSE, $0
-	map_attributes Route3PokeCenter1F, ROUTE_3_POKECENTER_1F, $0
+	map_attributes Route3CableCarGate, ROUTE_3_CABLE_CAR_GATE, $0
+	map_attributes MountMoonSquareCableCarGate, MOUNT_MOON_SQUARE_CABLE_CAR_GATE, $0
 	map_attributes Route10PokeCenter1F, ROUTE_10_POKECENTER_1F, $0
 	map_attributes PowerPlant, POWER_PLANT, $0
 	map_attributes BillsHouse, BILLS_HOUSE, $0
@@ -695,7 +696,7 @@ ENDM
 	map_attributes FastShipCabins_SW_SSW_NW, FAST_SHIP_CABINS_SW_SSW_NW, $0
 	map_attributes FastShipCabins_SE_SSE_CaptainsCabin, FAST_SHIP_CABINS_SE_SSE_CAPTAINS_CABIN, $0
 	map_attributes FastShipB1F, FAST_SHIP_B1F, $0
-	map_attributes MountMoonSquare, MOUNT_MOON_SQUARE, $2d
+	map_attributes MountMoonSquare, MOUNT_MOON_SQUARE, $2c
 	map_attributes MountMoonGiftShop, MOUNT_MOON_GIFT_SHOP, $0
 	map_attributes TinTowerRoof, TIN_TOWER_ROOF, $1
 	map_attributes IndigoPlateauPokecenter1F, INDIGO_PLATEAU_POKECENTER_1F, $0

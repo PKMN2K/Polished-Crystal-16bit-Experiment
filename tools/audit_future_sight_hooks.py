@@ -1,4 +1,4 @@
-"""Inventory direct PyBoy hooks on GetFutureSightUser across tests.
+"""Inventory unsafe direct PyBoy hooks across the migration suite.
 
 Use --strict once all existing direct hooks are migrated to the shared helper.
 The default reports all remaining sites without blocking unrelated CI tests.
@@ -21,7 +21,7 @@ def audit(root):
                 continue
             if node.func.id != "hook" or not node.args:
                 continue
-            if isinstance(node.args[0], ast.Constant) and node.args[0].value == "GetFutureSightUser":
+            if isinstance(node.args[0], ast.Constant) and node.args[0].value in ("GetFutureSightUser", "ResetSubHit", "GetUserItem"):
                 findings.append((path.relative_to(root), node.lineno))
     return findings
 
@@ -33,8 +33,8 @@ def main():
     root = Path(__file__).resolve().parents[1]
     findings = audit(root)
     for path, lineno in findings:
-        print(f"::warning file={path},line={lineno}::Use hook_future_sight_after_push instead of a direct entry hook")
-    print(f"Future Sight entry-hook audit: {len(findings)} direct registrations remain")
+        print(f"::warning file={path},line={lineno}::Use the matching pyboy_hook_safety helper instead of a direct entry hook")
+    print(f"Unsafe entry-hook audit: {len(findings)} direct registrations remain")
     if args.strict and findings:
         raise SystemExit(1)
 

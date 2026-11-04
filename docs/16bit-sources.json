@@ -1,0 +1,26 @@
+{
+  "polishedcrystal": {
+    "repository": "Rangi42/polishedcrystal",
+    "commit": "bd535b89f8e1337151b715f76a235296c26a60c7"
+  },
+  "donor": {
+    "repository": "DanielOlivaw/pokecrystal16",
+    "commit": "ace283e879e8dd683fc0ccc26e8b85e70dc72313",
+    "original_base": "aaaaaa123456789/pokecrystal16",
+    "files": {
+      "engine/16/macros.asm": "b0ae4e7ecced2b60fd4458665e6a41cfccde8036e6ef51a0d77726bebf9a6f0b",
+      "engine/16/table_functions.asm": "3a2172bedcc1875c8e9e67159a076cbbcfe26716c8a67e42493fc1eb096c632b",
+      "home/16bit.asm": "79eea7427bb90a22f93bc016f1f40b460360b30a06302848df80d11ac18ba6ee",
+      "home/indirection.asm": "c5ca719f697e45521ce4dc4a4e17c5257ac0abbdb9f30d3989a8f6bea75f2b60",
+      "macros/wram_16bit.asm": "b34f015861950888cee97d2527c7c4aa651242b21d4e118827b4a85a760c1f01",
+      "constants/16_bit_translation_constants.asm": "9c2acde4be0e8619a2297e0d501dbb119094366744398b8db9f2cabacef47e1c",
+      "constants/16_bit_locking_constants.asm": "43e5c90097bc02ba0962b44c63160c406ea4d44d56197a32b29d8f0dfa5dfe89"
+    }
+  },
+  "reused_adapter": {
+    "repository": "PKMN2K/Polished-Crystal-16bit-Experiment",
+    "commit": "f2089e9e6580c0113217c13db4bdee4ec39db28c"
+  },
+  "rgbds": "1.0.4",
+  "scope": "Species index infrastructure and existing Polished roster; full engine migration remains incomplete."
+}

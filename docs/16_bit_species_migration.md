@@ -1,5 +1,10 @@
 # 16-bit Species-ID Migration
 
+> Historical implementation notes imported from the earlier experiment.
+> For the current branch, use `MIGRATION_STATUS.md` and `16bit-sources.json`.
+> Older save-version, activation, baseline and validation statements below
+> describe their dated checkpoints, not the current branch.
+
 This branch ports the stable Pokémon-indexing infrastructure from
 `fellowship-of-the-roms/pokecrystal16` into Polished Crystal. Polished Crystal
 remains the base project; pokecrystal16 is a reference implementation.

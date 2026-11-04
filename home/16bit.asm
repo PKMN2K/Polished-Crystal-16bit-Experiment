@@ -1,3 +1,4 @@
+; Species-index infrastructure from pokecrystal16; see docs/16bit-sources.json.
 MACRO ___conversion_table_homecall
 	; macro arguments: homecall type, function label
 	; all functions clobber af and hl (except for outputs) and preserve bc and de

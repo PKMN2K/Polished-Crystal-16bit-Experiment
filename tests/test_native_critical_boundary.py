@@ -12,6 +12,7 @@ read before damagestats, damage calculation, or HP application.
 This proves both active native 16-bit identities survive real critical-hit
 eligibility, held-item and ability checks.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
 import argparse
 from pathlib import Path
 
@@ -924,7 +925,7 @@ def main():
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
+        hook_user_item_after_future_sight(pyboy, symbols, data, offset, observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", lambda _: damagestats_calls.append(True))
         hook("BattleCommand_damagecalc", lambda _: damagecalc_calls.append(True))

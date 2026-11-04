@@ -903,16 +903,8 @@ VerifyGameVersion:
 	pop hl
 	call CloseSRAM
 
-	; Version 10 retains identical struct addresses and is decoded lazily.
-	; Stamp 11 before writing new data so older ROMs reject native box records
-	; and the new table envelope instead of misinterpreting them.
-	ld a, [wStringBuffer2]
-	and a
-	jr nz, .compare_current
-	ld a, [wStringBuffer2 + 1]
-	cp LEGACY_SPECIES_SAVE_VERSION
-	ret z
-.compare_current
+	; Upstream and the earlier experiment both used save version 11 with
+	; different layouts. Require this branch's version rather than guessing.
 	; needs upgrade if [hl:2] != [de:2]
 	ld a, [de]
 	cp [hl]

@@ -2,50 +2,42 @@
 
 This is a custom Pokémon game based on [the Pokémon Crystal disassembly](https://github.com/pret/pokecrystal).
 
-## 16-bit species migration workspace
+## DanielOlivaw 16-bit migration branch
 
-The current checkpoint reads version-10 saves and writes version 11. Native PC
-records and conversion-table checksums are enabled; automatic party/daycare
-conversion remains disabled. New saves require this migration build or newer.
+This branch combines current Polished Crystal source with the compatible
+pokecrystal16 species-index infrastructure and the existing Polished-specific
+adapters. **The full engine migration is not complete.** Native species storage,
+lookup, battle identity, and save recovery are implemented for the existing
+roster, but legacy runtime boundaries still prevent general playable species
+above `$01ff`. Move-ID expansion and link-format migration remain unfinished.
 
-This copy is an **unfinished development snapshot** of the Polished Crystal to
-pokecrystal16 species-ID migration. It is not a release build. Read
-[`MIGRATION_STATUS.md`](MIGRATION_STATUS.md) before making changes; it records
-the exact completed, partial, and pending work represented by this export.
+Use a **new save**. This branch writes and accepts save version 12; upstream and
+the older experiment both used version 11 with different layouts, so neither is
+silently imported. The original migration branch remains separate.
 
-### Build and test this snapshot
+See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for verified scope and remaining
+work, and [docs/16bit-sources.json](docs/16bit-sources.json) for pinned source
+commits and donor-file hashes. The release information below describes upstream
+Polished Crystal, not this experimental branch.
 
-The project requires RGBDS 1.0.3 and the usual Polished Crystal build tools.
-See [`INSTALL.md`](INSTALL.md) for platform-specific setup. On Unix-like
-systems, with the RGBDS executables available on `PATH`, run:
+### Build and validate
+
+Install RGBDS **1.0.4** and the dependencies in [INSTALL.md](INSTALL.md), then:
 
 ```sh
 make tidy
 make -j2
+python -m pip install pyboy==2.7.0
+python tools/audit_future_sight_hooks.py --strict
+python tools/run_migration_tests.py polishedcrystal-3.2.3.gbc
 ```
 
-The normal output is `polishedcrystal-3.2.3.gbc`. Build products, including the
-ROM, are intentionally excluded from the source archive. A clean debug build
-can be checked with:
-
-```sh
-make tidy
-make -j2 debug
-```
-
-If RGBDS is stored outside `PATH`, prepend its directory for each command, for
-example:
-
-```sh
-PATH="/path/to/rgbds-1.0.3:$PATH" make -j2
-```
-
-The current native active-battle checkpoint passes all eight GitHub Actions
-build variants. The last locally executed PyBoy checkpoint passed 5,979 CPU
-regression cases on both normal and debug ROMs; additional active-battle CPU
-coverage is committed but has not yet been rerun on the current head. See
-`MIGRATION_STATUS.md` for exact validation scope. Persistent party-format
-activation and end-to-end runtime testing remain pending.
+For a debug build, run `make tidy` followed by `make -j2 debug`, then test
+`polishedcrystal-debug-3.2.3.gbc`. Keep each ROM with its matching `.sym` file.
+The test runner starts every regression in a separate process, enforces a
+per-test timeout, and writes logs and a JSON summary under `build/test-results`.
+The branch-specific Actions workflow builds eight configurations and runs all
+CPU regression programs on normal and debug ROMs.
 
 My goal is to create what the title says: an improved, polished version of Pokémon Crystal. It fixes bugs, takes into account the official game changes since 2001, and adds some new ideas of my own. Many features restore what was removed from R/B/Y, or original to HG/SS.
 

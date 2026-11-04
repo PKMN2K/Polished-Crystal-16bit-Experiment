@@ -33,7 +33,7 @@ def main():
         memory[0xC100:0xC106] = [
             0xF3, 0xCD, target & 0xFF, target >> 8, 0x18, 0xFE
         ]
-        regs.BC = native
+        regs.B, regs.C = native >> 8, native & 255
         regs.HL = 0xC222
         regs.SP, regs.PC = 0xC0FF, 0xC100
         pyboy.tick(4, False, False)

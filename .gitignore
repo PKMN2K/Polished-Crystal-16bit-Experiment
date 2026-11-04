@@ -13,6 +13,8 @@ gfx/pokemon/*/*.dimensions
 gfx/pokemon/*/*.animated.tilemap
 gfx/pokemon/*/bitmask.asm
 gfx/pokemon/*/frames.asm
+gfx/overworld/cable_car/*.bin
+gfx/overworld/cable_car/bg.tilemap
 gfx/pokedex/*.bin
 gfx/stats/*.bin
 gfx/title/suicune_unowns.tilemap
@@ -65,3 +67,6 @@ bank_ends.txt
 # local tools
 rgbds/
 deploy.sh
+
+# migration build and CPU-test artifacts
+build/

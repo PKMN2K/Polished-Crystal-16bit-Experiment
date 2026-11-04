@@ -3469,7 +3469,7 @@ BattleCommand_posthiteffects:
 	call c, FlinchTarget
 	ret
 
-CheckStatHerbsAfterIntimidate:
+CheckStatHerbsAfterAbility:
 	ld hl, wDeferredSwitch
 	ld a, [hl]
 	push af
@@ -3869,10 +3869,14 @@ if !DEF(FAITHFUL)
 	ld a, c
 	pop bc
 	ret nz
+	cp DITTO
+	ret nz
 else
 	; only works if current species is Ditto
+	push bc
 	ld bc, DITTO
 	farcall IsOpponentActiveNativeSpeciesBC
+	pop bc
 	ret nz
 endc
 

@@ -1,3 +1,4 @@
+; Species-index infrastructure from pokecrystal16; see docs/16bit-sources.json.
 LoadIndirectPointer::
 	; in: a:hl: indirect table, bc: index
 	; out: a:hl: pointer to element, b: copy of a, c: clobbered, de: preserved, zero flag: set if pointer is null

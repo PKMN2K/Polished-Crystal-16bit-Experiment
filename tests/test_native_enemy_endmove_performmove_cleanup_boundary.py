@@ -13,6 +13,8 @@ After CheckPowerHerb returns, stop exactly at PerformMove.end_protect before
 the enemy PerformMove cleanup tail clears IN_ABILITY, ticks Disable/Encore,
 clears Protect/Endure, refreshes the tilemap, or enters ResolveFaints.
 """
+from pyboy_hook_safety import hook_user_item_after_future_sight
+from pyboy_hook_safety import hook_reset_subhit_after_push
 import argparse
 import faulthandler
 import os
@@ -546,7 +548,12 @@ def main():
                                             mem[addr("hROMBank")],
                                             tuple(mem[regs.SP:regs.SP + 4])))
 
-    pyboy.hook_register(item_bank, return_site, trace_item_return, None)
+    # The diagnostic and the regression observe the same post-CALL boundary.
+    # Compose them into one registration; PyBoy rejects duplicate breakpoints.
+    hook_user_item_after_future_sight(
+        pyboy, symbols, data, offset,
+        lambda context: (trace_item_return(context), observe_user_item(context)),
+    )
 
     # Detect CPU progress past the hooked entry point. The routine begins
     # PUSH HL (E5), immediately followed by PUSH DE (D5). Hooking the
@@ -3668,7 +3675,6 @@ def main():
         # The snapshot assertions normally populated here are expected to
         # require restoration after this isolation test.
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
-        hook("GetUserItem", observe_user_item)
         hook("UserValidBattleItem", observe_user_valid_item)
         hook("BattleCommand_damagestats", observe_damagestats)
         hook("ResetDamage", observe_damage_reset)
@@ -3688,7 +3694,7 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        hook_reset_subhit_after_push(pyboy, symbols, data, offset, observe_applydamage_reset_subhit)
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
         hook("GetOpponentItem", observe_applydamage_item)
         hook("TakeDamage", observe_applydamage_take_damage)

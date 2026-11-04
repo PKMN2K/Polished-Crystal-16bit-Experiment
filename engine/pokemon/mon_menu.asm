@@ -1713,4 +1713,3 @@ String_PowAcc:
 
 Text_CantForgetHM:
 	text_farend _MoveCantForgetHMText
-

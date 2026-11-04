@@ -33,7 +33,7 @@ def main():
             alolan_raichu = native
             break
     assert alolan_raichu is not None
-    cases = [(25, 25, 1), (256, 0, 0x21), (alolan_raichu, 26, 2)]
+    cases = [(25, 25, 1), (257, 1, 0x21), (alolan_raichu, 26, 2)]
     emulator = PyBoy(str(args.rom), window="null", sound_emulated=False,
                      cgb=True, log_level="ERROR")
     memory, regs = emulator.memory, emulator.register_file

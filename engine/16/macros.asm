@@ -1,3 +1,4 @@
+; Species-index infrastructure from pokecrystal16; see docs/16bit-sources.json.
 ; Some functions are defined as macros so they can be reused for multiple 16-bit tables
 ; (they are not parameterized due to performance constraints; loads and non-evicting stores should be as fast as possible)
 
