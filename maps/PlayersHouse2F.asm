@@ -380,6 +380,9 @@ PokemonJournalProfElmScript:
 	done
 
 PlayersHousePC:
+if DEF(NATIVE_GAMEPLAY_TEST)
+	sjumpfwd NativeGameplayLifecycle
+endc
 	opentext
 	special Special_PlayersHousePC
 	iffalse_endtext

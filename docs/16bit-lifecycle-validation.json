@@ -1,0 +1,1187 @@
+{
+  "performed_on": "2026-11-04T12:58:45.257253+00:00",
+  "baseline_commit": "5e71930b1b8af57789d298c65daa8a71c267b47c",
+  "scope": "Native trainer and phone identities, variable trainer streams, daycare growth, and joypad lifecycle/storage coverage.",
+  "toolchain": {
+    "rgbds": "1.0.4",
+    "pyboy": "2.7.0",
+    "python": "3.12.14",
+    "pillow": "13.0.0"
+  },
+  "builds": [
+    {
+      "name": "normal",
+      "flags": [],
+      "rom_sha256": {
+        "polishedcrystal-3.2.3.gbc": "35ad3e0a2caa90e3d02c5aa7ecd1cab7084b5ab6c9d55014d1bb86d0bfa12187"
+      }
+    },
+    {
+      "name": "debug",
+      "flags": [
+        "debug"
+      ],
+      "rom_sha256": {
+        "polishedcrystal-debug-3.2.3.gbc": "1ff9b4c418dd5e3b62394063295dba5b2a92bd8479615d150e1d1de86139d799"
+      }
+    },
+    {
+      "name": "gameplay-02ff-fd01",
+      "flags": [
+        "native-test",
+        "NATIVE_TEST_SPECIES=767",
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=64769",
+        "native_gameplay_test=1"
+      ],
+      "rom_sha256": {
+        "polishedcrystal-native-test-3.2.3.gbc": "fd5f089d0a9edd500b9f0780ff926e22755a8e619a67a85a8e3c122e2ea1d45d"
+      }
+    }
+  ],
+  "cpu_regressions": {
+    "normal": {
+      "programs": 166,
+      "passed": 166,
+      "failed_or_timed_out": 0
+    },
+    "debug": {
+      "programs": 166,
+      "passed": 166,
+      "failed_or_timed_out": 0
+    }
+  },
+  "fixtures": [
+    {
+      "test": "tests/fixtures/wide_species.py",
+      "returncode": 0,
+      "seconds": 1.599
+    },
+    {
+      "test": "tests/test_native_move_ids.py",
+      "returncode": 0,
+      "seconds": 2.803
+    },
+    {
+      "test": "tests/test_scripted_native_encounters.py",
+      "returncode": 0,
+      "seconds": 1.443
+    },
+    {
+      "test": "tests/test_native_link_packets.py",
+      "returncode": 0,
+      "seconds": 3.51
+    },
+    {
+      "test": "tests/test_native_post_battle.py",
+      "returncode": 0,
+      "seconds": 1.39
+    },
+    {
+      "test": "tests/test_native_trainer_daycare.py",
+      "returncode": 0,
+      "seconds": 3.461
+    }
+  ],
+  "gameplay": {
+    "species": "0x2ff",
+    "move": "0xfd01",
+    "input": "joypad only",
+    "checkpoints": [
+      {
+        "name": "new-game",
+        "frame": 3690,
+        "party": []
+      },
+      {
+        "name": "gift-battle",
+        "frame": 5025,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "battle-won",
+        "frame": 6585,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8135,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "captured",
+        "frame": 8975,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "saved",
+        "frame": 9425,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "cold-continue",
+        "frame": 10130,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8270,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              23,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "trainer-battle-won",
+        "frame": 17470,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8532,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              16,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pc-open",
+        "frame": 17890,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8532,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              16,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pc-deposited",
+        "frame": 18210,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pc-withdrawn",
+        "frame": 18530,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8532,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "daycare-deposited",
+        "frame": 19510,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "daycare-withdrawn",
+        "frame": 20200,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "lesson-gifts",
+        "frame": 21160,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 19,
+            "exp": 6859,
+            "moves": [
+              33,
+              45,
+              43,
+              10
+            ],
+            "pp": [
+              35,
+              40,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 97,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "learned-and-evolved-wide",
+        "frame": 25070,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 97,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "evolved-back",
+        "frame": 26510,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 97,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "hatch-animation",
+        "frame": 251870,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "hatched-wide-egg",
+        "frame": 252200,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "boxed-before-reload",
+        "frame": 253340,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "lifecycle-saved",
+        "frame": 253770,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "lifecycle-cold-continue",
+        "frame": 254475,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "boxed-native-ids-restored",
+        "frame": 255180,
+        "party": [
+          {
+            "species": 767,
+            "form": 161,
+            "level": 5,
+            "exp": 125,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 291,
+            "form": 33,
+            "level": 21,
+            "exp": 9261,
+            "moves": [
+              64769,
+              230,
+              43,
+              10
+            ],
+            "pp": [
+              25,
+              15,
+              30,
+              35
+            ]
+          },
+          {
+            "species": 767,
+            "form": 33,
+            "level": 1,
+            "exp": 0,
+            "moves": [
+              33,
+              0,
+              0,
+              0
+            ],
+            "pp": [
+              35,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "species": 767,
+            "form": 161,
+            "level": 20,
+            "exp": 8000,
+            "moves": [
+              33,
+              45,
+              64769,
+              0
+            ],
+            "pp": [
+              35,
+              40,
+              25,
+              0
+            ]
+          }
+        ]
+      }
+    ],
+    "frames": 255180,
+    "result": "passed"
+  },
+  "audits": {
+    "symbolic_move_sites": 8672,
+    "byte_only_boundaries": 0,
+    "unsafe_entry_hooks": 0,
+    "optimizer_findings": 0
+  },
+  "compatibility": {
+    "save_version": 13,
+    "link_protocol": 7,
+    "format_change_in_this_phase": false
+  },
+  "regressions": [
+    {
+      "boundary": "trainer species",
+      "before": "$02ff decoded as $00ff in the complete trainer battle",
+      "after": "native word retained, ordinary opponent send-out also validated"
+    },
+    {
+      "boundary": "phone trainer records",
+      "before": "native high byte folded into form, fixed move stride and overwritten party-end count",
+      "after": "native names and exact optional-field/escaped-move traversal; all three members selected in each of 64 layouts"
+    },
+    {
+      "boundary": "daycare growth",
+      "before": "level 20 / EXP 8532 returned as level 22 / EXP 10648 with no walking",
+      "after": "level 20 retained; existing withdrawal EXP floor policy produces 8000"
+    }
+  ],
+  "limits": [
+    "no full playthrough",
+    "no physical cable or linked-emulator serial timing validation",
+    "no daycare breeding or egg-collection UI coverage",
+    "no long allocator-lifetime gameplay with many distinct native identities",
+    "no production roster expansion or old-save importer"
+  ],
+  "github_actions": "Local evidence only; separately check all 23 migration configurations and Optimize for the published commit.",
+  "source_sha256": {
+    ".github/workflows/16bit-migration.yml": "75fd7e39ecfd6adaab429285649af1f52b3264f90cac7051b342ebc20efea967",
+    "MIGRATION_STATUS.md": "5fa9d2c20416d82492de4eb2a1ad30fd55eeea2a9f5768e2190447966353fb14",
+    "data/pokemon/evos_attacks.asm": "2270859f71752c722dda50ff7e0d370ed65eae81274b05b70a25436de89a6c48",
+    "data/trainers/parties.asm": "7fda35b6761b83457f22d402bc591c3a7b31ee39671fcf648e69c1a7312aea3f",
+    "engine/battle/read_trainer_party.asm": "262ef379efe6d20149478eebb3068a625ca68d442ec72eab7b6b18952638418c",
+    "engine/overworld/wildmons.asm": "fe51d7d37b8c83c2c8353eac7daf7151dd285cfddf87c9e1972fbee720b2a7d7",
+    "engine/pokemon/breedmon_level_growth.asm": "7f2cca118ebdda0ccb2754d69d00437cfeac0694008eaf5b76fc33cd9b88817d",
+    "maps/PlayersHouse2F.asm": "791c14317b9ad69f2fbbd2a0f2e70f90c4bdaef9c8db106b6eec4a8012fa2fba",
+    "tests/fixtures/native_gameplay.asm": "f61dbb2944dca8fe8a65ae9bf44b1ac8c7b60b0766718f152cf7855b1a9385e9",
+    "tests/fixtures/native_gameplay.py": "7226e0ca3313af49af150161f2d50d698b80886e6b278c9dd45060dacb24c82e",
+    "tests/test_native_trainer_daycare.py": "a6a165c5fa047761c9b291444182eff2f2c748a60bcf1c92f39c9ca9b2b970dd"
+  }
+}

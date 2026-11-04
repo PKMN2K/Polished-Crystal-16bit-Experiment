@@ -84,6 +84,7 @@ jobs:
           python tests/test_native_link_packets.py "${roms[0]}"
           python tests/test_scripted_native_encounters.py "${roms[0]}"
           python tests/test_native_post_battle.py "${roms[0]}"
+          python tests/test_native_trainer_daycare.py "${roms[0]}"
       - name: Wide-move integration
         if: matrix.moves
         shell: bash
@@ -91,7 +92,7 @@ jobs:
           roms=(polishedcrystal-*.gbc)
           python tests/test_native_move_ids.py "${roms[0]}"
           python tests/test_native_link_packets.py "${roms[0]}"
-      - name: Fresh-game battle, capture and cold save reload
+      - name: Joypad battles, storage, evolution, hatching and cold reload
         if: matrix.gameplay
         shell: bash
         run: |

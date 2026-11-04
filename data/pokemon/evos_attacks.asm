@@ -5928,6 +5928,14 @@ endc
 if DEF(NATIVE_SPECIES_TEST)
 	evo_data EVOLVE_LEVEL, 20, WIDE_TEST_SPECIES
 endc
+if DEF(NATIVE_GAMEPLAY_TEST)
+	; A filled moveset forces the real replacement UI at level 20.
+	learnset 1, TACKLE
+	learnset 1, GROWL
+	learnset 1, LEER
+	learnset 1, SCRATCH
+	learnset 20, WIDE_TEST_MOVE
+else
 	learnset 1, SHADOW_CLAW ; Shadow Punch → similar move ; evolution move
 	learnset 1, OUTRAGE
 	learnset 1, RAGE
@@ -5948,6 +5956,7 @@ endc
 	learnset 44, SCREECH
 	learnset 48, GUNK_SHOT ; Stomping Tantrum → HGSS tutor move
 	learnset 53, OUTRAGE
+endc
 
 	; Also terminates previous mon's learnset
 	EggEvosAttacks:

@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: native species and move-ID port integrated; fresh-game battle, capture and cold save reload validated. Broader gameplay and hardware validation remain.**
+**Status: native species and move-ID port integrated; wild/trainer battles, capture, PC/daycare transfers, move learning, evolution, hatching and cold save reload validated. Full playthrough and linked hardware/emulator validation remain.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -58,6 +58,16 @@ are recorded in `docs/16bit-sources.json`.
 - Post-battle berry conversion preserves its party counter across species
   decoding. The overwritten counter could scan beyond the party or leave a
   completed battle stuck after the experience message.
+- Trainer party readers use the same native species/form decoder as scripted
+  encounters. The old high-byte-to-form packing truncated `$02ff` to `$00ff`
+  and set Egg metadata in a real trainer battle.
+- Phone trainer names resolve native words directly. The party walker now
+  preserves the record boundary and skips variable nicknames and escaped move
+  IDs, so it can select every party member without treating move bytes as species.
+- Daycare growth queries decode saved species handles before calling the runtime
+  level calculator. Without this boundary conversion, the wrong growth group
+  could make a level-20 wide species return at level 22 without taking any steps.
+  The existing withdrawal policy of resetting EXP to the level floor is retained.
 
 ## Formats and compatibility
 
@@ -108,12 +118,13 @@ bits are rejected before destination records or either allocator are changed.
 
 ## Verification
 
-`docs/16bit-gameplay-validation.json` records this phase's local results and
-exact ROM hashes; `docs/16bit-validation.json` retains the earlier move-ID phase
-evidence. GitHub Actions status must be checked separately for the published
+`docs/16bit-lifecycle-validation.json` records the latest local results and exact
+ROM hashes. `docs/16bit-gameplay-validation.json` and `docs/16bit-validation.json`
+retain the earlier encounter and move-ID phase evidence. GitHub Actions status
+must be checked separately for the published
 commit. CI covers 23 configurations: eight production combinations, five
 species fixtures, eight move fixtures, one combined fixture and one playable
-gameplay fixture. Normal and debug each run 165 CPU test programs. Static audits
+gameplay fixture. Normal and debug each run 166 CPU test programs. Static audits
 reject byte-only symbolic move boundaries and known unsafe emulator entry
 hooks; the upstream optimization check remains enabled.
 
@@ -166,15 +177,34 @@ and preservation of a pending wide encounter during garbage collection.
 both storage formats, including mixed species and all-Shuckle parties. Both
 regressions fail on the preceding move-ID commit.
 
-`tests/fixtures/native_gameplay.py` boots a new game and reaches a test-only
-bedroom radio event with species `$02ff` and move `$fd01` (Ember). Joypad input
-drives the gift UI, a complete battle victory, a second encounter caught with a
-Master Ball, the Save menu, and Continue in a new emulator instance using only
-cartridge SRAM/RTC. It verifies both native battle identities, move use and PP,
-experience gains, both captured/gifted party records, and overworld movement
-after reload. It uses no CPU hooks, memory/register writes, ROM patches or
-emulator save states. CI preserves screenshots, battery files and a structured
-checkpoint log. The fixture adds no event or WRAM byte to production builds.
+`tests/test_native_trainer_daycare.py` checks 335 production identities (336 in
+each wide fixture), dynamic-form defaults, all 64 optional trainer record layouts,
+three-member phone selection, variable nicknames and escaped moves across an
+address-page boundary. It also checks 1,340 production daycare growth cases
+(1,344 in each wide fixture), covering every identity, both parents, legacy/native
+storage, unchanged source records and correct runtime temporary identities.
+These CPU tests use synthetic WRAM records without ROM stubs.
+
+`tests/fixtures/native_gameplay.py` boots a new game and reaches test-only bedroom
+events with species `$02ff` and move `$fd01` (Ember). Joypad input drives:
+
+- Gift and capture UIs, a complete wild battle and a two-member trainer battle
+  with both wide and ordinary opponent identities.
+- PC deposit/withdraw and daycare deposit/withdraw, checking species, moves,
+  levels, EXP and restored PP.
+- A full move-replacement prompt learning native Ember; evolution from ordinary
+  Annihilape into the wide fixture, Shadow Claw learning, and return evolution.
+- An Egg gift, ordinary overworld walking through all 20 hatch cycles, the full
+  hatch animation and nickname prompt. Egg timers and hatch routines are unchanged.
+- Two menu saves and cold Continue sessions using only cartridge SRAM/RTC.
+  The final save contains a boxed wide species with native Ember; after reload,
+  the PC withdrawal restores it exactly alongside the evolved and hatched party.
+
+The final local scenario completed in 255,180 emulated frames. It uses no CPU
+hooks, memory/register writes, ROM patches or emulator save states. CI preserves
+screenshots, battery files and a structured checkpoint log. Test-only trainer,
+learnset and bedroom content is absent from production builds; no save/link format
+changes are introduced by this phase.
 
 Example fixture builds (run `make tidy` between configurations):
 
@@ -195,8 +225,9 @@ python3 tests/fixtures/native_gameplay.py polishedcrystal-native-test-3.2.3.gbc
 
 1. Validate protocol 7 over an actual cable or a linked emulator pair, including
    a complete trade/animation, mail delivery and linked battle.
-2. Extend joypad-driven coverage to trainer battles, learning/evolution/hatching
-   animations, PC/daycare transfers, long allocator lifetimes and a full playthrough.
+2. Extend joypad-driven coverage to daycare breeding/egg collection, long allocator
+   lifetimes across many distinct identities, additional gameplay systems and a
+   full playthrough. Gift-Egg hatching is covered; it is not breeding UI coverage.
 3. Add and test the intended expanded roster/move content and any corresponding
    forms/classification tables. Provide explicit save-import tooling if older
    saves must migrate.

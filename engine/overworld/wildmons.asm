@@ -1155,99 +1155,50 @@ RandomPhoneMon:
 	ld b, e
 	farcall SkipTrainerPartiesAndName
 
+RandomPhoneMonFromTrainer:
+; hl = party flags, b = remaining byte count (including flags).
+; Walk encoded records: nicknames and escaped native moves are variable-length.
+	ld a, l
+	add b
+	ld c, a ; all trainer parties occupy fewer than 256 bytes
 	ld a, [wTrainerGroupBank]
 	call GetFarByte
 	inc hl
-
-	; nicknames have uneven length, so always use the first mon
-	bit TRNTYPE_NICKNAME, a
-	jr nz, .got_mon
-
-	; All trainers use at least 4 bytes per mon
-	; (Level, 16-bit native species, Form).
-	ld c, 4
-	; TRAINERTYPE_ITEM uses 1 more byte
-	bit TRNTYPE_ITEM, a
-	jr z, .no_item
-	inc c
-.no_item
-	; TRAINERTYPE_DVS uses 1 more byte
-	bit TRNTYPE_DVS, a
-	jr z, .no_dvs
-	inc c
-.no_dvs
-	; TRAINERTYPE_PERSONALITY uses 1 more byte
-	bit TRNTYPE_PERSONALITY, a
-	jr z, .no_personality
-	inc c
-.no_personality
-	; TRAINERTYPE_EVs uses 1 more byte
-	bit TRNTYPE_EVS, a
-	jr z, .no_evs
-	inc c
-.no_evs
-	; TRAINERTYPE_MOVES uses 4 more bytes
-	bit TRNTYPE_MOVES, a
-	jr z, .no_moves
-	inc c
-	inc c
-	inc c
-	inc c
-.no_moves
-	; bc == size of mon sub-struct
-	ld b, 0
-
-	; c currently holds party size in bytes
-	ld a, c
-	add l
-	ld e, 0
+	ld b, a
+	ld d, 0
 	push hl
 .count_mon
-	inc e
-	add hl, bc
-	cp l
+	inc d
+	ld a, b
+	farcall SkipTrainerPartyMon
+	ld a, l
+	cp c
 	jr nz, .count_mon
 	pop hl
 
 .rand
 	call Random
 	and 7
-	cp e
+	cp d
 	jr nc, .rand
 
 	inc a
 .get_mon
 	dec a
 	jr z, .got_mon
-	add hl, bc
+	push af
+	ld a, b
+	farcall SkipTrainerPartyMon
+	pop af
 	jr .get_mon
 .got_mon
 
 	inc hl ; species
-	push hl
 	ld a, [wTrainerGroupBank]
 	call GetFarWord
 	ld b, h
 	ld c, l
-	farcall GetRootSpeciesFromNativeIDBC
-	pop hl
-	inc hl
-	inc hl ; form
-	ld a, [wTrainerGroupBank]
-	call GetFarByte
-	ld e, a
-	ld a, c
-	ld [wNamedObjectIndex], a
-	ld a, b
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or e
-	ld [wNamedObjectIndex+1], a
-	call GetPokemonName
+	farcall GetPokemonNameFromNativeIDBC
 	ld hl, wStringBuffer1
 	ld de, wStringBuffer4
 	ld bc, MON_NAME_LENGTH

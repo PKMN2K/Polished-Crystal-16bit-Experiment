@@ -40,6 +40,15 @@ endc
 		tr_moves SING, HEALINGLIGHT, FLAMETHROWER, MOONBLAST
 	end_trainer
 
+if DEF(NATIVE_GAMEPLAY_TEST)
+	; Test-only second Cal party exercises the full trainer send-out loop.
+	def_trainer 2, "Cal"
+	tr_mon 5, WIDE_TEST_SPECIES
+		tr_moves WIDE_TEST_MOVE
+	tr_mon 5, RATTATA
+		tr_moves WIDE_TEST_MOVE
+	end_trainer
+endc
 
 SECTION "CarrieGroup", ROMX
 CarrieGroup:

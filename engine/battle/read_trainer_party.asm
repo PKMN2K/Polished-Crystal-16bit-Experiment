@@ -36,32 +36,7 @@ ReadTrainerParty:
 	ld [wCurPartyLevel], a
 
 ; species
-	call GetNextTrainerDataByte
-	ld c, a
-	call GetNextTrainerDataByte
-	ld b, a
-	push hl
-	farcall GetRootSpeciesFromNativeIDBC
-	ld a, c
-	ld [wCurPartySpecies], a
-	ld a, b
-	pop hl
-	push af
-
-	call GetNextTrainerDataByte
-	ld b, a
-	pop af
-	assert MON_EXTSPECIES_F == 5
-	add a
-	add a
-	add a
-	add a
-	add a
-	or b
-	ld b, a
-	call SetDynamicForm
-	ld a, b
-	ld [wCurForm], a
+	call ReadTrainerPartySpecies
 
 	ld a, OTPARTYMON
 	ld [wMonType], a
@@ -304,6 +279,21 @@ ReadTrainerParty:
 .no_stat_recalc
 	jmp .loop2
 
+ReadTrainerPartySpecies:
+; Read a native word and form without folding native high bits into metadata.
+; Wide roots require a tagged runtime handle, just like scripted encounters.
+	call GetNextTrainerDataByte
+	ld c, a
+	call GetNextTrainerDataByte
+	ld b, a
+	call GetNextTrainerDataByte
+	farcall GetLegacySpeciesAndFormFromNativeIDBC
+	ld [wCurPartySpecies], a
+	call SetDynamicForm
+	ld a, b
+	ld [wCurForm], a
+	ret
+
 SetDynamicForm:
 ; Adjust form of mon in bc dynamically based on context if no form is set.
 ; If no dynamic setting applies, b is set to plain form.
@@ -448,6 +438,49 @@ GetNextTrainerDataByte:
 	ld a, [wTrainerGroupBank]
 	call GetFarByte
 	inc hl
+	ret
+
+SkipTrainerPartyMon:
+; hl = level, a = trainer flags; returns hl at next record, preserves bc/de.
+	push bc
+	ld b, a
+	inc hl ; level
+	inc hl ; native species low
+	inc hl ; native species high
+	inc hl ; form
+	bit TRNTYPE_ITEM, b
+	jr z, .no_item
+	inc hl
+.no_item
+	bit TRNTYPE_DVS, b
+	jr z, .no_dvs
+	inc hl
+.no_dvs
+	bit TRNTYPE_PERSONALITY, b
+	jr z, .no_personality
+	inc hl
+.no_personality
+	bit TRNTYPE_NICKNAME, b
+	jr z, .no_nickname
+.nickname
+	call GetNextTrainerDataByte
+	cp '@'
+	jr nz, .nickname
+.no_nickname
+	bit TRNTYPE_EVS, b
+	jr z, .no_evs
+	inc hl
+.no_evs
+	bit TRNTYPE_MOVES, b
+	jr z, .done
+	ld b, NUM_MOVES
+.moves
+	ld a, [wTrainerGroupBank]
+	call SkipMoveIDFromHL
+	dec b
+	jr nz, .moves
+.done
+	pop bc
 	ret
 
 ; must come before the EVSpreads table below, to define
