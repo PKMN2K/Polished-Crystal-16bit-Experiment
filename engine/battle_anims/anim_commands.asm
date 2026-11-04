@@ -1148,8 +1148,8 @@ endr
 	ld hl, wEnemyMonNativeSpecies
 
 .got_shadow
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	call LoadCryFromNativeIDBC
 	pop hl

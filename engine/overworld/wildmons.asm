@@ -12,8 +12,7 @@ LoadWildMonData:
 	ret nc
 	inc hl
 	inc hl
-	call GetWildDataByte
-	ret
+	jp GetWildDataByte
 
 GetWildLocations:
 ; Writes to wDexAreaMons. Assumes we're in the correct WRAM bank for this.
@@ -1034,7 +1033,6 @@ RandomPhoneRareWildMon:
 	call LoadLegacyWildmonFromHL
 	ld c, a
 	ld a, b
-	ld b, a
 	ld [wCurForm], a
 	pop hl
 	ld de, 2 + 1 + 0 * WILDMON_DATA_LENGTH

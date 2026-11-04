@@ -1487,8 +1487,8 @@ endr
 	farcall GetNativeSpeciesIDFromLegacyPokemonDataStruct
 	ld hl, wEnemyMonNativeSpecies
 .store_native_word
-	ld [hl], c
-	inc hl
+	ld a, c
+	ld [hli], a
 	ld [hl], b
 	pop bc
 	pop de
@@ -3133,8 +3133,8 @@ NewEnemyMonStatus:
 ResetEnemyAbility:
 	push hl
 	ld hl, wEnemyMonNativeSpecies
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	ld hl, wEnemyMonPersonality
 	farcall GetAbilityFromNativeIDBC
@@ -3147,8 +3147,8 @@ ResetEnemyAbility:
 ResetPlayerAbility:
 	push hl
 	ld hl, wBattleMonNativeSpecies
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	ld hl, wBattleMonPersonality
 	farcall GetAbilityFromNativeIDBC
@@ -8079,8 +8079,7 @@ RevealGhostEnemyFrontpic:
 	farcall PrepareEnemyBattlePictureIdentity
 	ret c
 	ld de, vTiles0
-	farcall GetFrontpic
-	ret
+	farjp GetFrontpic
 
 RecordRevealedGhostEnemySeen:
 ; The animation may alter renderer globals. Resolve the native shadow again

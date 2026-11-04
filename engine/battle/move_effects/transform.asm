@@ -14,8 +14,8 @@ BattleCommand_transform:
 	ld hl, wBattleMonNativeSpecies
 	ld de, wBattleMonItem
 .got_mon_item
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	; Preserve the old Mewtwo-form wildcard, including Armored Mewtwo,
 	; but compare the full root ID rather than just a legacy species byte.

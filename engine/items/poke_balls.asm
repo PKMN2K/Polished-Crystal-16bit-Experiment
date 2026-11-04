@@ -252,8 +252,8 @@ HeavyBallMultiplier:
 ; else add 30 to base catch rate if weight < 409.6 kg
 ; else add 40 to base catch rate
 	ld hl, wEnemyMonNativeSpecies
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	ld a, b
 	or c

@@ -443,35 +443,26 @@ ApplyHallOfFameNativeSpecies:
 	ld a, PARTY_LENGTH
 .loop
 	push af
-	ld c, [hl]
-	inc hl
-	ld b, [hl]
-	inc hl
-	ld a, b
+	ld a, [hli]
+	ld c, a
+	ld a, [hli]
+	ld b, a
 	or c
 	jr z, .next
 	push hl
 	push de
 	ld h, d
 	ld l, e
-	ld bc, 4 ; species to encoded form/personality high byte
-	add hl, bc
+	; BC is the authoritative native species word; use DE for the offset.
+	ld de, 4 ; species to encoded form/personality high byte
+	add hl, de
 	ld a, [hl]
-	and SPECIESFORM_MASK
+	; The decoder replaces species/form bits and preserves gender metadata.
 	farcall GetLegacySpeciesAndFormFromNativeIDBC
 	pop de
 	ld [de], a
-	ld h, d
-	ld l, e
-	ld de, 4
-	add hl, de
+	; The decoder preserves HL, which still points at the form byte.
 	ld [hl], b
-	ld d, h
-	ld e, l
-	dec de
-	dec de
-	dec de
-	dec de
 	pop hl
 .next
 	push hl

@@ -7,8 +7,8 @@ BattleCommand_lowkick:
 	jr nz, .got_opp_species
 	ld hl, wEnemyMonNativeSpecies
 .got_opp_species
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	; An empty native shadow uses the minimum power, never a stale legacy ID.
 	ld a, b

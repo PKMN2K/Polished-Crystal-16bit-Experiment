@@ -17,8 +17,8 @@ PlayEnemyBattleStereoCryNoWait::
 PlayBattleStereoCryFromShadow:
 	push de
 	push bc
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	ld a, 1
 	ld [wStereoPanningMask], a
@@ -39,8 +39,8 @@ PlayFaintCryFromActiveNativeSpecies::
 	jr z, .got_identity
 	ld hl, wEnemyMonNativeSpecies
 .got_identity
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 PlaySlowCryNativeBC::
 	call LoadCryFromNativeIDBC

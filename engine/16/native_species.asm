@@ -26,7 +26,7 @@ GetAbilityFromNativeIDBC::
 	jr nc, .no_ability
 .check_reserved
 	ld a, b
-	cp 1
+	dec a
 	jr nz, .valid_ability_species
 	ld a, c
 	and a
@@ -124,7 +124,7 @@ GetRootSpeciesFromNativeIDBC::
 	jr nc, .invalid
 .within_catalog
 	ld a, b
-	cp 1
+	dec a
 	jr nz, .check_root
 	ld a, c
 	and a
@@ -261,7 +261,7 @@ GetLegacySpeciesAndFormFromNativeIDBC::
 	jr nc, .unsupported
 .within_catalog
 	ld a, b
-	cp 1
+	dec a
 	jr nz, .valid_native
 	ld a, c
 	and a
@@ -361,7 +361,7 @@ IsActiveBattleNativeSpeciesInAnimationList::
 	assert BANK(HardenUsers) == BANK(WithdrawUsers)
 	assert BANK(CheckBattleAnimSubstitution.MilkDrinkUsers) == BANK(WithdrawUsers)
 	ld a, BANK(WithdrawUsers)
-	jp IsActiveBattleNativeSpeciesInList
+	; fallthrough
 
 IsActiveBattleNativeSpeciesInList::
 ; Test the current move user's direct native battle identity against a
@@ -376,12 +376,12 @@ IsActiveBattleNativeSpeciesInList::
 	jr z, .got_shadow
 	ld hl, wEnemyMonNativeSpecies
 .got_shadow
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	pop hl
 	pop af
-	jp IsNativeSpeciesInListBC
+	; fallthrough
 
 IsNativeSpeciesInListBC::
 ; Test a one-based native identity against a zero-terminated native word list.
@@ -589,8 +589,7 @@ GetLegacySpeciesAndFormFromPokemonDataStruct::
 ; out: a = c = root species byte, b = encoded form; preserves hl
 	call PokemonDataUsesTransientSpecies
 	jr nz, .legacy
-	farcall GetLegacySpeciesAndFormFromTransientStruct
-	ret
+	farjp GetLegacySpeciesAndFormFromTransientStruct
 .legacy
 	push hl
 	ld a, [hl]
@@ -643,8 +642,7 @@ PrepareLegacyPokemonDataStructForStorage::
 	call PokemonDataUsesTransientSpecies
 	ret nz
 	ld de, MON_FORM - MON_SPECIES
-	farcall MigrateLegacySpeciesAndFormAtHL
-	ret
+	farjp MigrateLegacySpeciesAndFormAtHL
 
 InitializeNativePokemonDataForNewGame::
 ; Fresh games have no legacy party/daycare identities to preserve. Start them
@@ -696,9 +694,7 @@ PokemonDataSourceUsesTransientSpecies::
 ; out: z for a transient source, nz for a legacy source; preserves bc/de/hl
 	ld a, [wMonType]
 	cp OTPARTYMON
-	jr z, .legacy_opponent
-	jp PokemonDataUsesTransientSpecies
-.legacy_opponent
+	jp nz, PokemonDataUsesTransientSpecies
 	ld a, 1
 	and a
 	ret
@@ -937,7 +933,7 @@ DecodeNativeBoxIdentity::
 .valid
 	; $0100 is the unused root slot, not a storable species.
 	ld a, b
-	cp 1
+	dec a
 	jr nz, .decode
 	ld a, c
 	and a
@@ -1004,8 +1000,7 @@ MigrateLegacyPlayerPokemonData::
 	push de
 	push bc
 	ld hl, wPartyMon1Species
-	ld b, PARTY_LENGTH
-	ld c, MON_LOCK_SAVE_MIGRATION_START
+	lb bc, PARTY_LENGTH, MON_LOCK_SAVE_MIGRATION_START
 .party
 	call .convert_and_lock
 	ld de, PARTYMON_STRUCT_LENGTH
@@ -1114,8 +1109,8 @@ GetBaseDataFromEnemyBattleNativeSpecies::
 	push de
 	push bc
 	ld hl, wEnemyMonNativeSpecies
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	call LoadBaseDataFromNonzeroNativeIDBC
 	jp PopBCDEHL
@@ -1139,15 +1134,15 @@ PrepareEnemyBattlePictureIdentity::
 PrepareBattlePictureIdentity:
 	and FORM_MASK
 	ld e, a
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	ld a, b
 	or c
 	jr z, .invalid
 	; The reserved root $0100 has no renderable legacy species byte.
 	ld a, b
-	cp 1
+	dec a
 	jr nz, .valid
 	ld a, c
 	and a
@@ -1252,8 +1247,8 @@ GetBaseDataFromActiveBattleNativeSpecies::
 	jr z, .got_shadow
 	ld hl, wEnemyMonNativeSpecies
 .got_shadow
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	call LoadBaseDataFromNonzeroNativeIDBC
 	jp PopBCDEHL
@@ -1294,8 +1289,7 @@ CopyEnemyBattlePkmnToTempMon::
 .copy
 	; Reuse the existing byte-exact temporary-record copy without doing its
 	; redundant legacy base-data lookup.
-	farcall _CopyPkmnToTempMon.copy_data
-	ret
+	farjp _CopyPkmnToTempMon.copy_data
 
 
 PrepareNativeEnemyBattleAnimatedFrontpic::

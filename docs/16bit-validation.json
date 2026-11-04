@@ -1,19 +1,26 @@
 {
   "performed_on": "2026-11-03 America/Toronto",
   "location": "local",
-  "github_actions": "Not yet observed for the publication commit; check Actions separately.",
+  "baseline_commit": "6b15be6fd50a9fbe5205f2fcbda425825d376be8",
+  "scope": "Native Hall of Fame restoration and imported assembly optimization cleanup.",
+  "github_actions": "Local evidence only. Check Actions separately for the published branch head.",
+  "toolchain": {
+    "rgbds": "1.0.4",
+    "pyboy": "2.7.0",
+    "python": "3.12"
+  },
   "builds": [
     {
       "name": "normal",
       "flags": [],
       "returncode": 0,
       "artifacts": [
-        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
         "polishedcrystal-3.2.3.map",
-        "polishedcrystal-3.2.3.gbc"
+        "polishedcrystal-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-3.2.3.gbc": "6500e093805fb6d79f641bf3a82d282dfbaeaa036fcfc49610b6f67ff14cb136"
+        "polishedcrystal-3.2.3.gbc": "c5f2c671ea7eb09efce2031b031edaff16e991c88eda2d8087c980a30f66357f"
       }
     },
     {
@@ -28,7 +35,7 @@
         "polishedcrystal-debug-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-debug-3.2.3.gbc": "b5471ab6cbbc0bb14663101d9568560192247228abc91c6bcb124b1fbc1f1cd5"
+        "polishedcrystal-debug-3.2.3.gbc": "ff3a55e86d7386df24db591b148e3e9c16970c9adc73f2b021586b63287772cb"
       }
     },
     {
@@ -39,11 +46,11 @@
       "returncode": 0,
       "artifacts": [
         "polishedcrystal-faithful-3.2.3.gbc",
-        "polishedcrystal-faithful-3.2.3.sym",
-        "polishedcrystal-faithful-3.2.3.map"
+        "polishedcrystal-faithful-3.2.3.map",
+        "polishedcrystal-faithful-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-faithful-3.2.3.gbc": "e7778fce2e595e7670d20eec02c2a6eb152bc731da567f95496797167b6f5804"
+        "polishedcrystal-faithful-3.2.3.gbc": "cbf8a734d4c278fc6caf505d6f91f01d89ed00d34d026cf467d6e1d51b719c9f"
       }
     },
     {
@@ -55,11 +62,11 @@
       "returncode": 0,
       "artifacts": [
         "polishedcrystal-faithful-debug-3.2.3.gbc",
-        "polishedcrystal-faithful-debug-3.2.3.sym",
-        "polishedcrystal-faithful-debug-3.2.3.map"
+        "polishedcrystal-faithful-debug-3.2.3.map",
+        "polishedcrystal-faithful-debug-3.2.3.sym"
       ],
       "roms": {
-        "polishedcrystal-faithful-debug-3.2.3.gbc": "937c787ec011992a044157c63124b56ffa2279da0068393494dde1c1f41507be"
+        "polishedcrystal-faithful-debug-3.2.3.gbc": "121d9f5335b06cf4796820ac64300a55e9dccb60f9acce6977633cafc61a6756"
       }
     },
     {
@@ -69,17 +76,17 @@
       ],
       "returncode": 0,
       "artifacts": [
-        "polishedcrystal-3.2.3.map",
-        "polishedcrystal-3.2.3_vc.map",
-        "polishedcrystal-3.2.3.patch",
         "polishedcrystal-3.2.3.gbc",
-        "polishedcrystal-3.2.3_vc.gbc",
+        "polishedcrystal-3.2.3.map",
+        "polishedcrystal-3.2.3.patch",
         "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3_vc.gbc",
+        "polishedcrystal-3.2.3_vc.map",
         "polishedcrystal-3.2.3_vc.sym"
       ],
       "roms": {
-        "polishedcrystal-3.2.3_vc.gbc": "b3fc64086f0c3ea9f22b6effb4af6aaa60dd20f140607e6d8849be066b884b68",
-        "polishedcrystal-3.2.3.gbc": "6500e093805fb6d79f641bf3a82d282dfbaeaa036fcfc49610b6f67ff14cb136"
+        "polishedcrystal-3.2.3.gbc": "c5f2c671ea7eb09efce2031b031edaff16e991c88eda2d8087c980a30f66357f",
+        "polishedcrystal-3.2.3_vc.gbc": "ee3de4d65ec7868209f32a05ec42910838452d7506c881cd34a343d4883dbed8"
       }
     },
     {
@@ -90,17 +97,17 @@
       ],
       "returncode": 0,
       "artifacts": [
-        "polishedcrystal-faithful-3.2.3_vc.map",
         "polishedcrystal-faithful-3.2.3.gbc",
+        "polishedcrystal-faithful-3.2.3.map",
         "polishedcrystal-faithful-3.2.3.patch",
-        "polishedcrystal-faithful-3.2.3_vc.gbc",
         "polishedcrystal-faithful-3.2.3.sym",
-        "polishedcrystal-faithful-3.2.3_vc.sym",
-        "polishedcrystal-faithful-3.2.3.map"
+        "polishedcrystal-faithful-3.2.3_vc.gbc",
+        "polishedcrystal-faithful-3.2.3_vc.map",
+        "polishedcrystal-faithful-3.2.3_vc.sym"
       ],
       "roms": {
-        "polishedcrystal-faithful-3.2.3_vc.gbc": "83e184ab1b69c4b4f8b13d1984a202015078c3f017d0296e9bf6f84543eabcfb",
-        "polishedcrystal-faithful-3.2.3.gbc": "e7778fce2e595e7670d20eec02c2a6eb152bc731da567f95496797167b6f5804"
+        "polishedcrystal-faithful-3.2.3.gbc": "cbf8a734d4c278fc6caf505d6f91f01d89ed00d34d026cf467d6e1d51b719c9f",
+        "polishedcrystal-faithful-3.2.3_vc.gbc": "e8e27ac466ce907593c2d0322d2faff27732dea0628d3b153e2570fd1db870de"
       }
     },
     {
@@ -112,16 +119,16 @@
       "returncode": 0,
       "artifacts": [
         "polishedcrystal-debug-3.2.3.gbc",
-        "polishedcrystal-debug-3.2.3_vc.map",
-        "polishedcrystal-debug-3.2.3_vc.gbc",
         "polishedcrystal-debug-3.2.3.map",
-        "polishedcrystal-debug-3.2.3_vc.sym",
+        "polishedcrystal-debug-3.2.3.patch",
         "polishedcrystal-debug-3.2.3.sym",
-        "polishedcrystal-debug-3.2.3.patch"
+        "polishedcrystal-debug-3.2.3_vc.gbc",
+        "polishedcrystal-debug-3.2.3_vc.map",
+        "polishedcrystal-debug-3.2.3_vc.sym"
       ],
       "roms": {
-        "polishedcrystal-debug-3.2.3.gbc": "b5471ab6cbbc0bb14663101d9568560192247228abc91c6bcb124b1fbc1f1cd5",
-        "polishedcrystal-debug-3.2.3_vc.gbc": "b850d6fe95d672f8cd716fbfa12bb9051423e7fa132e19f7d5767f5316d6ae83"
+        "polishedcrystal-debug-3.2.3.gbc": "ff3a55e86d7386df24db591b148e3e9c16970c9adc73f2b021586b63287772cb",
+        "polishedcrystal-debug-3.2.3_vc.gbc": "f6d61f4cee8a680f87bb23d9b80c929ef9cf4893954d83a0230de15d5eaf1f9b"
       }
     },
     {
@@ -133,63 +140,56 @@
       ],
       "returncode": 0,
       "artifacts": [
-        "polishedcrystal-faithful-debug-3.2.3_vc.map",
         "polishedcrystal-faithful-debug-3.2.3.gbc",
-        "polishedcrystal-faithful-debug-3.2.3_vc.gbc",
-        "polishedcrystal-faithful-debug-3.2.3_vc.sym",
+        "polishedcrystal-faithful-debug-3.2.3.map",
         "polishedcrystal-faithful-debug-3.2.3.patch",
         "polishedcrystal-faithful-debug-3.2.3.sym",
-        "polishedcrystal-faithful-debug-3.2.3.map"
+        "polishedcrystal-faithful-debug-3.2.3_vc.gbc",
+        "polishedcrystal-faithful-debug-3.2.3_vc.map",
+        "polishedcrystal-faithful-debug-3.2.3_vc.sym"
       ],
       "roms": {
-        "polishedcrystal-faithful-debug-3.2.3.gbc": "937c787ec011992a044157c63124b56ffa2279da0068393494dde1c1f41507be",
-        "polishedcrystal-faithful-debug-3.2.3_vc.gbc": "894e45701b740d5403e5912a73521969de3d34de64faddb5891b23fe1960331c"
+        "polishedcrystal-faithful-debug-3.2.3.gbc": "121d9f5335b06cf4796820ac64300a55e9dccb60f9acce6977633cafc61a6756",
+        "polishedcrystal-faithful-debug-3.2.3_vc.gbc": "23cee73a40e809a0651bb01d24ddf54f36db6cbcdc265dbf7be47c21a38ed706"
       }
     }
   ],
   "cpu_regressions": {
     "normal": {
-      "programs": 158,
-      "passed": 158,
+      "programs": 159,
+      "passed": 159,
       "failed": 0,
-      "full_sweep_passed_before_final_hook_composition": 157,
-      "subsequent_targeted_passes": [
-        "test_native_enemy_endmove_performmove_cleanup_boundary.py",
-        "test_battle_item_identity.py"
-      ],
-      "notes": "The single duplicate-breakpoint registration found in the sweep was composed into one callback and rerun successfully. Held-item fixtures were also rerun after faithful-mode coverage was added."
+      "returncode": 0
     },
     "debug": {
-      "programs": 158,
-      "passed": 158,
+      "programs": 159,
+      "passed": 159,
       "failed": 0,
-      "full_sweep_passed_before_final_hook_composition": 157,
-      "subsequent_targeted_passes": [
-        "test_native_enemy_endmove_performmove_cleanup_boundary.py",
-        "test_battle_item_identity.py"
-      ],
-      "notes": "The single duplicate-breakpoint registration found in the sweep was composed into one callback and rerun successfully. Held-item fixtures were also rerun after faithful-mode coverage was added."
+      "returncode": 0
     }
   },
-  "held_item_configurations": [
-    {
-      "variant": "normal",
-      "returncode": 0
-    },
-    {
-      "variant": "debug",
-      "returncode": 0
-    },
-    {
-      "variant": "faithful",
-      "returncode": 0
-    },
-    {
-      "variant": "faithful-debug",
-      "returncode": 0
-    }
-  ],
-  "boot_smoke": "Polished Crystal title screen reached in PyBoy; no full playthrough claimed.",
+  "static_checks": {
+    "optimization_findings": 0,
+    "unsafe_entry_hooks": 0,
+    "git_diff_check": "passed"
+  },
+  "hall_of_fame": {
+    "cases_per_rom": 291,
+    "configurations": [
+      "normal",
+      "debug"
+    ],
+    "unmodified_baseline": "Regression fails: native Pikachu 0x0019 is displayed as Charmander 0x0004.",
+    "coverage": [
+      "Mechanical variants and extended roots",
+      "Cosmetic forms and metadata preservation",
+      "Empty slots and all ten saved teams",
+      "Save/load history rotation",
+      "Legacy and transient player parties with Eggs omitted"
+    ],
+    "final_fixture_check": "Both ROMs passed again after correcting the unused nickname terminator byte to 0x53."
+  },
+  "boot_smoke": "Not repeated in this continuation; the previous checkpoint reached the title screen. No full playthrough claimed.",
   "limitations": [
     "Native gameplay identities above 0x01ff remain incomplete.",
     "Expanded move IDs and native link serialization remain unported.",

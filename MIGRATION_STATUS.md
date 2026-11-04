@@ -37,6 +37,12 @@ Source commits and SHA-256 hashes of donor reference files are recorded in
   version 11 are rejected. No automatic old-save upgrade is claimed.
 - Fixed inherited Metal Powder behavior: non-Ditto Pokémon no longer get the
   boost, and faithful builds preserve the defense value during species matching.
+- Fixed native Hall of Fame restoration: keep the full species word while
+  locating the form byte, and preserve gender/personality metadata. The
+  regression covers all mechanical variants, cosmetic forms, ten stored
+  teams, history rotation and party-to-save/load with Eggs excluded.
+- Reconciled imported assembly with the upstream optimization check while
+  retaining the native decoders' register and bank-switching contracts.
 - A single bounded test runner, eight-config CI, and shared opcode-checked hooks
   replace unsafe ResetSubHit/GetUserItem entry breakpoints across the suite.
 - Stale tests now use the valid extended root $0101 instead of reserved $0100,

@@ -1359,8 +1359,8 @@ UserValidBattleItem:
 	jr z, .got_native
 	ld hl, wEnemyMonNativeSpecies
 .got_native
-	ld c, [hl]
-	inc hl
+	ld a, [hli]
+	ld c, a
 	ld b, [hl]
 	; The old zero-form table entry was a form wildcard. Resolve a mechanical
 	; native variant back to its root species before matching to preserve that.
