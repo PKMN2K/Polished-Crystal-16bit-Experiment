@@ -1335,7 +1335,8 @@ _TownMap:
 	jmp TownMapJohtoFlips
 
 TownMap_InitFlyPossible:
-	lb de, FLY, HM_FLY
+	ld_move d, FLY
+	ld e, HM_FLY
 	farcall CheckPartyMove
 	jr c, .no_fly
 	ld de, ENGINE_STORMBADGE

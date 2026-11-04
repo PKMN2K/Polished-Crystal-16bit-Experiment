@@ -16,6 +16,8 @@ MACRO evo_data
 	db \1 ; evolution type
 	if \1 == EVOLVE_PARTY
 		native_species_entry \2 ; native party-species parameter
+	elif \1 == EVOLVE_MOVE
+		dw \2 ; native move parameter
 	else
 		db \2 ; parameter
 	endc
@@ -65,7 +67,7 @@ MACRO learnset
 	endc
 	REDEF EVOS_ATTACKS_STATE EQU 2
 	db \1 ; level
-	db \2 ; move
+	move_id \2 ; native move
 ENDM
 
 
@@ -79,7 +81,11 @@ EvosAttacks::
 
 	evos_attacks Bulbasaur
 	evo_data EVOLVE_LEVEL, 16, IVYSAUR
+if DEF(NATIVE_MOVE_TEST)
+	learnset 1, WIDE_TEST_MOVE
+else
 	learnset 1, TACKLE
+endc
 	learnset 3, GROWL
 	learnset 7, LEECH_SEED
 	learnset 9, VINE_WHIP
@@ -1172,7 +1178,11 @@ endc
 	learnset 47, OUTRAGE
 
 	evos_attacks Primeape
+if DEF(NATIVE_MOVE_TEST)
+	evo_data EVOLVE_MOVE, WIDE_TEST_MOVE, ANNIHILAPE
+else
 	evo_data EVOLVE_MOVE, OUTRAGE, ANNIHILAPE
+endc
 	learnset 1, OUTRAGE
 	learnset 1, RAGE ; evolution move
 	learnset 1, SCRATCH
@@ -5952,5 +5962,9 @@ WideTestEvosAttacks:
 	native_species_form ANNIHILAPE, PLAIN_FORM
 	db -1
 WideTestLearnset:
-	db 1, TACKLE, 20, GROWL, -1
+	db 1
+	move_id TACKLE
+	db 20
+	move_id GROWL
+	db -1
 endc

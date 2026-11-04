@@ -366,71 +366,19 @@ BattleJumptable::
 GetCurMoveProperty::
 	ld a, [wCurMove]
 GetMoveProperty::
-	dec a
+	farjp NativeGetMoveProperty
 GetMoveAttr::
-; Assuming hl = Moves + x, return attribute x of move a.
-	push bc
-	ld bc, MOVE_LENGTH
-	rst AddNTimes
-	ld a, BANK(Moves)
-	call GetFarByte
-	pop bc
-	ret
+; Historical entry takes a runtime handle minus one.
+	inc a
+	jr GetMoveProperty
 
 GetFixedMoveStruct::
-; a = move + 1
-; de = destination
-	dec a
-	ld hl, Moves
-	ld bc, MOVE_LENGTH
-	rst AddNTimes
-	ld a, BANK(Moves)
-	push de
-	call FarCopyBytes
-	pop hl
-	call GetFixedCategory
-	ld bc, MOVE_CATEGORY
-	add hl, bc
-	ld [hl], a
-	ret
+	farjp NativeGetFixedMoveStruct
 
 GetCurMoveFixedCategory::
 	ld a, [wCurMove]
 GetMoveFixedCategory::
-	dec a
-	ld hl, Moves
-	ld bc, MOVE_LENGTH
-	rst AddNTimes
-GetFixedCategory::
-; return category in a without modifying hl
-; if category is STATUS, return it
-	push hl
-	ld bc, MOVE_CATEGORY
-	add hl, bc
-	ld a, BANK(Moves)
-	call GetFarByte
-	pop hl
-	cp STATUS
-	ret z
-; if PSS_OPT is on, return the category
-	ld b, a
-	ld a, [wInitialOptions]
-	bit PSS_OPT, a
-	ld a, b
-	ret nz
-; return PHYSICAL or SPECIAL depending on the type
-	push hl
-	ld bc, MOVE_TYPE
-	add hl, bc
-	ld a, BANK(Moves)
-	call GetFarByte
-	pop hl
-	cp SPECIAL_TYPES
-	ld a, PHYSICAL
-	ret c
-	inc a ; SPECIAL
-	ret
-
+	farjp NativeGetMoveFixedCategory
 ApplyPhysicalDefenseDamageMod::
 	push bc
 	ld c, a

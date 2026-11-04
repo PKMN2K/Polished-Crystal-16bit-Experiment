@@ -14,7 +14,8 @@
       "home/indirection.asm": "c5ca719f697e45521ce4dc4a4e17c5257ac0abbdb9f30d3989a8f6bea75f2b60",
       "macros/wram_16bit.asm": "b34f015861950888cee97d2527c7c4aa651242b21d4e118827b4a85a760c1f01",
       "constants/16_bit_translation_constants.asm": "9c2acde4be0e8619a2297e0d501dbb119094366744398b8db9f2cabacef47e1c",
-      "constants/16_bit_locking_constants.asm": "43e5c90097bc02ba0962b44c63160c406ea4d44d56197a32b29d8f0dfa5dfe89"
+      "constants/16_bit_locking_constants.asm": "43e5c90097bc02ba0962b44c63160c406ea4d44d56197a32b29d8f0dfa5dfe89",
+      "home/moves.asm": "937eb94def7d394ea1de079f0f877208cd44f1428f7ae65c70cc72c70fbe11ff"
     }
   },
   "reused_adapter": {
@@ -22,5 +23,5 @@
     "commit": "f2089e9e6580c0113217c13db4bdee4ec39db28c"
   },
   "rgbds": "1.0.4",
-  "scope": "Species index infrastructure and existing Polished roster; full engine migration remains incomplete."
+  "scope": "Native species and move ID infrastructure for the existing Polished roster. Move runtime handles follow the donor; compact ROM streams, native save/PC/link words and catalog ordinals adapt it to the existing 2 MiB MBC3/32 KiB SRAM format. Content expansion and hardware playthrough validation remain separate."
 }

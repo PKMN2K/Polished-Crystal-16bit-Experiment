@@ -58,7 +58,7 @@ BattleCommand_transform:
 	jr z, .mimic_substitute
 	call CheckUserIsCharging
 	jr nz, .mimic_substitute
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	call LoadAnim
 .mimic_substitute
 	ld a, BATTLE_VARS_SUBSTATUS2
@@ -124,7 +124,7 @@ BattleCommand_transform:
 	inc de
 	and a
 	jr z, .done_move
-	cp SKETCH
+	cp_move SKETCH
 	ld a, 1
 	jr z, .done_move
 	ld a, 5
@@ -151,7 +151,8 @@ BattleCommand_transform:
 	jr c, .mimic_anims
 	; Animation is done "raw" to allow Imposter
 	; to use the correct animation
-	ld de, TRANSFORM
+	ld_move e, TRANSFORM
+	ld d, 0
 	call FarPlayBattleAnimation
 	jr .after_anim
 
@@ -165,7 +166,7 @@ BattleCommand_transform:
 	ld a, $2
 	ld [wBattleAnimParam], a
 	pop af
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	call nz, LoadAnim
 	ld hl, TransformedText
 	call StdBattleTextbox

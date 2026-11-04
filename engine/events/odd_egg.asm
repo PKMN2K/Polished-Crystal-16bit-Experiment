@@ -39,8 +39,14 @@ GiveSpecialEgg:
 	xor a ; item
 	ld [de], a
 	inc de
-	ld bc, NUM_MOVES
-	rst CopyBytes
+	ld b, NUM_MOVES
+.moves
+	ld a, BANK(OddEggs)
+	call ReadMoveWordFromHL
+	ld [de], a
+	inc de
+	dec b
+	jr nz, .moves
 	call SwapHLDE
 	xor a
 	ld bc, MON_DVS - MON_ID

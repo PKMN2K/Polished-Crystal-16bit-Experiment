@@ -21,7 +21,7 @@ def audit(root):
                 continue
             if node.func.id != "hook" or not node.args:
                 continue
-            if isinstance(node.args[0], ast.Constant) and node.args[0].value in ("GetFutureSightUser", "ResetSubHit", "GetUserItem"):
+            if isinstance(node.args[0], ast.Constant) and node.args[0].value in ("GetFutureSightUser", "ResetSubHit", "GetUserItem", "SetFastestTurn"):
                 findings.append((path.relative_to(root), node.lineno))
     return findings
 

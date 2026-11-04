@@ -208,22 +208,26 @@ WeatherAbility:
 	cp WEATHER_HAIL
 	jr z, .handlehail
 	; is sandstorm
-	ld de, SANDSTORM
+	ld_move e, SANDSTORM
+	ld d, 0
 	farcall PlayBattleAnimDE
 	farcall BattleCommand_startsandstorm
 	jmp EndAbility
 .handlerain
-	ld de, RAIN_DANCE
+	ld_move e, RAIN_DANCE
+	ld d, 0
 	farcall PlayBattleAnimDE
 	farcall BattleCommand_startrain
 	jmp EndAbility
 .handlesun
-	ld de, SUNNY_DAY
+	ld_move e, SUNNY_DAY
+	ld d, 0
 	farcall PlayBattleAnimDE
 	farcall BattleCommand_startsun
 	jmp EndAbility
 .handlehail
-	ld de, HAIL
+	ld_move e, HAIL
+	ld d, 0
 	farcall PlayBattleAnimDE
 	farcall BattleCommand_starthail
 	jmp EndAbility
@@ -962,7 +966,7 @@ CheckNullificationAbilities:
 .movelist_nullification
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	call IsInByteArray
+	call IsInMoveArray
 	jr c, .ability_ok
 	ret
 
@@ -1824,7 +1828,7 @@ IsPunchingMove:
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
 	ld hl, PunchingMoves
-	call IsInByteArray
+	call IsInMoveArray
 	sbc a
 	inc a
 	ret
@@ -1843,7 +1847,7 @@ MoveBoostAbility:
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
 	push bc
-	call IsInByteArray
+	call IsInMoveArray
 	pop bc
 	ret nc
 	ld a, b
@@ -1870,7 +1874,7 @@ RecklessAbility:
 ; 120% damage for (Hi) Jump Kick and recoil moves except for Struggle
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	ret z
 	ld a, BATTLE_VARS_MOVE_EFFECT
 	call GetBattleVar

@@ -160,7 +160,7 @@ def main():
 
         # Serialize a current-schema primary save with legacy species records. SavePokemonData
         # stamps the current envelope/version, so patch only those compatibility
-        # markers to legacy record encoding within the current version-12 schema, then
+        # markers to legacy record encoding within the current version-13 schema, then
         # recompute the real game-data checksum.
         invoke("SavePlayerData")
         invoke("SavePokemonData")
@@ -172,7 +172,7 @@ def main():
         mem[saved_data + format_delta:saved_data + format_delta + 2] = [0, 0]
         mem[saved_data + table_format_delta:saved_data + table_format_delta + 2] = [0, 0]
         mem[0x4000] = symbols["sSaveVersion"][0]
-        mem[addr("sSaveVersion"):addr("sSaveVersion") + 2] = [0, 12]
+        mem[addr("sSaveVersion"):addr("sSaveVersion") + 2] = [0, 13]
         mem[0x4000] = symbols["sPokemonIndexTableMagic"][0]
         mem[addr("sPokemonIndexTableMagic"):addr("sPokemonIndexTableMagic") + 2] = [0, 0]
         invoke("SaveChecksum")
@@ -290,7 +290,7 @@ def main():
         assert mem[addr("wCurForm")] & 0x3F == decoded_form
 
         print(
-            "PASS: version-10 legacy save loads through TryLoadSaveFile, migrates $0101 Egg, "
+            "PASS: current-schema legacy species save loads through TryLoadSaveFile, migrates $0101 Egg, "
             "hatches it, re-saves a valid native primary envelope, and reloads full identity "
             "with stats/HP, nickname, Egg clear, happiness, OT and status intact"
         )

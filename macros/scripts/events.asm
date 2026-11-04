@@ -372,9 +372,9 @@ MACRO givepoke
 		db POKE_BALL
 	endc
 	if _NARG >= 6
-		db \6 ; special move
+		dw \6 ; native special move
 	else
-		db NO_MOVE
+		dw NO_MOVE
 	endc
 	if _NARG >= 7
 		db TRUE ; trainer
@@ -1493,6 +1493,13 @@ MACRO usepaletteswap
 	def _NUM_PALETTE_SWAPS = 0
 	db usepaletteswap_command
 	dw \1 ; paletteswap_pointer
+ENDM
+
+	const loadmove_command
+MACRO loadmove
+	db loadmove_command
+	dw \1 ; runtime move destination
+	dw \2 ; native move ID
 ENDM
 
 DEF NUM_EVENT_COMMANDS EQU const_value

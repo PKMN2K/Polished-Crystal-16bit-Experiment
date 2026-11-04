@@ -29,14 +29,17 @@ def main():
         at = addr('wPokemonIndexTableEntries') + 12
         mem[at:at+2] = list(value.to_bytes(2, 'little'))
         mem[0xFF70] = 1
-    def invoke(label):
+    def invoke(label, de=0x5678):
         b, a = syms[label]
         mem[0x2000] = b
         put('hROMBank', b)
         mem[0xC100:0xC106] = [0xF3, 0xCD, a & 255, a >> 8, 0x18, 0xFE]
-        regs.B, regs.C, regs.D, regs.E, regs.HL = 0x12, 0x34, 0x56, 0x78, 0xC280
+        regs.B, regs.C, regs.D, regs.E, regs.HL = 0x12, 0x34, de >> 8, de & 255, 0xC280
         regs.SP, regs.PC = 0xC0FF, 0xC100
-        p.tick(4, False, False)
+        for _ in range(80):
+            p.tick(1, False, False)
+            if (regs.PC, regs.SP) == (0xC104, 0xC0FF):
+                break
         assert (regs.PC, regs.SP) == (0xC104, 0xC0FF), (label, hex(regs.PC))
         assert mem[addr('hROMBank')] == b
         assert mem[0xFF70] & 7 == 1
@@ -51,7 +54,7 @@ def main():
         end = extra + 3
         encoded_extra = addr('wEncodedTempMonExtra')
         nickname_len = addr('wEncodedTempMonOT') - addr('wEncodedTempMonNickname')
-        ot_len = addr('wEncodedTempMonEnd') - addr('wEncodedTempMonOT')
+        ot_len = addr('wEncodedTempMonMoveHighs') - addr('wEncodedTempMonOT')
         identities = [(25, 25, 1), (257, 257, 1)] + variants
         identities += [(129, 129, form) for form in range(1, 21)]
         for native, base, canonical in identities:
@@ -74,13 +77,17 @@ def main():
                     mem[nick:nick+nickname_len+1] = [0x80+i for i in range(nickname_len)] + [0x53]
                     mem[ot:ot+ot_len+1] = [0x8A+i for i in range(ot_len)] + [0x53]
                     assert not invoke('SetTempPartyMonData')[1], context
+                    invoke('CalcExpAtLevel', de=25 << 8)
+                    at = addr('hProduct') + 1
+                    exp = addr('wTempMonExp')
+                    mem[exp:exp+3] = mem[at:at+3]
                     expected = bytes(mem[start:end])
                     stats = addr('wTempMonMaxHP')
                     assert all(int.from_bytes(mem[stats+i:stats+i+2], 'big') > 0 for i in range(0, 12, 2)), context
                     assert all(mem[pp+i] & 0x3F for i in range(4)), context
                     invoke('EncodeTempMon')
-                    assert mem[addr('wEncodedTempMonSpecies')] == 0, context
-                    assert bytes(mem[encoded_extra+1:encoded_extra+3]) == native.to_bytes(2, 'little'), context
+                    assert mem[addr('wEncodedTempMonSpecies')] == native & 255, context
+                    assert mem[encoded_extra+1] == native >> 8, context
                     if stale and native in {v[0] for v in variants}:
                         # Valid native ID with a stale normal presentation form.
                         put('wEncodedTempMonForm', metadata | 1)
@@ -92,7 +99,7 @@ def main():
                         if start+i in (extra+1, extra+2, addr('wTempMonUnused')):
                             continue  # native word / unserialized scratch byte
                         assert got == want, (context, hex(start+i), want, got)
-                    assert bytes(mem[extra+1:extra+3]) == native.to_bytes(2, 'little'), context
+                    assert bytes(mem[extra+1:extra+3]) == bytes(2), context
                     count += 1
         print(f'PASS: {count} complete native PC serialization round trips; live EncodeTempMon, checksum, DecodeTempMon, base data, stat/HP/PP rebuild, all mechanical variants, cosmetic forms, metadata, names/items/DVs and stale variant forms')
     finally:

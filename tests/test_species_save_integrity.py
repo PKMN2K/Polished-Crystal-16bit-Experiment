@@ -46,7 +46,7 @@ def main():
     try:
         m[0xff50] = 1
         m[0xffff] = m[0xff0f] = m[0xff40] = 0
-        for version in (12,):
+        for version in (13,):
             reset()
             sram('sSaveVersion')
             at = addr('sSaveVersion')
@@ -61,7 +61,7 @@ def main():
         reject_bytes = [m[reject_bank, reject_at + i] for i in range(3)]
         for i, byte in enumerate((0x3e, 0xee, 0xc9)):
             m[reject_bank, reject_at + i] = byte
-        for version in (10, 11, 13, 0xffff):
+        for version in (10, 11, 12, 14, 0xffff):
             reset()
             sram('sSaveVersion')
             at = addr('sSaveVersion')
@@ -137,7 +137,7 @@ def main():
                 m[0xff70] = 1
                 call('SavePokemonData' if prefix == 's' else 'SaveBackupPokemonData')
                 sram('sSaveVersion')
-                assert list(m[addr('sSaveVersion'):addr('sSaveVersion')+2]) == [0, 12]
+                assert list(m[addr('sSaveVersion'):addr('sSaveVersion')+2]) == [0, 13]
                 call(save)
                 sram(prefix+'PokemonData')
                 at = addr(prefix+'PokemonData') + addr('wPokemonDataFormat')-addr('wPokemonData')

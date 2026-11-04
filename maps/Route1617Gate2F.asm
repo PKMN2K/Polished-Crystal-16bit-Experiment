@@ -31,7 +31,7 @@ Route1617Gate2FTutorTrickRoomScript:
 	writetext Text_Route1617Gate2FTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval TRICK_ROOM
+	setval16 TRICK_ROOM
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

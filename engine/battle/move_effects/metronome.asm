@@ -13,12 +13,12 @@ BattleCommand_metronome:
 	call LoadMoveAnim
 
 .GetMove:
-	call BattleRandom
+	farcall GetRandomNativeMove
 
 ; None of the moves in MetronomeExcepts.
 	push af
 	ld hl, MetronomeExcepts
-	call IsInByteArray
+	call IsInMoveArray
 	pop bc
 	jr c, .GetMove
 

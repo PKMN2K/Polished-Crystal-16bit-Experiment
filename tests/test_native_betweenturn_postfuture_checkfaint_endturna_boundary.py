@@ -13,6 +13,7 @@ wBattleEnded, wEnemyFleeing, Future Sight counters, and weather state.
 """
 from pyboy_hook_safety import hook_user_item_after_future_sight
 from pyboy_hook_safety import hook_reset_subhit_after_push
+from pyboy_hook_safety import hook_set_fastest_turn_after_speed
 import argparse
 from pathlib import Path
 
@@ -3994,7 +3995,7 @@ def main():
         hook("HandleFutureSight.do_it", observe_future_sight_do_it)
         hook("HandleEndturnBlockA", observe_handle_endturn_block_a)
         hook("GetWeatherAfterCloudNine", observe_weather_deep)
-        hook("SetFastestTurn", observe_weather_deep)
+        hook_set_fastest_turn_after_speed(pyboy, symbols, data, offset, observe_weather_deep)
         hook("SendInUserPkmn", observe_sendin)
         hook(
             "GetBaseDataFromActiveBattleNativeSpecies",

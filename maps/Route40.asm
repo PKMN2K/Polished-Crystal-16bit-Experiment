@@ -114,7 +114,7 @@ Route40FisherScript:
 	iffalsefwd .NoSilverLeaf
 	yesorno
 	iffalsefwd .TutorRefused
-	setval KNOCK_OFF
+	setval16 KNOCK_OFF
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

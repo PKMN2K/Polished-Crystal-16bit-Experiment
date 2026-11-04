@@ -139,7 +139,7 @@ SnowtopMountainInsideTutorIcyWindScript:
 	writetext Text_SnowtopMountainInsideTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval ICY_WIND
+	setval16 ICY_WIND
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

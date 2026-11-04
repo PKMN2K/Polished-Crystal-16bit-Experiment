@@ -1,4 +1,11 @@
 MoveDescriptions::
+	indirect_table 2, 1
+	indirect_entries NUM_ATTACKS, MoveDescriptionPointers
+if NUM_WIDE_MOVES
+	indirect_alias NUM_ATTACKS + 1, MoveDescriptionPointers, WIDE_TEST_MOVE_ALIAS - 1
+endc
+	indirect_table_end
+MoveDescriptionPointers:
 ; entries correspond to move ids (see constants/move_constants.asm)
 	table_width 2
 	dw AcrobaticsDescription
@@ -257,6 +264,7 @@ MoveDescriptions::
 	dw DisarmVoiceDescription
 	dw StruggleDescription
 	assert_table_length NUM_ATTACKS
+MoveDescriptionPointers.IndirectEnd:
 	dw Move00Description
 	assert_table_length $100
 

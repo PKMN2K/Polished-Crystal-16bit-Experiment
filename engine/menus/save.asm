@@ -416,6 +416,8 @@ SavePokemonData:
 	ld de, sPokemonData
 	ld bc, wPokemonDataEnd - wPokemonData
 	rst CopyBytes
+	ld de, sNativeMovesMagic
+	farcall SaveNativeMoveData
 	jmp CloseSRAM
 
 ; $16bd introduced transient roamers; $16be adds the table checksum.
@@ -510,6 +512,8 @@ SaveBackupPokemonData:
 	ld de, sBackupPokemonData
 	ld bc, wPokemonDataEnd - wPokemonData
 	rst CopyBytes
+	ld de, sBackupNativeMovesMagic
+	farcall SaveNativeMoveData
 	jmp CloseSRAM
 
 SaveBackupPokemonIndexTable:
@@ -576,6 +580,11 @@ TryLoadSaveFile:
 	jr nz, .backup
 	call VerifyPokemonIndexTable
 	jr nz, .backup
+	ld a, BANK(sNativeMovesMagic)
+	call GetSRAMBank
+	ld hl, sNativeMovesMagic
+	farcall VerifyNativeMoveData
+	jr nz, .backup
 	call LoadPlayerData
 	call LoadPokemonData
 	call LoadPokemonIndexTable
@@ -595,6 +604,11 @@ TryLoadSaveFile:
 	call VerifyBackupChecksum
 	jr nz, .corrupt
 	call VerifyBackupPokemonIndexTable
+	jr nz, .corrupt
+	ld a, BANK(sBackupNativeMovesMagic)
+	call GetSRAMBank
+	ld hl, sBackupNativeMovesMagic
+	farcall VerifyNativeMoveData
 	jr nz, .corrupt
 	call LoadBackupPlayerData
 	call LoadBackupPokemonData
@@ -734,6 +748,8 @@ LoadPokemonData:
 	ld de, wPokemonData
 	ld bc, wPokemonDataEnd - wPokemonData
 	rst CopyBytes
+	ld hl, sNativeMoves
+	farcall LoadNativeMoveData
 	jmp CloseSRAM
 
 LoadPokemonIndexTable:
@@ -833,6 +849,8 @@ LoadBackupPokemonData:
 	ld de, wPokemonData
 	ld bc, wPokemonDataEnd - wPokemonData
 	rst CopyBytes
+	ld hl, sBackupNativeMoves
+	farcall LoadNativeMoveData
 	jmp CloseSRAM
 
 VerifyBackupChecksum:

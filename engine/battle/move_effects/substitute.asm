@@ -44,7 +44,7 @@ BattleCommand_substitute:
 	ld [wNumHits], a
 	ld [wFXAnimIDHi], a
 	ld [wBattleAnimParam], a
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	call LoadAnim
 	jr .finish
 

@@ -147,6 +147,8 @@ SkipEvolutionEntry::
 	jr z, .extra
 	cp EVOLVE_HOLDING
 	jr z, .extra
+	cp EVOLVE_MOVE
+	jr z, .extra
 	cp EVOLVE_PARTY
 	jr nz, .target
 .extra

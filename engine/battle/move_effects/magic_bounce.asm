@@ -16,7 +16,7 @@ BattleCommand_bounceback:
 
 	; Some moves bypass Substitute
 	ld hl, SubstituteBypassMoves
-	call IsInByteArray
+	call IsInMoveArray
 	jr c, .sub_ok
 
 	; Otherwise, Substitute blocks it

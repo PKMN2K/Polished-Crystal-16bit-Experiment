@@ -1,7 +1,7 @@
 BattleCommand_encore:
 	ldh a, [hBattleTurn]
 	and a
-	ld b, ENCORE
+	ld_move b, ENCORE
 	ld de, wEnemyEncoreCount
 	ld hl, wEnemyMonMoves
 	jr z, DoEncoreDisable
@@ -12,7 +12,7 @@ BattleCommand_encore:
 BattleCommand_disable:
 	ldh a, [hBattleTurn]
 	and a
-	ld b, DISABLE
+	ld_move b, DISABLE
 	ld de, wEnemyDisableCount
 	ld hl, wEnemyMonMoves
 	jr z, DoEncoreDisable
@@ -21,19 +21,19 @@ BattleCommand_disable:
 DoEncoreDisable:
 	ld a, [de]
 	and $f
-	jr nz, .failed
+	jmp nz, .failed
 
 	ld a, BATTLE_VARS_LAST_COUNTER_MOVE_OPP
 	call GetBattleVar
 	and a
 	jr z, .failed
-	cp STRUGGLE
+	cp_move STRUGGLE
 	jr z, .failed
 
 	; Don't allow encoring Encore
 	cp b
 	jr nz, .move_ok
-	cp ENCORE
+	cp_move ENCORE
 	jr z, .failed
 .move_ok
 
@@ -72,7 +72,7 @@ DoEncoreDisable:
 
 	; Get move effect text and duration
 	ld a, b
-	cp DISABLE
+	cp_move DISABLE
 	ld hl, WasDisabledText
 	ld a, 5
 	jr z, .got_text_and_duration

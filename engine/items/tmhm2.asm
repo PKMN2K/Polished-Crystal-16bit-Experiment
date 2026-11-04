@@ -345,25 +345,15 @@ PrintMoveDesc:
 	ld d, h
 	ld e, l
 	pop hl
-	rst PlaceString
-	ret
+	jp FarPlaceMoveDescription
 
 ; input: a = move ID
 PrintMoveDescInBattle:
 	call GetMoveDesc
-	jmp BattleTextbox
+	jp FarBattleMoveDescription
 
 GetMoveDesc:
-	dec a
-	ld c, a
-	ld b, 0
-	ld hl, MoveDescriptions
-	add hl, bc
-	add hl, bc
-	ld a, [hli]
-	ld h, [hl]
-	ld l, a
-	ret
+	farjp NativeGetMoveDescription
 
 AskTeachTMHM:
 	ld hl, wOptions1

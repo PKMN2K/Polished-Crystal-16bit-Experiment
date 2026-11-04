@@ -116,7 +116,7 @@ MahoganyMart1FTutorAgilityScript:
 	writetext Text_MahoganyMart1FTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval AGILITY
+	setval16 AGILITY
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

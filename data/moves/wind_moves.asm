@@ -1,7 +1,7 @@
 WindMoves::
-	db BLIZZARD
-	db GUST
-	db HURRICANE
-	db ICY_WIND
-	db SANDSTORM
-	db -1
+	dw BLIZZARD
+	dw GUST
+	dw HURRICANE
+	dw ICY_WIND
+	dw SANDSTORM
+	dw -1

@@ -917,6 +917,8 @@ for n, 1, PARTY_LENGTH + 1
 wLinkPlayerPartyMon{d:n}:: party_struct wLinkPlayerPartyMon{d:n}
 endr
 
+wLinkPlayerMoveHighs:: ds PARTY_LENGTH * NUM_MOVES
+
 wLinkPlayerPartyMonOTs::
 for n, 1, PARTY_LENGTH + 1
 wLinkPlayerPartyMon{d:n}OT:: ds NAME_LENGTH
@@ -1508,3 +1510,18 @@ SECTION "16-bit WRAM home data", WRAM0
 ; The linker keeps the bitmap aligned to $20 bytes.
 wConversionTableBitmap:: ds $20
 wTempLoopCounter:: db
+
+SECTION "Active Enemy", WRAM0
+
+wEnemyMon:: battle_struct wEnemyMon
+
+wTempBattleMonSpecies:: db
+wTempBattleMonForm:: db
+wTempEnemyMonSpecies:: db
+wTempEnemyMonForm:: db
+
+	ds 1 ; unused
+
+wEnemyMonCatchRate:: db
+wEnemyMonBaseExp:: db
+wEnemyMonEnd::

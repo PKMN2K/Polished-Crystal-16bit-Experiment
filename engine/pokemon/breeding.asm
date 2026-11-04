@@ -571,10 +571,9 @@ InheritLevelMove:
 	ret z
 	inc hl
 	ld a, BANK(EvosAttacks)
-	call GetFarByte
+	call ReadMoveIDFromHL
 	cp d
 	jr z, InheritMove
-	inc hl
 	jr .loop2
 
 InheritEggMove:
@@ -594,15 +593,23 @@ InheritEggMove:
 	inc hl
 	inc hl
 .loop
+	push hl
 	ld a, BANK(EggSpeciesMoves)
-	call GetFarByte
+	call GetFarWord
+	ld a, h
+	and l
 	inc a
-	ret z
-	dec a
+	jr z, .end_egg_moves
+	call GetMoveIDFromIndex
+	pop hl
+	inc hl
+	inc hl
 	cp d
 	jr z, InheritMove
-	inc hl
 	jr .loop
+.end_egg_moves
+	pop hl
+	ret
 
 InheritMove:
 	ld hl, wTempMonMoves

@@ -745,18 +745,7 @@ ENDU
 
 	ds 2 ; unused
 
-wEnemyMon:: battle_struct wEnemyMon
 
-wTempBattleMonSpecies:: db
-wTempBattleMonForm:: db
-wTempEnemyMonSpecies:: db
-wTempEnemyMonForm:: db
-
-	ds 1 ; unused
-
-wEnemyMonCatchRate:: db
-wEnemyMonBaseExp:: db
-wEnemyMonEnd::
 
 wBattleMode::
 ; 0: overworld
@@ -899,6 +888,8 @@ wOTPartyMons::
 for n, 1, PARTY_LENGTH + 1
 wOTPartyMon{d:n}:: party_struct wOTPartyMon{d:n}
 endr
+
+wOTPartyMoveHighs:: ds PARTY_LENGTH * NUM_MOVES
 
 wOTPartyMonOTs::
 for n, 1, PARTY_LENGTH + 1
@@ -1517,7 +1508,8 @@ wPartyCount::   db ; number of Pokémon in party
 
 wPokemonDataFormat:: dw
 wPokemonIndexTableFormat:: dw ; checksummed save-envelope version
-	ds 3 ; unused
+wMoveDataFormat:: dw
+	ds 1 ; unused
 
 wPartyMons::
 assert wPartyMons - wPartyCount == 8
@@ -1696,6 +1688,7 @@ SECTION "16-bit WRAM tables", WRAMX
 
 ; Aligned conversion table mapping transient byte IDs to native species IDs.
 wram_conversion_table wPokemonIndexTable, MON_TABLE
+wram_conversion_table wMoveIndexTable, MOVE_TABLE
 
 
 SECTION UNION "Metatiles", WRAMX

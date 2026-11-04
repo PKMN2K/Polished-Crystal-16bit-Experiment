@@ -84,7 +84,7 @@ def main():
                             transfer_count += 1
         for n, species, form in cases:
             for metadata in (0, 0x40, 0x80, 0xc0):
-                for mode in ('native', 'legacy', 'corrupt', 'zero', 'unused', 'out_of_range'):
+                for mode in ('native', 'corrupt', 'zero', 'unused', 'out_of_range'):
                     reset(0x16bc)
                     put('wTempMonSpecies', species)
                     put('wTempMonForm', form | metadata)
@@ -93,21 +93,19 @@ def main():
                     for name, size in (('wTempMonNickname', 11), ('wTempMonOT', 8)):
                         m[addr(name):addr(name)+size] = [0x80] * (size-1) + [0x50]
                     call('EncodeTempMon')
-                    assert m[addr('wEncodedTempMonSpecies')] == 0
+                    assert m[addr('wEncodedTempMonSpecies')] == n & 255
                     at = addr('wEncodedTempMonExtra')
-                    assert int.from_bytes(m[at+1:at+3], 'little') == n
+                    assert m[at+1] == n >> 8
                     assert m[at] == 0xfc
-                    if mode == 'legacy':
-                        put('wEncodedTempMonSpecies', species)
-                        m[at+1:at+3] = [0, 0]
-                        call('ChecksumTempMon')
-                    elif mode in ('zero', 'unused', 'out_of_range'):
-                        m[at+1:at+3] = {'zero': [0, 0], 'unused': [0, 1], 'out_of_range': [255, 255]}[mode]
+                    if mode in ('zero', 'unused', 'out_of_range'):
+                        low, high = {'zero': [0, 0], 'unused': [0, 1], 'out_of_range': [255, 255]}[mode]
+                        put('wEncodedTempMonSpecies', low)
+                        m[at+1] = high
                         call('ChecksumTempMon')
                     elif mode == 'corrupt':
                         m[addr('wEncodedTempMonItem')] ^= 1
                     call('DecodeTempMon')
-                    if mode in ('native', 'legacy'):
+                    if mode == 'native':
                         assert not r.F & 0x10, (n, metadata, mode)
                         assert m[addr('wTempMonSpecies')] == species
                         assert m[addr('wTempMonForm')] == form | metadata
@@ -115,7 +113,7 @@ def main():
                     else:
                         assert r.F & 0x10, (n, metadata, mode)
                     box_count += 1
-        print(f'PASS: {transfer_count} party/temp transfers and {box_count} full native/legacy/corrupt box round-trips')
+        print(f'PASS: {transfer_count} party/temp transfers and {box_count} full native/corrupt box round-trips')
     finally:
         p.stop(save=False)
 

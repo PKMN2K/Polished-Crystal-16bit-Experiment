@@ -78,8 +78,7 @@ GetTMHMName::
 	ret
 
 GetMoveName::
-	ld a, MOVE_NAME
-	jr GetName
+	farjp NativeGetMoveName
 
 GetCurItemName::
 	ld a, [wCurItem]

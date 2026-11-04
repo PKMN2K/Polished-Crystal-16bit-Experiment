@@ -280,6 +280,7 @@ RunScriptCommand:
 	dw Script_digmod                     ; dd
 	dw Script_toggleevent                ; de
 	dw Script_usepaletteswap             ; df
+	dw Script_loadmove
 	assert_table_length NUM_EVENT_COMMANDS
 
 GetScriptWordDE::
@@ -2094,7 +2095,8 @@ Script_givepoke:
 	ld [wCurItem], a
 	call GetScriptByte
 	ld [wGiftMonBall], a
-	call GetScriptByte
+	call GetScriptWord
+	call GetMoveIDFromIndex
 	ld [wCurPlayerMove], a
 	call GetScriptByte
 	and a
@@ -2841,6 +2843,15 @@ Pluralize:
 	ld a, '@'
 	ld [bc], a
 	pop af
+	pop hl
+	ld [hl], a
+	ret
+
+Script_loadmove:
+	call GetScriptWord
+	push hl
+	call GetScriptWord
+	call GetMoveIDFromIndex
 	pop hl
 	ld [hl], a
 	ret

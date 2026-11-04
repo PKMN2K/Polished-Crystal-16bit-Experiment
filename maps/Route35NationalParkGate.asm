@@ -210,7 +210,7 @@ Route35NationalParkGateTutorCharmScript:
 	writetext Text_Route35NationalParkGateTutorQuestion
 	yesorno
 	iffalsefwd .TutorRefused
-	setval CHARM
+	setval16 CHARM
 	writetext ClearText
 	special Special_MoveTutor
 	ifequalfwd $0, .TeachMove

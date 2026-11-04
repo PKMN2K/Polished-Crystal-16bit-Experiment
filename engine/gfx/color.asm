@@ -108,7 +108,7 @@ INCLUDE "gfx/battle/status.pal"
 
 LoadBattleCategoryAndTypePals:
 	ld a, [wPlayerMoveStruct + MOVE_ANIM]
-	cp HIDDEN_POWER
+	cp_move HIDDEN_POWER
 	jr nz, .not_hidden_power
 	ld hl, wBattleMonDVs
 	farcall GetHiddenPowerType

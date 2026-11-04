@@ -59,9 +59,9 @@ def main():
         cases += [(257, 257, 1, 1)]
         def setup(native, raw):
             mem[start:end] = [0] * (end-start)
-            mem[extra+1:extra+3] = list(native.to_bytes(2, 'little'))
+            put('wEncodedTempMonSpecies', native & 255)
+            mem[extra+1] = native >> 8
             put('wEncodedTempMonForm', raw)
-            put('wEncodedTempMonLevel', 10)
         for native, base, canonical, raw in cases:
             for metadata in (0, 0x40, 0x80, 0xC0):
                 expected = canonical | ((base >> 8) << 5) | metadata
@@ -78,9 +78,9 @@ def main():
                     assert mem[addr(form)] == expected, (label, native, raw, metadata, mem[addr(form)], expected)
                     if live:
                         at = addr('wTempMonExtra')
-                        assert bytes(mem[at+1:at+3]) == native.to_bytes(2, 'little')
+                        assert bytes(mem[at+1:at+3]) == bytes(2)
                     else:
-                        assert bytes(mem[extra+1:extra+3]) == native.to_bytes(2, 'little')
+                        assert mem[extra+1] == native >> 8
                     count += 1
         for native in (0, 256, 0xFFFF):
             setup(native, 0x81)
@@ -99,10 +99,10 @@ def main():
             setup(0xFFFF, 0x81)
             put('wEncodedTempMonSpecies', species)
             before = bytes(mem[start:end])
-            assert not invoke('DecodeNativeBoxIdentity')[1]
+            assert invoke('DecodeNativeBoxIdentity')[1]
             assert bytes(mem[start:end]) == before
             count += 1
-        print(f'PASS: {count} native PC-box form/checksum cases; canonical regional forms, cosmetic forms, Egg/gender metadata, native word preservation, live DecodeTempMon identity boundary, invalid/corrupt rejection and legacy compatibility')
+        print(f'PASS: {count} native PC-box form/checksum cases; canonical regional forms, cosmetic forms, Egg/gender metadata, split native identity preservation, live DecodeTempMon identity boundary, invalid/corrupt rejection and invalid legacy-shaped records rejected')
     finally:
         p.stop(save=False)
 

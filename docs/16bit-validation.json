@@ -1,26 +1,18 @@
 {
-  "performed_on": "2026-11-04T04:41:12.133491+00:00",
-  "location": "local",
-  "baseline_commit": "7a4f1a3d66580e832ae7dff2f65404ec5d8d1ac8",
-  "scope": "Native species link protocol 6, peer-local alias reconstruction and trade-animation garbage-collection roots.",
-  "github_actions": "Local evidence only. The published commit runs eight production configurations and five native fixtures; check Actions separately for that exact head.",
-  "toolchain": {
-    "rgbds": "1.0.4",
-    "pyboy": "2.7.0",
-    "python": "3.12"
-  },
+  "performed_on": "2026-11-04T07:02:50.173609+00:00",
+  "baseline_commit": "ecd3c59ef98a4095e9ef91667f3c3efc184361ba",
   "builds": [
     {
       "name": "normal",
       "flags": [],
       "returncode": 0,
       "artifacts": [
+        "polishedcrystal-3.2.3.sym",
         "polishedcrystal-3.2.3.gbc",
-        "polishedcrystal-3.2.3.map",
-        "polishedcrystal-3.2.3.sym"
+        "polishedcrystal-3.2.3.map"
       ],
       "roms": {
-        "polishedcrystal-3.2.3.gbc": "8f1766429faac505e648f51874a165c0f36f75e68b3f618fec13b254f83381d2"
+        "polishedcrystal-3.2.3.gbc": "a6cccaa36f33144cf17d004fd5d64ff49dc317ae2a3a25161c0d9a8371487e50"
       }
     },
     {
@@ -30,136 +22,583 @@
       ],
       "returncode": 0,
       "artifacts": [
+        "polishedcrystal-debug-3.2.3.sym",
         "polishedcrystal-debug-3.2.3.gbc",
-        "polishedcrystal-debug-3.2.3.map",
-        "polishedcrystal-debug-3.2.3.sym"
+        "polishedcrystal-debug-3.2.3.map"
       ],
       "roms": {
-        "polishedcrystal-debug-3.2.3.gbc": "4c821f37a52918637cd34acc26934000bea6032072327848164ec14ce792f1c5"
+        "polishedcrystal-debug-3.2.3.gbc": "e95e1c217150031833ece11218cb5154d77b6e86cd879a616803206032ea6400"
       }
     },
     {
-      "name": "native-0201",
+      "name": "faithful",
+      "flags": [
+        "faithful"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-faithful-3.2.3.map",
+        "polishedcrystal-faithful-3.2.3.sym",
+        "polishedcrystal-faithful-3.2.3.gbc"
+      ],
+      "roms": {
+        "polishedcrystal-faithful-3.2.3.gbc": "e4835c0caaa1d7927003d7aaad0f522cb331bb8ae65b06313cda04274b5f1b84"
+      }
+    },
+    {
+      "name": "faithful-debug",
+      "flags": [
+        "faithful",
+        "debug"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-faithful-debug-3.2.3.gbc",
+        "polishedcrystal-faithful-debug-3.2.3.sym",
+        "polishedcrystal-faithful-debug-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-faithful-debug-3.2.3.gbc": "6ed2a09f3d5fcb39f8578efb7ada3cd7718a28f4f624f2838f931aae05091920"
+      }
+    },
+    {
+      "name": "vc",
+      "flags": [
+        "vc"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3_vc.map",
+        "polishedcrystal-3.2.3_vc.sym",
+        "polishedcrystal-3.2.3.patch",
+        "polishedcrystal-3.2.3_vc.gbc",
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3_vc.gbc": "68d0455573f157745493995bea1b3fde0146e8889c2690d22925320d0d1d9ab2",
+        "polishedcrystal-3.2.3.gbc": "a6cccaa36f33144cf17d004fd5d64ff49dc317ae2a3a25161c0d9a8371487e50"
+      }
+    },
+    {
+      "name": "faithful-vc",
+      "flags": [
+        "faithful",
+        "vc"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-faithful-3.2.3.patch",
+        "polishedcrystal-faithful-3.2.3.map",
+        "polishedcrystal-faithful-3.2.3_vc.sym",
+        "polishedcrystal-faithful-3.2.3.sym",
+        "polishedcrystal-faithful-3.2.3_vc.map",
+        "polishedcrystal-faithful-3.2.3.gbc",
+        "polishedcrystal-faithful-3.2.3_vc.gbc"
+      ],
+      "roms": {
+        "polishedcrystal-faithful-3.2.3.gbc": "e4835c0caaa1d7927003d7aaad0f522cb331bb8ae65b06313cda04274b5f1b84",
+        "polishedcrystal-faithful-3.2.3_vc.gbc": "513c6cc5450fea7e257bb0d912bc7acb41ca8dc19223a5cb1a860a0fd34fa2aa"
+      }
+    },
+    {
+      "name": "debug-vc",
+      "flags": [
+        "debug",
+        "vc"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-debug-3.2.3.patch",
+        "polishedcrystal-debug-3.2.3_vc.map",
+        "polishedcrystal-debug-3.2.3.sym",
+        "polishedcrystal-debug-3.2.3.gbc",
+        "polishedcrystal-debug-3.2.3.map",
+        "polishedcrystal-debug-3.2.3_vc.sym",
+        "polishedcrystal-debug-3.2.3_vc.gbc"
+      ],
+      "roms": {
+        "polishedcrystal-debug-3.2.3.gbc": "e95e1c217150031833ece11218cb5154d77b6e86cd879a616803206032ea6400",
+        "polishedcrystal-debug-3.2.3_vc.gbc": "600aec15a5c44db18476020012e6a6c2b8517cc0d7fc231cd095ad3164d41ce4"
+      }
+    },
+    {
+      "name": "faithful-debug-vc",
+      "flags": [
+        "faithful",
+        "debug",
+        "vc"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-faithful-debug-3.2.3_vc.map",
+        "polishedcrystal-faithful-debug-3.2.3.patch",
+        "polishedcrystal-faithful-debug-3.2.3_vc.gbc",
+        "polishedcrystal-faithful-debug-3.2.3.gbc",
+        "polishedcrystal-faithful-debug-3.2.3.sym",
+        "polishedcrystal-faithful-debug-3.2.3.map",
+        "polishedcrystal-faithful-debug-3.2.3_vc.sym"
+      ],
+      "roms": {
+        "polishedcrystal-faithful-debug-3.2.3_vc.gbc": "c8ca266aff82081b89e439a0447c2b24627f685c7d5918f04daccebc7f56e56a",
+        "polishedcrystal-faithful-debug-3.2.3.gbc": "6ed2a09f3d5fcb39f8578efb7ada3cd7718a28f4f624f2838f931aae05091920"
+      }
+    },
+    {
+      "name": "species-0201",
       "flags": [
         "native-test",
         "NATIVE_TEST_SPECIES=513"
       ],
       "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "a3c4484817c96be7efcb38494e03c38df61d47364969b4eb6075abf9148b7c83"
+        "polishedcrystal-native-test-3.2.3.gbc": "c1642a56f212298fee91b9cdc578ad42fb2585e010d03971a835a08fe5fc6f40"
       }
     },
     {
-      "name": "native-02fd",
+      "name": "species-02fd",
       "flags": [
         "native-test",
         "NATIVE_TEST_SPECIES=765"
       ],
       "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "f6783b660be6d2c53613d5f6299daf1c62f6a0c546ba90b454ef714f3d37dea2"
+        "polishedcrystal-native-test-3.2.3.gbc": "70d7ab1c6902980497a2dc729058731a244d7bb950e15ebd84f7a053faeaca39"
       }
     },
     {
-      "name": "native-02fe",
+      "name": "species-02fe",
       "flags": [
         "native-test",
         "NATIVE_TEST_SPECIES=766"
       ],
       "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "3bdb74bb50a5f970ea00095f62951a1b1599ee8fe948c0cd4617cb1ef93b9c00"
+        "polishedcrystal-native-test-3.2.3.gbc": "625288dbf546302eb54f09dc24e485b1b0cdfaaa823aee12e0fe92dc159d0397"
       }
     },
     {
-      "name": "native-02ff",
+      "name": "species-02ff",
       "flags": [
         "native-test",
         "NATIVE_TEST_SPECIES=767"
       ],
       "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "4f9f6acdf26ec681ae8e8f3503f49d2c0f95843cb8e3b15c71e59a7d382a7244"
+        "polishedcrystal-native-test-3.2.3.gbc": "622d95b3e468a5b8429e5a09dea21a8a4eb372403f85ae920dbd6396814bc557"
       }
     },
     {
-      "name": "native-0300",
+      "name": "species-0300",
       "flags": [
         "native-test",
         "NATIVE_TEST_SPECIES=768"
       ],
       "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
       "roms": {
-        "polishedcrystal-native-test-3.2.3.gbc": "e5d52adccacd296abe99e31bda390af3eb7e16af673a0ac1196e26eb0efc7b28"
+        "polishedcrystal-native-test-3.2.3.gbc": "d1bd43d2e3e87d265c90e8cf287b053ea8a926a64f014e0d43fc32f96c7d7fe2"
+      }
+    },
+    {
+      "name": "move-0100",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=256"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "9e1d97bab8035cd56f2d538b03091f7e062efc4cd2e647fb8bead82ddcf1cf58"
+      }
+    },
+    {
+      "name": "move-0101",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=257"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "adb68f54ae2c0796490c4516ea7824d1649c2c9b5068911ae2179e22e796f731"
+      }
+    },
+    {
+      "name": "move-01fd",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=509"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "97d9c7f34d4ac767c58fba46459426327548afde4353b4277b8e4985dc0d8017"
+      }
+    },
+    {
+      "name": "move-01fe",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=510"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "8b6580f82c17cceea753ceab7c7c233d2a90da88c99e19ced5b193832e792fe1"
+      }
+    },
+    {
+      "name": "move-01ff",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=511"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "95967a59e6c19fe7799d6b47c8a74a73c0f455a925514e759128ed0b24d39d74"
+      }
+    },
+    {
+      "name": "move-0200",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=512"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "00f97deace7d552217898d8da1437307b12f4511f24676ab511db4e423632147"
+      }
+    },
+    {
+      "name": "move-fd01",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=64769"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "bb9a7376f8f2fe7b71f3fea431d2434856fac348668a6f9d979a63e90e8c3f3b"
+      }
+    },
+    {
+      "name": "move-feff",
+      "flags": [
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=65279"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-3.2.3.sym",
+        "polishedcrystal-3.2.3.gbc",
+        "polishedcrystal-3.2.3.map"
+      ],
+      "roms": {
+        "polishedcrystal-3.2.3.gbc": "2e3f8f1fcf71e84b5d81f10df005c871bac72d5264cb25834d38f503bdbffa08"
+      }
+    },
+    {
+      "name": "combined-02ff-fffe",
+      "flags": [
+        "native-test",
+        "NATIVE_TEST_SPECIES=767",
+        "native_move_test=1",
+        "NATIVE_TEST_MOVE=65534"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        "polishedcrystal-native-test-3.2.3.map",
+        "polishedcrystal-native-test-3.2.3.sym",
+        "polishedcrystal-native-test-3.2.3.gbc"
+      ],
+      "roms": {
+        "polishedcrystal-native-test-3.2.3.gbc": "f9e7a1eba5e18392a21121b433b85d274313fa67ccedd8019d1342e2d0c9f5f9"
       }
     }
   ],
   "cpu_regressions": {
     "normal": {
-      "programs": 162,
-      "passed": 162,
+      "programs": 163,
+      "passed": 163,
       "failed": 0,
       "returncode": 0
     },
     "debug": {
-      "programs": 162,
-      "passed": 162,
+      "programs": 163,
+      "passed": 163,
       "failed": 0,
       "returncode": 0
     }
   },
-  "native_link": {
-    "protocol_version": 6,
-    "minimum_trade_version": 6,
-    "rom_stubs": false,
-    "peers": "Two independent PyBoy instances with different conversion-table allocation histories.",
-    "transport": "Harness copies outgoing serial buffers to the other peer; real ROM packet builders, patch encoders/decoders and native import execute unchanged.",
-    "transfers_per_rom": 48,
-    "tested_roms": [
-      "normal",
-      "debug",
-      "native-0201",
-      "native-02fd",
-      "native-02fe",
-      "native-02ff",
-      "native-0300"
+  "fixtures": {
+    "species-0201": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
     ],
-    "coverage": [
-      "Party sizes 1 through 6, trade and battle rooms, native and legacy player input layouts; original party records unchanged by serialization.",
-      "Full native species words, canonical regional forms, cosmetic forms, egg/gender metadata, all remaining party bytes, player ID, OT names and nicknames.",
-      "Real serial patch-list round trips for control bytes 0xfd, 0xfe and 0xff, including player ID and both patch-list segments.",
-      "Real received-party battle identity publication, OT-to-temp copy and persistent party insertion after trade.",
-      "Zeroed inactive slots; 15 malformed-packet cases reject invalid counts, zero/Egg/reserved/unsupported IDs in first and last slots, wire EXTSPECIES and nonempty inactive identities.",
-      "Rejected packets leave destination records and conversion-table bytes unchanged.",
-      "Both room types reject older incompatible protocols; compatible version 6 succeeds.",
-      "Every wide fixture forces collection on its first received wide allocation from a full local table.",
-      "Four isolated trade-animation identity roots each survive 229 distinct allocations in every wide fixture."
+    "species-02fd": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "species-02fe": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "species-02ff": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "species-0300": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-0100": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-0101": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-01fd": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-01fe": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-01ff": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-0200": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-fd01": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "move-feff": [
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
+    ],
+    "combined-02ff-fffe": [
+      {
+        "test": "tests/fixtures/wide_species.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_move_ids.py",
+        "returncode": 0
+      },
+      {
+        "test": "tests/test_native_link_packets.py",
+        "returncode": 0
+      }
     ]
   },
-  "native_catalog_fixtures": {
-    "ids": [
-      "0x0201",
-      "0x02fd",
-      "0x02fe",
-      "0x02ff",
-      "0x0300"
+  "location": "local",
+  "scope": "Native 16-bit move IDs throughout ROM readers, runtime aliases, battles, learning, PC, primary/backup saves and protocol-7 link packets; existing species migration retained.",
+  "github_actions": "Local evidence only. Check the published commit separately: 22 migration configurations plus the upstream Optimize job.",
+  "toolchain": {
+    "rgbds": "1.0.4",
+    "pyboy": "2.7.0",
+    "python": "3.12"
+  },
+  "compatibility": {
+    "save_version": 13,
+    "link_protocol": 7,
+    "minimum_trade_protocol": 7,
+    "old_save_importer": false,
+    "rom_bytes": 2097152,
+    "sram_bytes": 32768,
+    "pc_record_bytes": 51,
+    "pc_physical_records": 414,
+    "pc_usable_capacity": 400,
+    "link_packet_bytes": 465,
+    "move_table_bytes": 512
+  },
+  "move_fixtures": {
+    "native_ids": [
+      "0x0100",
+      "0x0101",
+      "0x01fd",
+      "0x01fe",
+      "0x01ff",
+      "0x0200",
+      "0xfd01",
+      "0xfeff",
+      "0xfffe"
     ],
-    "rom_stubs": false,
-    "production_roster_unchanged": true,
+    "ordinary_catalog_moves": 255,
+    "ordinary_property_checks": 2040,
+    "special_noncontact_alias": "0xfd01 -> Ember",
+    "other_aliases": "Tackle",
     "coverage": [
-      "Existing wide-species integration: generation/catching, native battle identity, names/stats/cries/pictures, PC serialization, evolution, daycare, Pokedex and primary/backup saves.",
-      "Native link transfers at 0x0201, 0x02fd, 0x02fe, 0x02ff and 0x0300."
+      "native allocation and garbage collection",
+      "all ordinary move properties, names, descriptions, structs, animations and contact classifications",
+      "primary/backup native sidecars and corruption rejection",
+      "PC native move round trips and all 414 physical record addresses",
+      "compact and fixed ROM streams, including escaped Struggle",
+      "level/egg inheritance, evolution parameter names, evolution-move duplicate detection, relearner and TM compatibility",
+      "trainer, tower, special egg, unique wild and script readers",
+      "gift insertion before naming UI",
+      "both-side real data, priority, contact, damage and STAB commands",
+      "two-peer serial codec and post-trade handoff with different local allocation histories"
     ]
   },
-  "static_checks": {
-    "optimization_findings": 0,
+  "two_peer_transfers_per_rom": 48,
+  "limits": [
+    "synthetic game-state integration, not a complete interactive playthrough",
+    "link packet transport does not emulate serial interrupts or cable timing",
+    "full trade animation, mail delivery and linked battle remain unverified",
+    "no added production roster or moves",
+    "no old-save import tooling"
+  ],
+  "static_audit": {
+    "symbolic_move_sites": 8668,
+    "byte_only_boundaries": 0,
     "unsafe_entry_hooks": 0,
+    "optimizer_findings": 0,
     "git_diff_check": "passed"
   },
-  "limitations": [
-    "Cable interrupts/timing, physical hardware or wireless VC compatibility, complete trade animation, mail delivery and a complete linked battle are not emulated by the buffer-transfer tests.",
-    "Expanded move IDs remain unported.",
-    "Wide fixtures reuse existing art/stats; no full interactive wide-species playthrough or arbitrary expanded roster is claimed.",
-    "Content-specific forms/classification extensions and old-save import remain separate work. Save version 12 is unchanged."
+  "validation_fixes": [
+    "SetFastestTurn observation uses opcode-checked post-CheckSpeed boundary to prevent an emulator entry-hook loop; full normal/debug suites rerun",
+    "wide Ember fixture covers special non-contact moves above Struggle; equality-only Struggle check"
   ]
 }

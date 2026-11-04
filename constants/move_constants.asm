@@ -265,6 +265,22 @@ endc
 	const DISARM_VOICE  ; $fe
 	const STRUGGLE      ; $ff
 DEF NUM_ATTACKS EQU const_value - 1
+; Additional move records use native IDs, independent of animation constants.
+if DEF(NATIVE_MOVE_TEST)
+ DEF WIDE_TEST_MOVE EQU NATIVE_MOVE_TEST
+ DEF FIRST_WIDE_MOVE EQU WIDE_TEST_MOVE
+ DEF NUM_WIDE_MOVES EQU 1
+ assert WIDE_TEST_MOVE > $ff && WIDE_TEST_MOVE < $ffff
+ if WIDE_TEST_MOVE == $fd01
+  DEF WIDE_TEST_MOVE_ALIAS EQU EMBER ; special, non-contact boundary fixture
+ else
+  DEF WIDE_TEST_MOVE_ALIAS EQU TACKLE ; physical, contact boundary fixture
+ endc
+else
+ DEF FIRST_WIDE_MOVE EQU $0101
+ DEF NUM_WIDE_MOVES EQU 0
+endc
+DEF NUM_NATIVE_MOVES EQU NUM_ATTACKS + NUM_WIDE_MOVES
 ; Battle animations use the same constants as the moves up to this point
 	; These animations don't play if battle anims are disabled.
 	const_next $100

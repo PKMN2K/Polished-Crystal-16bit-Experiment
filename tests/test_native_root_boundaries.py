@@ -87,23 +87,23 @@ def main():
                         count += 1
         for native, base, form in identities:
             for metadata in (0, 0x40, 0x80, 0xC0):
-                put('wEncodedTempMonSpecies', 0)
+                put('wEncodedTempMonSpecies', native & 255)
                 at = addr('wEncodedTempMonExtra')
-                mem[at+1:at+3] = list(native.to_bytes(2, 'little'))
+                mem[at+1] = native >> 8
                 encoded = form | ((base >> 8) << 5) | metadata
                 put('wEncodedTempMonForm', encoded)
                 assert not invoke('DecodeNativeBoxIdentity')[1], (native, encoded)
                 assert mem[addr('wEncodedTempMonSpecies')] == base & 255
                 assert mem[addr('wEncodedTempMonForm')] == encoded, (native, encoded, mem[addr('wEncodedTempMonForm')])
-                assert bytes(mem[at+1:at+3]) == native.to_bytes(2, 'little')
+                assert mem[at+1] == native >> 8
                 count += 1
         for native in (0, 256, 0xFFFF):
-            put('wEncodedTempMonSpecies', 0)
+            put('wEncodedTempMonSpecies', native & 255)
             at = addr('wEncodedTempMonExtra')
-            mem[at+1:at+3] = list(native.to_bytes(2, 'little'))
+            mem[at+1] = native >> 8
             put('wEncodedTempMonForm', 0x81)
             assert invoke('DecodeNativeBoxIdentity')[1], native
-            assert mem[addr('wEncodedTempMonSpecies')] == 0
+            assert mem[addr('wEncodedTempMonSpecies')] == native & 255
             assert mem[addr('wEncodedTempMonForm')] == 0x81
             count += 1
         print(f'PASS: {count} native battle-root/box cases and {audited} linked-bank call checks; variants, full-word roots, both battle sides, transient/legacy formats, metadata and invalid box identities')

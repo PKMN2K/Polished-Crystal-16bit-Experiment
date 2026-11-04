@@ -314,11 +314,12 @@ CheckHowToEvolve:
 	ld b, a
 	ld a, [hli]
 	cp b
-	jr nz, .dont_evolve_3
+	jmp nz, .dont_evolve_3
 	jr .proceed
 
 .move
-	ld a, [hli]
+	ld a, BANK(EvosAttacks)
+	call ReadMoveWordFromHL
 	push hl
 	push bc
 	ld b, a
@@ -602,9 +603,10 @@ LearnEvolutionMove:
 	ld a, BANK(EvolutionMoves)
 	call LoadIndirectPointer
 	jr z, .pop_bc_and_ret
-	call GetFarByte
+	call ReadMoveWordFromHL
 	and a
 	jr z, .pop_bc_and_ret
+	ld [wPutativeTMHMMove], a ; root the candidate across a long learnset scan
 
 	ld d, a
 	ld a, MON_MOVES
@@ -628,8 +630,13 @@ LearnEvolutionMove:
 	ld b, a
 	ld a, [wCurPartyLevel]
 	cp b
-	ld a, [hli]
 	jr c, .ok
+	push af
+	ld a, BANK(EvosAttacks)
+	call ReadMoveIDFromHL
+	ld b, a
+	pop af
+	ld a, b
 	jr nz, .check_level_moves
 	cp d
 	jr nz, .check_level_moves
@@ -672,8 +679,13 @@ LearnLevelMoves:
 	ld b, a
 	ld a, [wCurPartyLevel]
 	cp b
-	ld a, [hli]
-	jr nz, .find_move
+	jr z, .read_level_move
+	ld a, BANK(EvosAttacks)
+	call SkipMoveIDFromHL
+	jr .find_move
+.read_level_move
+	ld a, BANK(EvosAttacks)
+	call ReadMoveIDFromHL
 
 	push hl
 	ld d, a
@@ -717,8 +729,10 @@ FillMoves:
 
 .NextMove:
 	pop de
+	jr .GetLevel
 .GetMove:
-	inc hl
+	ld a, BANK(EvosAttacks)
+	call SkipMoveIDFromHL
 .GetLevel:
 	ld a, [hli]
 	and a
@@ -735,12 +749,15 @@ FillMoves:
 	jr nc, .GetMove
 
 .CheckMove:
+	ld a, BANK(EvosAttacks)
+	call ReadMoveIDFromHL
+	ld b, a
 	push de
 	ld c, NUM_MOVES
 .CheckRepeat:
 	ld a, [de]
 	inc de
-	cp [hl]
+	cp b
 	jr z, .NextMove
 	dec c
 	jr nz, .CheckRepeat
@@ -757,6 +774,7 @@ FillMoves:
 	pop de
 	push de
 	push hl
+	push bc
 	ld h, d
 	ld l, e
 	call ShiftMoves
@@ -772,16 +790,17 @@ FillMoves:
 	pop de
 
 .ShiftedMove:
+	pop bc
 	pop hl
 
 .LearnMove:
-	ld a, [hl]
+	ld a, b
 	ld [de], a
 	ld a, [wEvolutionOldSpecies]
 	and a
 	jr z, .NextMove
 	push hl
-	ld a, [hl]
+	ld a, b
 	ld hl, MON_PP - MON_MOVES
 	add hl, de
 	push hl
@@ -893,7 +912,8 @@ GetEvolutionData:
 	jr .copy_string
 
 .get_move_name:
-	ld a, [hl] ; parameter 1 (move)
+	ld a, BANK(EvosAttacks)
+	call ReadMoveWordFromHL
 	ld [wNamedObjectIndex], a
 	call GetMoveName
 	jr .copy_string
@@ -933,8 +953,13 @@ GetNextMove:
 	jr c, .next_move
 	jr z, .next_move
 	; got move
-	ld d, [hl]
+	push af
+	ld a, BANK(EvosAttacks)
+	call ReadMoveIDFromHL
+	ld d, a
+	pop af
 	ret
 .next_move
-	inc hl
+	ld a, BANK(EvosAttacks)
+	call SkipMoveIDFromHL
 	jr .find_move

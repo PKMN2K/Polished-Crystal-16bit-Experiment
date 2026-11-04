@@ -31,7 +31,8 @@ CheckUniqueWildMove:
 .compare_form
 	cp b
 	jr nz, .inc1andloop
-	ld a, [hli] ; move
+	ld a, BANK(UniqueWildMoves)
+	call ReadMoveWordFromHL
 	ld b, a
 
 	; Ignore placeholders (move 0)
@@ -45,7 +46,7 @@ CheckUniqueWildMove:
 	cp UNION_CAVE
 	jr z, .TeachMove ; assume this is a Lapras in UnionCaveB2F
 	ld a, b
-	cp SURF
+	cp_move SURF
 	jr z, .TeachMove ; assume only Pikachu can learn Surf
 
 	call Random
@@ -70,7 +71,7 @@ CheckUniqueWildMove:
 	ld [hl], a
 
 	; assume only Pikachu can learn Fly
-	cp FLY
+	cp_move FLY
 	jr z, .UseFlyingPikachu
 	ret
 
@@ -79,6 +80,7 @@ CheckUniqueWildMove:
 .inc2andloop
 	inc hl
 .inc1andloop
+	inc hl
 	inc hl
 	jr .loop
 

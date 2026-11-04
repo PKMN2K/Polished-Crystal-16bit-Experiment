@@ -488,7 +488,7 @@ ParsePlayerAction:
 .using_move
 	ld a, [wBattleType]
 	cp BATTLETYPE_GHOST
-	jr z, .lavender_ghost
+	jmp z, .lavender_ghost
 
 	call SetPlayerTurn
 	call CheckLockedIn
@@ -512,7 +512,7 @@ ParsePlayerAction:
 	call FarCopyColorWRAM
 	call SetDefaultBGPAndOBP
 	ld a, [wCurPlayerMove]
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	call nz, PlayClickSFX
 	ld a, TRANSFER_TILEMAP
 	ldh [hBGMapMode], a
@@ -648,10 +648,11 @@ GetMovePriority:
 	call GetBattleVar
 
 	ld hl, MovePriorities
-	ld de, 2
-	call IsInArray
-	inc a
-	jr z, .got_priority
+	ld de, 3
+	call IsInMoveArrayWithStride
+	ld a, 0 ; no-optimize a = 0 (preserve search carry)
+	jr nc, .got_priority
+	inc hl
 	inc hl
 	ld a, [hl]
 .got_priority
@@ -695,7 +696,7 @@ PerformMove:
 	res SUBSTATUS_IN_ABILITY, [hl]
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	cp DESTINY_BOND
+	cp_move DESTINY_BOND
 	jr z, .skip_destinybond_reset
 	res SUBSTATUS_DESTINY_BOND, [hl]
 .skip_destinybond_reset
@@ -1452,7 +1453,7 @@ endr
 	jr z, .substitute_check_done
 	xor a
 	ld [wFXAnimIDHi], a
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	farcall LoadAnim
 
 .substitute_check_done
@@ -5323,7 +5324,7 @@ MoveSelectionScreen:
 
 .struggle
 	call ClearSprites
-	ld a, STRUGGLE
+	ld_move a, STRUGGLE
 	ld [wCurPlayerMove], a
 	ld hl, BattleText_PkmnHasNoMovesLeft
 	call StdBattleTextbox
@@ -5609,7 +5610,7 @@ MoveInfoBox:
 	lb bc, BANK(CategoryIconGFX), 2
 	call Request2bpp
 	ld a, [wPlayerMoveStruct + MOVE_ANIM]
-	cp HIDDEN_POWER
+	cp_move HIDDEN_POWER
 	jr nz, .not_hidden_power
 	ld hl, wBattleMonDVs
 	farcall GetHiddenPowerType
@@ -5924,7 +5925,7 @@ ParseEnemyAction:
 	ret
 
 .struggle
-	ld a, STRUGGLE
+	ld_move a, STRUGGLE
 	jr .finish
 
 ResetVarsForSubstatusRage:
@@ -5997,7 +5998,7 @@ endc
 	and a
 	jr nz, .switch
 	ld a, [wCurPlayerMove]
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	ld a, BATTLEACTION_STRUGGLE
 	jr z, .use_move
 	ld a, [wCurMoveNum]
@@ -7525,6 +7526,8 @@ _GetNewBaseExp:
 	ld a, 10 ; 2nd stage: *10/20 -> *0.5
 	jr z, .got_multiplier
 	ld a, d
+	cp EVOLVE_MOVE
+	jr z, .inc_3
 	cp EVOLVE_PARTY
 	jr z, .inc_3
 	cp EVOLVE_STAT
@@ -8984,7 +8987,8 @@ AutomaticBattleWeather:
 	ld a, [wMapNumber]
 	; Automatic sandstorm on Rugged Road
 	cp MAP_RUGGED_ROAD_SOUTH
-	lb de, WEATHER_SANDSTORM, SANDSTORM
+	ld d, WEATHER_SANDSTORM
+	ld_move e, SANDSTORM
 	ld hl, SandstormBrewedText
 	jr z, .got_weather
 	; Automatic hail on Snowtop Mountain
@@ -8998,7 +9002,8 @@ AutomaticBattleWeather:
 	ld a, [wMapNumber]
 	cp MAP_SILVER_CAVE_ROOM_3
 .maybe_hail
-	lb de, WEATHER_HAIL, HAIL
+	ld d, WEATHER_HAIL
+	ld_move e, HAIL
 	ld hl, HailStartedText
 	jr z, .got_weather
 .not_mt_silver_peak
@@ -9012,7 +9017,8 @@ AutomaticBattleWeather:
 	assert OVERCAST_INTENSITY_OVERCAST == 0
 	and a
 	ret z
-	lb de, WEATHER_RAIN, RAIN_DANCE
+	ld d, WEATHER_RAIN
+	ld_move e, RAIN_DANCE
 	ld hl, DownpourText
 .got_weather
 	ld a, d

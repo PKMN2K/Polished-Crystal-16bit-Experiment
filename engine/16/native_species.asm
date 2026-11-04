@@ -635,6 +635,7 @@ InitializeNativePokemonDataForNewGame::
 	xor a
 	ld [wPokemonIndexTableFormat], a
 	ld [wPokemonIndexTableFormat + 1], a
+	farcall InitializeNativeMoveDataForNewGame
 
 	pop af
 	ldh [rSVBK], a
@@ -860,8 +861,7 @@ ConvertCopiedPartyTempIdentity::
 	jp PopBCDEHL
 
 EncodeNativeBoxIdentity::
-; Newbox reserves species byte zero as an explicit native-record tag.
-; Native ID lives in the two formerly unused extra bytes; layout is unchanged.
+; Save v13 stores native low in Species, high in Extra+1.
 	ld a, [wEncodedTempMonSpecies]
 	ld c, a
 	ld a, [wEncodedTempMonForm]
@@ -870,22 +870,17 @@ EncodeNativeBoxIdentity::
 	call GetSpeciesAndFormIndex
 	inc bc
 	ld a, c
-	ld [wEncodedTempMonExtra + 1], a
-	ld a, b
-	ld [wEncodedTempMonExtra + 2], a
-	xor a
 	ld [wEncodedTempMonSpecies], a
+	ld a, b
+	ld [wEncodedTempMonExtra + 1], a
 	ret
 
 DecodeNativeBoxIdentity::
 ; Called only after the stored checksum has been checked. Carry on bad ID.
-; Old nonzero legacy species records need no conversion and remain readable.
+; The save version gate rejects the previous 49-byte box format.
 	ld a, [wEncodedTempMonSpecies]
-	and a
-	ret nz
-	ld a, [wEncodedTempMonExtra + 1]
 	ld c, a
-	ld a, [wEncodedTempMonExtra + 2]
+	ld a, [wEncodedTempMonExtra + 1]
 	ld b, a
 	or c
 	jr z, .invalid

@@ -978,7 +978,7 @@ AI_Smart_SpeedDownHit:
 ; Player is faster than enemy.
 
 	ld a, [wEnemyMoveStruct + MOVE_ANIM]
-	cp ICY_WIND
+	cp_move ICY_WIND
 	ret nz
 	call AICheckEnemyQuarterHP
 	ret nc
@@ -1151,7 +1151,7 @@ AI_Smart_Encore:
 	push hl
 	ld a, [wPlayerSelectedMove]
 	ld hl, EncoreMoves
-	call IsInByteArray
+	call IsInMoveArray
 	pop hl
 	jr nc, .discourage
 
@@ -1313,7 +1313,7 @@ AI_Smart_Disable:
 	push hl
 	ld a, [wPlayerSelectedMove]
 	ld hl, UsefulMoves
-	call IsInByteArray
+	call IsInMoveArray
 
 	pop hl
 	jr nc, .notencourage
@@ -1720,7 +1720,7 @@ AI_Smart_Earthquake:
 
 ; Greatly encourage this move if the player is underground and the enemy is faster.
 	ld a, [wPlayerSelectedMove]
-	cp DIG
+	cp_move DIG
 	ret nz
 
 	ld a, [wPlayerSubStatus3]
@@ -1900,7 +1900,7 @@ AI_Smart_JumpKick:
 AI_Smart_Gust:
 ; Greatly encourage this move if the player is flying and the enemy is faster.
 	ld a, [wPlayerSelectedMove]
-	cp FLY
+	cp_move FLY
 	ret nz
 
 	ld a, [wPlayerSubStatus3]
@@ -2184,7 +2184,7 @@ AI_Opportunist:
 	push de
 	push bc
 	ld hl, StallMoves
-	call IsInByteArray
+	call IsInMoveArray
 
 	pop bc
 	pop de
@@ -2458,7 +2458,7 @@ AI_Cautious:
 	push de
 	push bc
 	ld hl, ResidualMoves
-	call IsInByteArray
+	call IsInMoveArray
 
 	pop bc
 	pop de

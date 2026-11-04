@@ -19,7 +19,7 @@ SpecialGiveShinyDitto:
 	call GetBaseData
 	ld a, EVERSTONE
 	ld [hli], a
-	ld a, TRANSFORM
+	ld_move a, TRANSFORM
 	ld [hli], a
 	xor a
 rept NUM_MOVES - 1

@@ -423,6 +423,15 @@ MACRO end_trainer
 		def _tr_size += NUM_MOVES
 	endc
 	def _tr_size *= _tr_mons
+	if _tr_flags & TRAINERTYPE_MOVES
+		for p, _tr_mons
+			for i, 1, NUM_MOVES + 1
+				if _tr_pk{d:p}_move{d:i} >= $ff
+					def _tr_size += 2
+				endc
+			endr
+		endr
+	endc
 
 	if _tr_flags & TRAINERTYPE_NICKNAME
 		def _tr_size += _tr_nick_lengths + _tr_mons ; append terminators
@@ -482,7 +491,7 @@ MACRO end_trainer
 
 		if _tr_flags & TRAINERTYPE_MOVES
 			for i, 1, NUM_MOVES + 1
-				db _tr_pk{d:p}_move{d:i}
+				move_id _tr_pk{d:p}_move{d:i}
 			endr
 		endc
 	endr

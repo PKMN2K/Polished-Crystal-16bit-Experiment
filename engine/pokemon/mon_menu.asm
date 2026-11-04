@@ -1045,7 +1045,7 @@ MoveScreenLoop:
 	rrca
 	jr c, .pressed_a
 	rrca
-	jr c, .pressed_b
+	jmp c, .pressed_b
 	rrca
 	jmp c, .pressed_select
 	rrca
@@ -1062,7 +1062,7 @@ MoveScreenLoop:
 .pressed_a
 	ld a, [wMoveScreenMode]
 	and a ; cp MOVESCREEN_NORMAL
-	jr z, .swap_move
+	jmp z, .swap_move
 	ld de, SFX_READ_TEXT_2
 	call PlaySFX
 	ld a, [wMoveScreenCursor]
@@ -1094,23 +1094,23 @@ MoveScreenLoop:
 	ld a, [hl]
 
 	; Player flies somewhere, forgets Fly and gets stuck on the island.
-	cp FLY
+	cp_move FLY
 	ld e, HM_FLY
 	jr z, .checkhm
 
 	; Player surfs to a tiny island, forgets surf, can't re-surf.
-	cp SURF
+	cp_move SURF
 	ld e, HM_SURF
 	jr z, .checkhm
 
 	; Players forgetting Strength mid-puzzle.
-	cp STRENGTH
+	cp_move STRENGTH
 	ld e, HM_STRENGTH
 	jr z, .checkhm
 
 	; Whirlpool implies surf, but not all water have wild encounters.
 	; This is just in case a whirlpool is added to one such location.
-	cp WHIRLPOOL
+	cp_move WHIRLPOOL
 	ld e, HM_WHIRLPOOL
 	jr nz, .ok
 	; Other HMs (Cut, Fly, Flash, Waterfall) can't softlock the player.
@@ -1352,9 +1352,12 @@ MoveScreenLoop:
 	ret
 
 .HMMoves:
-	db SURF, HM_SURF ; can leave players stuck at tiny islands w/o encounters
-	db STRENGTH, HM_STRENGTH ; problem spots have wilds, but just in case
-	db WHIRLPOOL, HM_WHIRLPOOL ; just in case there are wild-less whirlpools
+	dw SURF
+	db HM_SURF ; can leave players stuck at tiny islands w/o encounters
+	dw STRENGTH
+	db HM_STRENGTH ; problem spots have wilds, but just in case
+	dw WHIRLPOOL
+	db HM_WHIRLPOOL ; just in case there are wild-less whirlpools
 
 .MustSaveFirst:
 	text "Please save the"
@@ -1367,6 +1370,7 @@ GetForgottenMoves::
 	ld hl, wPartyMon1Species
 	ld a, [wCurPartyMon]
 	call GetPartyLocation
+	ld de, MON_FORM - MON_SPECIES
 	farcall GetLegacySpeciesAndFormFromPokemonDataStruct
 	farcall GetEvosAttacksPointer
 	farcall SkipEvolutionData
@@ -1388,8 +1392,7 @@ GetForgottenMoves::
 	cp b
 	ret nc
 	ld a, BANK(EvosAttacks)
-	call GetFarByte
-	inc hl
+	call ReadMoveIDFromHL
 
 	; exclude moves the user already knows
 	push hl

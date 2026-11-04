@@ -3,6 +3,7 @@ BattleAnimations::
 	table_width 2
 	farbank "Battle Animations"
 	fardw BattleAnim_0
+MoveAnimationPointers:
 	fardw BattleAnim_Acrobatics
 	fardw BattleAnim_KarateChop
 	fardw BattleAnim_DoubleSlap
@@ -262,6 +263,7 @@ endc
 	fardw BattleAnim_PlayRough
 	fardw BattleAnim_DisarmVoice
 	fardw BattleAnim_Struggle
+MoveAnimationPointers.IndirectEnd:
 	assert_table_length NUM_ATTACKS + 1
 	assert_table_length $100
 ; $100
@@ -293,3 +295,11 @@ endc
 	fardw BattleAnim_HitConfusion
 	fardw BattleAnim_HeldItemTrigger
 	assert_table_length NUM_BATTLE_ANIMS + 1
+
+NativeMoveAnimations:
+	indirect_table 2, 1
+	indirect_entries NUM_ATTACKS, MoveAnimationPointers
+if NUM_WIDE_MOVES
+	indirect_alias NUM_ATTACKS + 1, MoveAnimationPointers, WIDE_TEST_MOVE_ALIAS - 1
+endc
+	indirect_table_end

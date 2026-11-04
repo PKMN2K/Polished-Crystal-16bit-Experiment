@@ -1,4 +1,4 @@
-DEF BTMON_SIZE EQU 10 ; native species + form/gender + item + 4 moves + DV index + personality ability/nature
+DEF BTMON_SIZE EQU 14 ; native species + form/gender + item + 4 moves + DV index + personality ability/nature
 
 INCLUDE "data/battle_tower/classes.asm"
 INCLUDE "data/battle_tower/tiers.asm"
@@ -398,10 +398,19 @@ BT_AppendOTMon:
 	ld a, MON_ITEM
 	call .Copy
 
-	; Add moves
-	ld bc, NUM_MOVES
-	ld a, MON_MOVES
-	call .Copy
+	; Decode four native move words to this session's handles.
+	push de
+	inc de ; MON_ITEM
+	inc de ; MON_MOVES
+	ld b, NUM_MOVES
+.copy_native_moves
+	ld a, BANK(BattleTowerMons)
+	call ReadMoveWordFromHL
+	ld [de], a
+	inc de
+	dec b
+	jr nz, .copy_native_moves
+	pop de
 
 	push hl
 	ld hl, MON_MOVES

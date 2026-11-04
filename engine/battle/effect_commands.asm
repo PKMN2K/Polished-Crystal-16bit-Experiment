@@ -312,7 +312,7 @@ endc
 	; Sleep Talk bypasses sleep.
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp SLEEP_TALK
+	cp_move SLEEP_TALK
 	jr z, .not_asleep
 
 	call CantMove
@@ -327,11 +327,11 @@ endc
 	; Sacred Fire, Scald, and Flare Blitz thaw the user.
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp SACRED_FIRE
+	cp_move SACRED_FIRE
 	jr z, .thaw
-	cp SCALD
+	cp_move SCALD
 	jr z, .thaw
-	cp FLARE_BLITZ
+	cp_move FLARE_BLITZ
 	jr z, .thaw
 
 	; Check for defrosting
@@ -495,9 +495,9 @@ CantMove:
 .cancel_fly_dig
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVarAddr
-	cp FLY
+	cp_move FLY
 	jr z, .fly_dig
-	cp DIG
+	cp_move DIG
 	ret nz
 .fly_dig
 	jmp AppearUserRaiseSub
@@ -552,9 +552,8 @@ IncreaseMetronomeCount:
 	ret
 .reset
 	; Struggle doesn't update last move set but does reset count
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	jr z, .done_update_selected_move
-	dec a
 	ld [de], a
 .done_update_selected_move
 	xor a
@@ -1049,7 +1048,7 @@ IgnoreSleepOnly:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	xor SLEEP_TALK
+	cp_move SLEEP_TALK
 	ret nz
 
 	ld a, BATTLE_VARS_STATUS
@@ -1157,7 +1156,7 @@ BattleConsumePP:
 
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	jr z, .end
 
 	ld a, BATTLE_VARS_SUBSTATUS3
@@ -1245,7 +1244,7 @@ BattleCommand_critical:
 	call GetBattleVar
 	push bc
 	ld hl, CriticalHitMoves
-	call IsInByteArray
+	call IsInMoveArray
 	pop bc
 	jr nc, .ScopeLens
 
@@ -1508,7 +1507,7 @@ BattleCommand_stab:
 	; Struggle doesn't apply STAB or matchups
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	ret z
 
 	; Apply type matchups
@@ -1757,7 +1756,7 @@ _CheckTypeMatchup:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld hl, PowderMoves
-	call IsInByteArray
+	call IsInMoveArray
 	jr nc, .skip_powder
 	call GetOpponentItemAfterUnnerve
 	ld a, b
@@ -1877,11 +1876,11 @@ BattleCommand_checkpowder:
 	ret
 
 .no_nullification
-	cp THUNDER_WAVE
+	cp_move THUNDER_WAVE
 	jr z, BattleCommand_resettypematchup
-	cp TOXIC
+	cp_move TOXIC
 	jr z, .check_corrosion
-	cp POISONPOWDER
+	cp_move POISONPOWDER
 	jr nz, .powder
 .check_corrosion
 	ld b, a
@@ -1889,12 +1888,12 @@ BattleCommand_checkpowder:
 	cp CORROSION
 	ret z
 	ld a, b
-	cp TOXIC
+	cp_move TOXIC
 	jr z, BattleCommand_resettypematchup
 	; fallthrough for poisonpowder
 .powder
 	ld hl, PowderMoves
-	call IsInByteArray
+	call IsInMoveArray
 	ret nc
 	; fallthrough
 BattleCommand_resettypematchup:
@@ -2021,7 +2020,7 @@ BattleCommand_checkhit:
 	ret z
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	ret z
 
 	; Immunity might be set already from Prankster
@@ -2207,7 +2206,7 @@ BattleCommand_checkhit:
 	jr z, .not_blocked
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp SWAGGER
+	cp_move SWAGGER
 	jr z, .blocked
 	ld a, BATTLE_VARS_MOVE_EFFECT
 	call GetBattleVar
@@ -2238,9 +2237,9 @@ BattleCommand_checkhit:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	cp EARTHQUAKE
+	cp_move EARTHQUAKE
 	ret z
-	cp MAGNITUDE
+	cp_move MAGNITUDE
 	ret z
 
 .LockedOn:
@@ -2254,7 +2253,7 @@ BattleCommand_checkhit:
 	ret nz
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp TOXIC
+	cp_move TOXIC
 	ret
 
 .PursuitCheck:
@@ -2288,20 +2287,20 @@ BattleCommand_checkhit:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	cp GUST
+	cp_move GUST
 	ret z
-	cp THUNDER
+	cp_move THUNDER
 	ret z
-	cp HURRICANE
+	cp_move HURRICANE
 	ret
 
 .DigMoves:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	cp EARTHQUAKE
+	cp_move EARTHQUAKE
 	ret z
-	cp MAGNITUDE
+	cp_move MAGNITUDE
 	ret
 
 .WeatherAccCheck:
@@ -2318,16 +2317,16 @@ BattleCommand_checkhit:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	cp THUNDER
+	cp_move THUNDER
 	ret z
-	cp HURRICANE
+	cp_move HURRICANE
 	ret
 
 .HailAccCheck:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 
-	cp BLIZZARD
+	cp_move BLIZZARD
 	ret
 
 .NoGuardCheck:
@@ -2347,9 +2346,9 @@ BattleCommand_checkhit:
 	jr z, .no_minimize
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp BODY_SLAM
+	cp_move BODY_SLAM
 	ret z
-	cp STOMP
+	cp_move STOMP
 	ret z
 .no_minimize
 	or 1
@@ -2380,7 +2379,7 @@ BattleCommand_checkpriority:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld hl, SoundMoves
-	call IsInByteArray
+	call IsInMoveArray
 	ld b, ATKFAIL_ABILITY
 	jr c, .attack_fails
 	ret
@@ -2480,7 +2479,7 @@ BattleCommand_lowersub:
 	ld [wFXAnimIDHi], a
 	inc a
 	ld [wBattleAnimParam], a
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	jmp LoadAnim
 
 .mimic_anims
@@ -2571,9 +2570,9 @@ BattleCommand_moveanimnosub:
 
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp FLY
+	cp_move FLY
 	jr z, .fly_dig
-	cp DIG
+	cp_move DIG
 	ret nz
 
 .fly_dig
@@ -2635,7 +2634,7 @@ BattleCommand_raisesub:
 	ld [wFXAnimIDHi], a
 	ld a, $2
 	ld [wBattleAnimParam], a
-	ld a, SUBSTITUTE
+	ld_move a, SUBSTITUTE
 	jmp LoadAnim
 
 BattleCommand_failuretext:
@@ -2650,9 +2649,9 @@ BattleCommand_failuretext:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVarAddr
 
-	cp FLY
+	cp_move FLY
 	jr z, .fly_dig
-	cp DIG
+	cp_move DIG
 	jr z, .fly_dig
 
 ; Move effect:
@@ -3253,7 +3252,7 @@ BattleCommand_postfainteffects:
 	ld [wFXAnimIDHi], a
 	inc a
 	ld [wBattleAnimParam], a
-	ld a, DESTINY_BOND
+	ld_move a, DESTINY_BOND
 	call LoadAnim
 	call SwitchTurn
 
@@ -3546,7 +3545,7 @@ CheckThroatSpray:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld hl, SoundMoves
-	call IsInByteArray
+	call IsInMoveArray
 	pop bc
 	ret nc
 
@@ -4340,7 +4339,7 @@ BattleCommand_damagecalc:
 	; Burn should not halve physical attack if using Facade, or with Guts.
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp FACADE
+	cp_move FACADE
 	jr z, .burn_done
 
 	call GetTrueUserIgnorableAbility
@@ -5136,7 +5135,7 @@ SapHealth:
 	; for Drain Kiss, we want 75% drain instead of 50%
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp DRAINING_KISS
+	cp_move DRAINING_KISS
 	jr nz, .skip_draining_kiss
 	ld h, b
 	ld l, c
@@ -5812,9 +5811,9 @@ BattleCommand_charge:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld b, a
-	cp FLY
+	cp_move FLY
 	jr z, .set_flying
-	cp DIG
+	cp_move DIG
 	jr nz, .dont_set_digging
 	set SUBSTATUS_UNDERGROUND, [hl]
 	jr .dont_set_digging
@@ -5836,15 +5835,15 @@ BattleCommand_charge:
 	call GetBattleVar
 
 	ld hl, .SolarBeam
-	cp SOLAR_BEAM
+	cp_move SOLAR_BEAM
 	ret z
 
 	ld hl, .Fly
-	cp FLY
+	cp_move FLY
 	ret z
 
 	ld hl, .Dig
-	cp DIG
+	cp_move DIG
 	ret
 
 .SolarBeam:
@@ -5900,17 +5899,14 @@ BattleCommand_traptarget:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld [de], a
-	ld b, a
 	ld hl, .Traps
-
-.find_trap_text
-	ld a, [hli]
-	cp b
-	jr z, .found_trap_text
+	ld de, 4
+	call IsInMoveArrayWithStride
+	jr c, .trap_row
+	dec hl ; the terminator search stops on its high byte
+.trap_row
 	inc hl
 	inc hl
-	jr .find_trap_text
-
 .found_trap_text
 	ld a, [hli]
 	ld h, [hl]
@@ -5918,15 +5914,16 @@ BattleCommand_traptarget:
 	jmp StdBattleTextbox
 
 .Traps:
-	dbw WRAP,      WrappedByText     ; 'was WRAPPED by'
-	dbw FIRE_SPIN, FireSpinTrapText  ; 'was trapped!'
-	dbw WHIRLPOOL, WhirlpoolTrapText ; 'was trapped!'
+	dw WRAP,      WrappedByText     ; 'was WRAPPED by'
+	dw FIRE_SPIN, FireSpinTrapText  ; 'was trapped!'
+	dw WHIRLPOOL, WhirlpoolTrapText ; 'was trapped!'
+	dw -1, FireSpinTrapText
 
 BattleCommand_recoil:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld b, a
-	inc a ; cp STRUGGLE
+	cp_move STRUGGLE
 	jr z, .StruggleRecoil
 
 	; For all other moves, potentially disable
@@ -5938,9 +5935,9 @@ BattleCommand_recoil:
 	ret z
 
 	ld a, b
-	cp DOUBLE_EDGE
+	cp_move DOUBLE_EDGE
 	jr z, .OneThirdRecoil
-	cp FLARE_BLITZ
+	cp_move FLARE_BLITZ
 	jr z, .OneThirdRecoil
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
@@ -6123,7 +6120,7 @@ BattleCommand_heal:
 	jr z, .hp_full
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	cp REST
+	cp_move REST
 	jr nz, .not_rest
 	ld a, BATTLE_VARS_STATUS
 	call GetBattleVar
@@ -6281,7 +6278,7 @@ CheckSubstituteOpp:
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
 	ld hl, SoundMoves
-	call IsInByteArray
+	call IsInMoveArray
 	pop hl
 	pop de
 	pop bc
@@ -6319,20 +6316,28 @@ CheckUserMove:
 	ret
 
 BoostJumptable:
-	dbw AVALANCHE,  DoAvalanche
-	dbw ACROBATICS, DoAcrobatics
-	dbw FACADE,     DoFacade
-	dbw HEX,        DoHex
-	dbw VENOSHOCK,  DoVenoshock
-	dbw KNOCK_OFF,  DoKnockOff
-	dbw PURSUIT,    DoPursuit
-	dbw -1, -1
+	dw AVALANCHE,  DoAvalanche
+	dw ACROBATICS, DoAcrobatics
+	dw FACADE,     DoFacade
+	dw HEX,        DoHex
+	dw VENOSHOCK,  DoVenoshock
+	dw KNOCK_OFF,  DoKnockOff
+	dw PURSUIT,    DoPursuit
+	dw -1, -1
 
 BattleCommand_conditionalboost:
 	ld hl, BoostJumptable
 	ld a, BATTLE_VARS_MOVE_ANIM
 	call GetBattleVar
-	jmp BattleJumptable
+	ld de, 4
+	call IsInMoveArrayWithStride
+	ret nc
+	inc hl
+	inc hl
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	jp hl
 
 DoAvalanche:
 	ld a, 1 << PHYSICAL | 1 << SPECIAL
@@ -6747,23 +6752,21 @@ AppearUserRaiseSub:
 
 CheckBattleAnimSubstitution:
 ; Checks the animation ID and possibly change it based on species.
-	assert !HIGH(NUM_ATTACKS), "This function is now obsolete."
-
-	; Moves are 1-255.
+	; A zero animation high byte selects a transient move handle.
 	ld a, [wFXAnimIDHi]
 	and a
 	ret nz
 
 	ld a, [wFXAnimIDLo]
-	cp FRESH_SNACK
+	cp_move FRESH_SNACK
 	ld de, ANIM_MILK_DRINK
 	ld hl, .MilkDrinkUsers
 	jr z, .check_species_list
-	cp FURY_STRIKES
+	cp_move FURY_STRIKES
 	ld de, ANIM_FURY_ATTACK
 	ld hl, FuryAttackUsers
 	jr z, .check_species_list
-	cp DEFENSE_CURL
+	cp_move DEFENSE_CURL
 	ret nz
 
 	; Defense Curl has 3 variations

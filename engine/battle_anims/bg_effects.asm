@@ -1407,7 +1407,7 @@ Rollout_FillLYOverridesBackup:
 	or a
 	jr nz, .not_rollout
 	ld a, [wFXAnimIDLo]
-	cp ROLLOUT
+	cp_move ROLLOUT
 	jr z, .rollout
 .not_rollout
 	pop af

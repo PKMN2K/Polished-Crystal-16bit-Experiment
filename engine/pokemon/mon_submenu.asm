@@ -88,14 +88,15 @@ PopulateMonMenu:
 
 GetMonMenuString:
 	ld hl, MonMenuOptions + 1
-	ld de, 3
+	ld de, 4
 	call IsInArray
 	dec hl
 	ld a, [hli]
 	cp MONMENU_MENUOPTION
 	jr z, .NotMove
 	inc hl
-	ld a, [hl]
+	ld a, BANK(MonMenuOptions)
+	call ReadMoveWordFromHL
 	ld [wNamedObjectIndex], a
 	jmp GetMoveName
 
@@ -188,7 +189,8 @@ IsFieldMove:
 	ret z
 	ld a, [hli]
 	ld d, a
-	ld a, [hli]
+	ld a, BANK(MonMenuOptions)
+	call ReadMoveWordFromHL
 	cp b
 	jr nz, .next
 	ld a, d

@@ -431,7 +431,7 @@ SummaryScreen_InitLayout:
 	ld a, [hl]
 	and a
 	jr z, .moveTypesEnd
-	cp HIDDEN_POWER
+	cp_move HIDDEN_POWER
 	jr nz, .not_hidden_power
 
 	push hl

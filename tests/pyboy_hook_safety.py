@@ -42,3 +42,18 @@ def hook_user_item_after_future_sight(pyboy, symbols, rom_data, offset, callback
         raise AssertionError("GetUserItem prologue changed; hook needs review")
     bank, address = symbols["GetUserItem"]
     pyboy.hook_register(bank, address + 3, callback, None)
+
+
+def hook_set_fastest_turn_after_speed(pyboy, symbols, rom_data, offset, callback):
+    """Observe SetFastestTurn after CheckSpeed, before selecting either side.
+
+    Its CALL entry can recur indefinitely in PyBoy after ROM layout changes.
+    CheckSpeed restores hBattleTurn, and both outcomes reach the following JR.
+    """
+    start = offset("SetFastestTurn")
+    expected = bytes((0xCD, symbols["CheckSpeed"][1] & 255,
+                      symbols["CheckSpeed"][1] >> 8, 0x28))
+    if rom_data[start:start + 4] != expected:
+        raise AssertionError("SetFastestTurn prologue changed; hook needs review")
+    bank, address = symbols["SetFastestTurn"]
+    pyboy.hook_register(bank, address + 3, callback, None)

@@ -236,10 +236,10 @@ for x, NUM_BATTLE_STATS
 endr
 	; hm slave
 	givepoke MEW, PLAIN_FORM, 100, LEFTOVERS
-	loadmem wPartyMon2Moves+0, FLY
-	loadmem wPartyMon2Moves+1, HEADBUTT
-	loadmem wPartyMon2Moves+2, DIG
-	loadmem wPartyMon2Moves+3, FRESH_SNACK
+	loadmove wPartyMon2Moves+0, FLY
+	loadmove wPartyMon2Moves+1, HEADBUTT
+	loadmove wPartyMon2Moves+2, DIG
+	loadmove wPartyMon2Moves+3, FRESH_SNACK
 	loadmem wPartyMon2PP+0, 15
 	loadmem wPartyMon2PP+1, 15
 	loadmem wPartyMon2PP+2, 10

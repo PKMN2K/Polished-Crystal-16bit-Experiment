@@ -2441,7 +2441,7 @@ RestorePPEffect:
 
 .ppup2
 	ld a, [hl]
-	cp SKETCH
+	cp_move SKETCH
 	jr z, .CantUsePPUpOnSketch
 
 	ld bc, MON_PP - MON_MOVES

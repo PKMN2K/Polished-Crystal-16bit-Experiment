@@ -36,6 +36,9 @@ def main():
                   if manifest[i+2:i+5] == bytes((37, 0, 2)))
     wide = (int.from_bytes(rom_bytes('NativeWideTestIdentity', 2), 'little')
             if 'NativeWideTestIdentity' in syms else None)
+    wide_move = (int.from_bytes(rom_bytes('NativeWideMoveTestIdentity', 2), 'little')
+                 if 'NativeWideMoveTestIdentity' in syms else None)
+    moves_offset = addr('wPartyMon1Moves') - addr('wPartyMon1')
     stride = addr('wPartyMon2') - addr('wPartyMon1')
     form = addr('wPartyMon1Form') - addr('wPartyMon1')
     unused = addr('wPartyMon1Unused') - addr('wPartyMon1')
@@ -96,8 +99,10 @@ def main():
             self.put('wSRAMAccessCount', 1)
             self.m[0x0000] = 0
             self.write('wPokemonDataFormat', b'\xbc\x16' if native else b'\0\0')
+            self.invoke('InitializeNativeMoveDataForNewGame')
             for value in range(50, 50+seed):
                 self.invoke('GetPokemonIDFromIndex', hl=value)
+                self.invoke('GetMoveIDFromIndex', hl=value)
 
         def prepare(self, identities, mode, native=True):
             self.put('wPartyCount', len(identities))
@@ -106,6 +111,7 @@ def main():
             self.write('wPlayerID', bytes((0xfe, 0xfd)))
             self.write('wPartyMons', bytes([0xa5]) * (6*stride))
             originals = []
+            native_moves = []
             for i, (identity, metadata) in enumerate(identities):
                 prefix = f'wPartyMon{i+1}'
                 payload = bytearray((0xfd, 0xfe, 0xff)[j % 3] for j in range(stride))
@@ -115,6 +121,11 @@ def main():
                 if native:
                     self.invoke('GetPokemonIDFromIndex', hl=identity)
                     payload[0] = self.r.A
+                moves = [33 + i, 255, wide_move or 254, 0]
+                native_moves.append(moves)
+                for slot, move in enumerate(moves):
+                    self.invoke('GetMoveIDFromIndex', hl=move)
+                    payload[moves_offset+slot] = self.r.A
                 payload[addr(prefix+'Level')-addr(prefix)] = 20
                 self.write(prefix, payload)
                 originals.append(bytes(payload))
@@ -135,10 +146,10 @@ def main():
             patches = self.get('wLinkMisc', patch_len)
             assert 0xfe not in packet[6+party_offset-2:6+party_offset+6*stride]
             assert self.get('wPartyMons', 6*stride) == before
-            return packet, patches, originals, raw
+            return packet, patches, originals, raw, native_moves
 
         def receive(self, sent, identities):
-            packet, patches, originals, raw = sent
+            packet, patches, originals, raw, native_moves = sent
             self.write('wOTPartyData', packet)
             self.put('wBattleAction', 0xfe)  # serial terminator at wOTPartyDataEnd
             self.write('wPlayerTrademonSpecies', patches)
@@ -155,6 +166,11 @@ def main():
                 expected = bytearray(original)
                 self.invoke('GetLegacySpeciesAndFormFromNativeIDBC', bc=identity, a=original[form])
                 expected[0], expected[form], expected[unused] = self.r.C, self.r.B, 0
+                for slot, native_move in enumerate(native_moves[i]):
+                    self.invoke('GetMoveIndexFromID', a=actual[moves_offset+slot])
+                    assert self.r.HL == native_move, ('wire move identity', i, slot, self.r.HL, native_move)
+                    self.invoke('GetMoveIDFromIndex', hl=native_move)
+                    expected[moves_offset+slot] = self.r.A
                 assert actual == expected, (hex(identity), actual.hex(), expected.hex())
                 self.invoke('GetNativeSpeciesIDFromLegacyPokemonDataStruct', hl=addr(prefix), de=form)
                 assert self.bc() == identity
@@ -196,6 +212,10 @@ def main():
                         assert not peer.invoke('AddTempMonToParty')
                         peer.invoke('GetNativeSpeciesIDFromPokemonDataStruct', hl=addr('wPartyMon1'), de=form)
                         assert peer.bc() == teams[1-i][0][0]
+                        for slot, native_move in enumerate(packets[1-i][4][0]):
+                            peer.invoke('GetMoveIndexFromID', a=peer.get('wPartyMon1Moves',4)[slot])
+                            assert peer.r.HL == native_move, 'post-trade native move identity'
+                        assert peer.get('wPartyMon1Nickname',name_len)==bytes([0x87]*10+[0x50])
 
         peer = peers[0]
         peer.reset(native=True)
@@ -219,27 +239,47 @@ def main():
         packet = bytearray(valid)
         packet[addr('wLinkPartyCount')-addr('wLinkData')] = 1  # nonzero unused identities
         corruptions.append(packet)
+        packet = bytearray(valid)
+        packet[party_offset+moves_offset] = 255
+        packet[addr('wLinkPlayerMoveHighs')-addr('wLinkData')] = 255
+        corruptions.append(packet)
         for packet in corruptions:
             peer.write('wLinkData', packet)
             before = peer.get('wOTPartyMons', 6*stride)
             peer.m[0xff70] = 2
             table = peer.get('wPokemonIndexTable', 256)
+            move_table = peer.get('wMoveIndexTable', 512)
             peer.m[0xff70] = 1
             assert peer.invoke('Link_LoadOTParty'), 'reject malformed party'
             assert peer.get('wOTPartyMons', 6*stride) == before
             peer.m[0xff70] = 2
             assert peer.get('wPokemonIndexTable', 256) == table
+            assert peer.get('wMoveIndexTable', 512) == move_table
             peer.m[0xff70] = 1
 
         for mode in (2, 3):
             peer.put('wLinkMode', mode)
-            for version, minimum, expected in ((6, 6, 1), (5, 5, 2 if mode == 2 else 0),
+            for version, minimum, expected in ((7, 7, 1), (6, 6, 2 if mode == 2 else 0),
                                                 (4, 4, 2 if mode == 2 else 0),
-                                                (7, 7, 3 if mode == 2 else 0)):
+                                                (8, 8, 3 if mode == 2 else 0)):
                 peer.write('wLinkOtherPlayerVersion', version.to_bytes(2, 'big'))
                 peer.write('wLinkOtherPlayerMinTradeVersion', minimum.to_bytes(2, 'big'))
                 peer.invoke('CheckCorrectLinkVersion')
                 assert peer.r.A == expected, (mode, version, peer.r.A)
+
+        if wide_move:
+            sender, receiver = peers
+            sender.reset(seed=3)
+            sent=sender.prepare(roster,3)
+            receiver.reset(seed=0)
+            receiver.m[0xff70]=2
+            receiver.write('wMoveIndexTableEntries',b''.join(n.to_bytes(2,'little') for n in range(1,231)))
+            receiver.put('wMoveIndexTableUsedSlots',230)
+            receiver.m[0xff70]=1
+            receiver.receive(sent,roster)
+            receiver.m[0xff70]=2
+            assert receiver.get('wMoveIndexTableUsedSlots',1)[0] < 230, 'move GC not forced'
+            receiver.m[0xff70]=1
 
         if wide:
             # Force the first received wide allocation to collect a full local
@@ -274,7 +314,7 @@ def main():
                 assert peer.bc() == wide, (prefix, 'trade animation GC root')
         print(f'PASS: {cases} two-peer native packet transfers; real serial escaping, '
               'battle/trade handoffs, metadata, empty slots, invalid IDs and version rejection; '
-              f'wide={hex(wide) if wide else "none"}; no ROM stubs, cable timing not emulated')
+              f'species={hex(wide) if wide else "ordinary"}, moves={hex(wide_move) if wide_move else "ordinary"}; no ROM stubs, cable timing not emulated')
     finally:
         for peer in peers:
             peer.p.stop(save=False)

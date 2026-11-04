@@ -123,14 +123,14 @@ def main():
         hp = get('wTempMonMaxHP', 12)
         assert any(hp)
         invoke('EncodeTempMon')
-        assert m[addr('wEncodedTempMonSpecies')] == 0
-        assert get('wEncodedTempMonExtra', 3)[1:] == native.to_bytes(2, 'little')
+        assert m[addr('wEncodedTempMonSpecies')] == native & 255
+        assert get('wEncodedTempMonExtra', 2)[1] == native >> 8
         invoke('ChecksumTempMon')
         assert r.F & 0x80
         encoded = get('wEncodedTempMonSpecies', addr('wEncodedTempMonEnd')-addr('wEncodedTempMonSpecies'))
         write('wTempMonSpecies', bytes(addr('wTempMonExtra')+3-addr('wTempMonSpecies')))
         write('wEncodedTempMonSpecies', encoded)
-        assert not invoke('DecodeTempMon')
+        assert not invoke('DecodeTempMon', ticks=40)
         assert get('wTempMonMaxHP', 12) == hp
         invoke('GetNativeSpeciesIDFromLegacyPokemonDataStruct', hl=addr('wTempMonSpecies'),
                de=addr('wTempMonForm')-addr('wTempMonSpecies'))

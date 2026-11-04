@@ -12,11 +12,11 @@ _CheckContactMove::
 .not_punching_glove
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVar
-	cp STRUGGLE
-	ret nc
+	cp_move STRUGGLE
+	ret z
 	push af
 	ld hl, AbnormalContactMoves
-	call IsInByteArray
+	call IsInMoveArray
 	ld b, PHYSICAL
 	jr nc, .not_abnormal
 	assert PHYSICAL + 1 == SPECIAL

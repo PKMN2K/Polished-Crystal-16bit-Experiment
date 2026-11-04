@@ -1225,7 +1225,13 @@ GetBuenasPassword:
 	jmp GetItemName
 
 .Move:
-	call .GetTheIndex
+	ld h, 0
+	ld l, c
+	add hl, hl
+	add hl, de
+	ld a, BANK(BuenasPasswordTable)
+	call ReadMoveWordFromHL
+	ld [wNamedObjectIndex], a
 	jmp GetMoveName
 
 .GetTheIndex:

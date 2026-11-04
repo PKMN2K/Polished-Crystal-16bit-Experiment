@@ -111,7 +111,7 @@ RunBattleAnimScript:
 	jr nz, .not_rollout
 
 	ld a, [wFXAnimIDLo]
-	cp ROLLOUT
+	cp_move ROLLOUT
 	jr nz, .not_rollout
 
 	ld a, $2e
@@ -1250,10 +1250,18 @@ ClearBattleAnims:
 	ld a, [hli]
 	ld d, [hl]
 	ld e, a
+	ld a, d
+	and a
+	jr nz, .control_animation
+	ld a, e
+	farcall LoadNativeMoveAnimation
+	jr .got_animation
+.control_animation
 	ld hl, BattleAnimations
 	add hl, de
 	add hl, de
 	call GetBattleAnimPointer
+.got_animation
 	call BattleAnimAssignPals
 	jmp DelayFrame
 

@@ -2,17 +2,21 @@ MACRO unique_moves
 	db \1 ; landmark
 	if _NARG == 4
 		dp \2, \3 ; species, form
-		db \4 ; move
+		dw \4 ; native move
 	else
 		dp \2 ; species
-		db \3 ; move
+		dw \3 ; native move
 	endc
 ENDM
 
 ; TODO: finish unique moves
 UniqueWildMoves:
 	; event mons (100% chance, see engine/battle/unique_wild_moves.asm)
+if DEF(NATIVE_MOVE_TEST)
+	unique_moves MAHOGANY_TOWN, VOLTORB, WIDE_TEST_MOVE
+else
 	unique_moves MAHOGANY_TOWN,    VOLTORB,    EXPLOSION    ; TeamRocketBaseB1F
+endc
 	unique_moves MAHOGANY_TOWN,    KOFFING,    EXPLOSION    ; TeamRocketBaseB1F
 	unique_moves MAHOGANY_TOWN,    GEODUDE,    EXPLOSION    ; TeamRocketBaseB1F
 	unique_moves UNION_CAVE,       LAPRAS,     SHELL_SMASH  ; UnionCaveB2F, Fridays

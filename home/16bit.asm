@@ -70,3 +70,48 @@ LockPokemonID::
 ; out: a = transient 8-bit ID
 GetLockedPokemonID::
 	___conversion_table_homecall_readlocked wPokemonIndexTable
+
+; Byte handles at runtime, native words at data/storage boundaries.
+GetMoveIndexFromID::
+	farjp _GetMoveIndexFromID
+GetMoveIDFromIndex::
+	farjp _GetMoveIDFromIndex
+CompareMoveIDToDE::
+	farjp _CompareMoveIDToDE
+LoadMoveIDPreservingFlags::
+	push bc
+	push af
+	call GetMoveIDFromIndex
+	ld b, a
+	pop af
+	ld a, b
+	pop bc
+	ret
+
+FarPlaceMoveDescription::
+	call StackCallInBankA
+	jp PlaceString
+
+FarBattleMoveDescription::
+	call StackCallInBankA
+	jp BattleTextbox
+
+ReadMoveIDFromHL::
+	farjp _ReadMoveIDFromHL
+ReadNativeMoveID::
+	farjp _ReadNativeMoveID
+ReadMoveWordFromHL::
+	farjp _ReadMoveWordFromHL
+SkipMoveIDFromHL::
+	farjp _SkipMoveIDFromHL
+
+IsInMoveArray::
+	ld de, 2
+IsInMoveArrayWithStride::
+; A runtime move in a native word array at HL, DE record stride; carry if found.
+	push hl
+	call GetMoveIndexFromID
+	ld b, h
+	ld c, l
+	pop hl
+	jp IsInWordArray

@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: incomplete engine port; native species link-packet checkpoint.**
+**Status: native species and move-ID port integrated; gameplay and hardware validation remain.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -13,126 +13,163 @@ Branch: `migration/danielolivaw-16bit` in
 - Toolchain: RGBDS 1.0.4, PyBoy 2.7.0, Python 3.12.
 
 The donor shares the original aaaaaa123456789/pokecrystal16 index architecture.
-The conversion-table macros, bank-safe home wrappers, WRAM table allocation
-and indirect pointer routines were checked against the requested donor.
-Existing adapters implement that architecture with current RGBDS syntax and
-Polished-specific party, form, Newbox and save layouts. The donor's move table,
-additional roster and gameplay content were not imported.
-Source commits and SHA-256 hashes of donor reference files are recorded in
-`docs/16bit-sources.json`.
+Conversion-table macros, bank-safe home wrappers, table allocation and indirect
+pointer routines were checked against the requested donor. The species and move
+adapters use that architecture with current RGBDS syntax and Polished-specific
+party, form, Newbox and save layouts. Additional roster and gameplay content
+were not imported. Source commits and SHA-256 hashes of donor reference files
+are recorded in `docs/16bit-sources.json`.
 
-## Integrated in this branch
+## Native identities and consumers
 
-- Existing-roster native species identities with separate mechanical variants,
-  transient byte IDs, allocation, locks and garbage collection.
-- Widened trainer/wild/event species records and native table indirection for
-  stats, names, evolution/learnset data, graphics and Pokédex data.
-- Native player-party/daycare storage, direct battle identity shadows, and
-  Polished's native Newbox storage and conversion-table save integrity envelope.
-- Fresh games initialize native player storage. Opponent and temporary records
-  retain their byte/form layout, with explicitly tagged conversion-table handles
-  for wide roots. Native IDs are decoded before names, cries, data and picture
-  lookups; wide identities are not truncated to nine bits.
-- Conversion-table collection protects live wide handles in opponent/link-party
-  workspaces, battle/temporary records, trade-animation records and rendering
-  globals.
-- Link protocol 6 carries native species words and separate form/egg/gender
-  metadata. The receiver validates identities before allocating its own runtime
-  aliases. Packet lengths and serial escaping remain unchanged; older link
-  protocols are rejected for both trading and battles.
-- Evolution targets and hatchling records store a native word plus a separate
-  form. Evolution-list readers skip whole records, so an ID byte of `$ff` is
-  not mistaken for a terminator. Party-species evolution parameters use words.
-- Pokédex lists store native root words plus separate form/metadata. List
-  construction and searches do not retain one conversion slot per species.
-- Daycare compatibility preserves the first parent's gender across the second
-  decoder. Form/ball inheritance preserves its selected parent-field pointer.
-- Current upstream's single grass encounter rate, new Battle Tower Bloodmoon
-  sets, current map/assets and WRAM layout are retained.
-- Save version 12 is required. Version 10 and both incompatible meanings of
-  version 11 are rejected. No automatic old-save upgrade is claimed.
-- Fixed inherited Metal Powder behavior: non-Ditto Pokémon no longer get the
-  boost, and faithful builds preserve the defense value during species matching.
-- Fixed native Hall of Fame restoration: keep the full species word while
-  locating the form byte, and preserve gender/personality metadata. The
-  regression covers all mechanical variants, cosmetic forms, ten stored
-  teams, history rotation and party-to-save/load with Eggs excluded.
-- Reconciled imported assembly with the upstream optimization check while
-  retaining the native decoders' register and bank-switching contracts.
-- A single bounded test runner, thirteen-config CI, and shared opcode-checked hooks
-  replace unsafe ResetSubHit/GetUserItem entry breakpoints across the suite.
-- Stale tests now use the valid extended root $0101 instead of reserved $0100,
-  correct ability-slot bits and supported PyBoy register access. The end-turn
-  fixture controls speed-tie randomness and checks side preservation.
+- Native species identities retain separate mechanical variants, byte runtime
+  aliases, allocation, locks and garbage collection. Trainer/wild/event species
+  records and stats, names, evolution, learnsets, graphics and Pokédex lookups
+  use native identities.
+- Fresh games initialize native player/daycare storage and native move handling.
+  Opponent and temporary species records retain their byte/form layout with
+  tagged conversion-table handles for wide roots. Direct battle identity shadows
+  preserve full words independently of those aliases.
+- Move IDs use a separate donor-style 230-entry conversion table with 18 lock
+  slots, 16 recent allocations and a 16-entry cache. The table occupies 512 WRAM
+  bytes. Party/daycare, both battle sides, temporary/link records, move menus,
+  AI/history and animation state are garbage-collection roots. A compile-time
+  bound reserves enough entries for all roots, locks and recent allocations.
+- Move data, names, descriptions and animations use native table indirection.
+  Catalog ordinals map sparse wide IDs to data without allocating thousands of
+  empty pointer entries. Ordinary battle moves keep a byte runtime handle;
+  animation controls retain their independent `$0100+` namespace.
+- Move constants, AI/ability lists, priorities, traps, conditional boosts,
+  Metronome, Sketch/Transform, learning, breeding, evolution parameters,
+  relearner/tutor/TM paths, trainers, Battle Tower, special eggs, wild encounters,
+  gifts, field moves and radio move names use the native adapters.
+- Evolution targets and Pokédex lists retain native species words and separate
+  form/metadata. Evolution readers skip whole records, including word move
+  parameters, so `$ff` inside an ID is never a list terminator.
+- Current upstream's grass encounter rate, Bloodmoon Battle Tower sets, assets
+  and gameplay data are retained. Existing species fixes cover daycare gender
+  and form inheritance, Metal Powder and native Hall of Fame restoration.
+- Opponent party/name copies now resolve each source address explicitly; the
+  new link sidecar means those arrays no longer share one offset from the
+  player arrays. The relearner supplies the explicit species-to-form offset.
 
-## Verification
+## Formats and compatibility
 
-The exact local build/test results and ROM hashes are recorded in
-`docs/16bit-validation.json`. These are local results; GitHub Actions status must
-be checked separately for the published commit.
+The ROM remains **2 MiB MBC3 with 32 KiB SRAM**, and the PC retains **400 usable
+Pokémon slots**. Native move words are stored at persistent and link boundaries;
+transient handles are reconstructed for the current session.
 
-The normal and debug CPU suites each include 162 test programs. The ordinary
-roster checks include native daycare generation, all 289 Pokédex list entries
-in national/Johto/alphabetical order, cursor selection and cosmetic form cycling.
+| Boundary | Encoding |
+| --- | --- |
+| Runtime move slots | Byte handles into the independent move table; zero means no move |
+| Sequential ROM move streams | IDs `$0000–$00fe`: one byte; IDs `$00ff–$ffff`: `$ff` escape plus little-endian word |
+| Indexed ROM move arrays | Little-endian native words; list terminators are explicit `$ffff` words |
+| Primary/backup party and daycare saves | 32 native move words per copy, with magic and checksum, in existing padding |
+| PC record | 51 bytes; four native low bytes plus four high bytes, all checksummed |
+| Link party | Move low bytes in each record and 24 high bytes after the six records |
 
-Five separate `native-test` builds define one real catalog fixture at `$0201`,
-`$02fd`, `$02fe`, `$02ff` or `$0300`. They reuse Annihilape's art/stats and have explicit native
-evolution and hatchling records. They add no Pokémon to the production roster.
-`tests/fixtures/wide_species.py` uses no ROM stubs and exercises:
+`move_id` emits the compact ROM stream; `ReadMoveIDFromHL` allocates its runtime
+handle and `SkipMoveIDFromHL` skips an entire encoded ID. Fixed arrays use `dw`
+and `ReadMoveWordFromHL`. Runtime literals use `ld_move` and `cp_move`.
+Learnset level terminators remain separate from the encoded move. Native move
+zero means no move, and `$ffff` remains reserved, never a playable move.
+Adding moves requires real data/name/description/animation records and catalog
+mapping, rather than increasing a count alone.
 
-- Native encounter-record reading and the full wild generator, plus player and
-  opponent insertion, catching and native battle identity publication.
-- Base data, names, cries, front-picture decompression and battle-picture identity.
-- Full PC encoding/checksum/decoding with stat reconstruction, evolution
-  eligibility/target decoding in both directions, and daycare egg generation.
-- Pokédex construction, cursor lookup and search; primary/backup Pokémon data
-  and conversion-table saves; independent runtime roots under allocator pressure.
+**Save version 13 is required.** Versions 10, 11 and 12 are rejected; no automatic
+old-save importer is provided. Party/save block lengths remain unchanged. PC
+records store species low/high directly, derive level from experience, and use
+17 name characters for the existing character/checksum encoding. Binary move
+highs have separate checksum coverage. Each database half has 160/27/20 records
+across its three SRAM sections: 207 per half, 414 physical records total.
 
-These are compiled-routine integration checks with synthetic game state. They
-are not a complete interactive playthrough, an entire wide-species battle, or a
-physical cable compatibility test. Existing battle regressions document any presentation
-or unrelated-behavior stubs in their individual files.
+**Link protocol 7 is required for both trading and battles.** The receiver
+validates every species and move word before allocating peer-local aliases.
+The party packet is 465 bytes; serial escaping covers the added move sidecar.
+The mail buffer boundary remains separate.
 
-`tests/test_native_link_packets.py` runs two independent emulator instances with
-different conversion tables. Each normal/debug/wide ROM executes 48 party-packet
-transfers across party sizes 1–6, trade/battle modes and both input formats. The
-real packet builder, serial patch encoder/decoder, identity validation, battle
-shadow publication and post-trade persistent insertion run without ROM stubs.
-The harness transports byte buffers; it does not simulate cable interrupts,
-link timing, the trade animation, mail delivery or a complete linked battle.
-Wide builds also force collection during receive and independently preserve
-all four trade-animation identity roots under allocator pressure.
-
-The version-6 party record has the following wire representation:
-
-| Field | On the wire | After receiving |
+| Party field | On the wire | After receiving |
 | --- | --- | --- |
-| `MON_SPECIES` | Native ID low byte | Local runtime species byte |
-| `MON_UNUSED` | Native ID high byte | Zero |
+| `MON_SPECIES` | Native species low byte | Local runtime species byte |
+| `MON_UNUSED` | Native species high byte | Zero |
 | `MON_FORM` | Form, egg and gender metadata; EXTSPECIES clear | Locally encoded form/metadata |
+| `MON_MOVES` | Four native move low bytes | Four local runtime move handles |
+| Move sidecar | Four native move high bytes per slot | Used to reconstruct those handles |
 
 Eggs carry their underlying native species, never the `$00ff` display sentinel.
 Unused slots are zeroed. Unsupported IDs, invalid counts and wire EXTSPECIES
-bits are rejected before any destination records or allocator state are changed.
-Save version 12 and party/save struct sizes remain unchanged.
+bits are rejected before destination records or either allocator are changed.
 
-Build a fixture with `make native-test NATIVE_TEST_SPECIES=513` (or 765–768),
-then run `python3 tests/fixtures/wide_species.py polishedcrystal-native-test-3.2.3.gbc`.
-Run `make tidy` between configurations. Production builds leave
-`NUM_WIDE_SPECIES` at zero; adding a roster requires defining native records,
-ordering and any new form/classification data rather than changing a count alone.
+## Verification
 
-## Remaining work before a completed engine migration
+`docs/16bit-validation.json` records local results and exact ROM hashes. GitHub
+Actions status must be checked separately for the published commit. CI covers
+22 configurations: eight production combinations, five species fixtures, eight
+move fixtures and one combined fixture. Normal and debug each run 163 CPU test
+programs. Static audits reject byte-only symbolic move boundaries and known
+unsafe emulator entry hooks; the upstream optimization check remains enabled.
 
-1. Validate protocol 6 over an actual cable or a linked emulator pair, including
-   a complete trade/animation, mail delivery and linked battle. The automated
-   two-peer packet tests do not establish hardware timing compatibility.
-2. Port the donor's move-ID conversion architecture and all move consumers for
-   the expanded move namespace.
-3. Validate wide-species gameplay interactively, including a complete battle,
-   evolution animation, hatching, transfers and longer allocator lifetimes.
-4. Extend and test content-specific forms/classification tables for any added
-   roster, and provide explicit save-import tooling if old saves must migrate.
+Five species-only `native-test` builds define one catalog fixture at `$0201`,
+`$02fd`, `$02fe`, `$02ff` or `$0300`, reusing Annihilape's art/stats with explicit
+native evolution and hatchling records. They add no production Pokémon.
+`tests/fixtures/wide_species.py` executes real encounter/generator, insertion,
+catching, battle-identity, names/cries/pictures, PC, evolution, daycare, Pokédex,
+save and allocator paths without ROM stubs.
 
-The branch remains experimental. The five high-ID catalog fixtures prove the
-listed paths, not a finished replacement engine or an arbitrary expanded roster.
+Move-only fixtures use `$0100`, `$0101`, `$01fd`, `$01fe`, `$01ff`, `$0200`,
+`$fd01` and `$feff`. A combined build uses species `$02ff` and move `$fffe`.
+They reuse Tackle, except `$fd01` reuses Ember to cover a special non-contact
+move above the old Struggle boundary. Production builds add no moves.
+`tests/test_native_move_ids.py` covers:
+
+- All 255 ordinary moves: eight properties, names, descriptions, structs,
+  animations and contact classifications, with handles distinct from IDs.
+- Root preservation under collection, primary/backup native save remapping,
+  corrupt sidecar rejection and PC round trips with derived levels.
+- Address and non-overlap checks for all 414 physical PC records.
+- Compact/fixed readers, learnsets, TMs and synchronized random selection.
+- Real move-data, priority, contact, damage and STAB routines on both sides;
+  wide and ordinary aliases must produce equal damage.
+- Wide egg/level inheritance, evolution parameter names, evolution-move
+  duplicate detection, relearner and TM compatibility, special egg insertion,
+  trainers, Battle Tower, unique wild moves and script readers. Gift insertion
+  is observed before its naming UI; the full gift UI is not exercised.
+
+`tests/test_native_link_packets.py` runs two independent emulator instances
+with different species and move tables. Each normal/debug/fixture ROM executes
+48 transfers across party sizes 1–6, trade/battle modes and both species input
+formats. The actual packet builder, serial patch codec, validation, battle
+shadow publication and post-trade persistent insertion run without ROM stubs.
+Wide fixtures force collection while receiving and check independent roots.
+The high-ID fixtures include serial control bytes in both halves of an ID.
+
+These are compiled-routine integration checks with synthetic game state. The
+link harness transports buffers; it does not simulate cable interrupts, timing,
+the complete trade animation, mail delivery or a complete linked battle.
+Existing battle regressions document their presentation/unrelated-behavior
+stubs. Shared opcode-checked observation helpers avoid emulator breakpoint
+loops without replacing the observed battle routines.
+
+Example fixture builds (run `make tidy` between configurations):
+
+```sh
+make native-test NATIVE_TEST_SPECIES=513
+python3 tests/fixtures/wide_species.py polishedcrystal-native-test-3.2.3.gbc
+make tidy
+make native_move_test=1 NATIVE_TEST_MOVE=64769
+python3 tests/test_native_move_ids.py polishedcrystal-3.2.3.gbc
+python3 tests/test_native_link_packets.py polishedcrystal-3.2.3.gbc
+```
+
+## Remaining work before a completed migration
+
+1. Validate protocol 7 over an actual cable or a linked emulator pair, including
+   a complete trade/animation, mail delivery and linked battle.
+2. Validate wide species and moves interactively through complete battles,
+   learning/evolution/hatching animations, transfers and long allocator lifetimes.
+3. Add and test the intended expanded roster/move content and any corresponding
+   forms/classification tables. Provide explicit save-import tooling if older
+   saves must migrate.
+
+The branch remains experimental. The high-ID fixtures establish the paths
+listed above, not a complete interactive playthrough or arbitrary added content.

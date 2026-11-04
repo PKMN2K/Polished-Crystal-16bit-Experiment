@@ -63,6 +63,9 @@ ifeq ($(filter native-test,$(MAKECMDGOALS)),native-test)
 MODIFIERS := $(MODIFIERS)-native-test
 RGBASMFLAGS += -DNATIVE_SPECIES_TEST=$(or $(NATIVE_TEST_SPECIES),513)
 endif
+ifeq ($(native_move_test),1)
+RGBASMFLAGS += -DNATIVE_MOVE_TEST=$(or $(NATIVE_TEST_MOVE),257)
+endif
 ifeq ($(filter pocket,$(MAKECMDGOALS)),pocket)
 MODIFIERS :=
 NAME := pkpc

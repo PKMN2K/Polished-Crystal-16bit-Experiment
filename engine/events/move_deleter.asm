@@ -144,9 +144,9 @@ MoveDeletion:
 	ld bc, MON_FORM - MON_SPECIES
 	add hl, bc
 	ld a, [wMoveScreenSelectedMove]
-	cp FLY
+	cp_move FLY
 	jr z, .reset_pikachu_form
-	cp SURF
+	cp_move SURF
 	ret nz
 .reset_pikachu_form
 	ld a, [hl]

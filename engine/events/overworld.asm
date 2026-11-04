@@ -133,7 +133,8 @@ CheckPartyMove:
 	ret
 
 CheckForSurfingPikachu:
-	lb de, SURF, HM_SURF
+	ld_move d, SURF
+	ld e, HM_SURF
 	call CheckPartyMove
 	jr c, .no
 	ld a, MON_SPECIES
@@ -386,7 +387,8 @@ TryFlashOW::
 	ld a, [wTimeOfDayPalset]
 	cp DARKNESS_PALSET
 	jr nz, .quit
-	lb de, FLASH, TM_FLASH
+	ld_move d, FLASH
+	ld e, TM_FLASH
 	call CheckPartyMove
 	jr c, .quit
 	call GetPartyNickname
@@ -627,7 +629,8 @@ TrySurfOW::
 	call CheckEngineFlag
 	jr c, .quit
 
-	lb de, SURF, HM_SURF
+	ld_move d, SURF
+	ld e, HM_SURF
 	call CheckPartyMove
 	jr c, .quit
 
@@ -890,7 +893,8 @@ Script_AutoWaterfall:
 	step_end
 
 TryWaterfallOW::
-	lb de, WATERFALL, HM_WATERFALL
+	ld_move d, WATERFALL
+	ld e, HM_WATERFALL
 	call CheckPartyMove
 	jr c, .failed
 	ld de, ENGINE_RISINGBADGE
@@ -1182,7 +1186,8 @@ AskStrengthScript:
 	endtext
 
 TryStrengthOW:
-	lb de, STRENGTH, HM_STRENGTH
+	ld_move d, STRENGTH
+	ld e, HM_STRENGTH
 	call CheckPartyMove
 	jr c, .nope
 
@@ -1332,7 +1337,8 @@ Script_AutoWhirlpool:
 	step_end
 
 TryWhirlpoolOW::
-	lb de, WHIRLPOOL, HM_WHIRLPOOL
+	ld_move d, WHIRLPOOL
+	ld e, HM_WHIRLPOOL
 	call CheckPartyMove
 	jr c, .failed
 	ld de, ENGINE_GLACIERBADGE
@@ -1437,7 +1443,8 @@ AutoHeadbuttScript:
 	farjp PrintOverworldItemIcon
 
 TryHeadbuttOW::
-	lb de, HEADBUTT, -1 ; you need the tutor for Headbutt
+	ld_move d, HEADBUTT
+	ld e, -1 ; you need the tutor for Headbutt
 	call CheckPartyMove
 	jr c, .no
 
@@ -1560,7 +1567,8 @@ AskRockSmashScript:
 	farjumptext _MaySmashText
 
 HasRockSmash:
-	lb de, ROCK_SMASH, TM_ROCK_SMASH
+	ld_move d, ROCK_SMASH
+	ld e, TM_ROCK_SMASH
 	call CheckPartyMove
 	; a = carry ? 1 : 0
 	sbc a
@@ -1962,7 +1970,8 @@ Script_CantGetOffBike:
 	waitendtext
 
 HasCutAvailable::
-	lb de, CUT, HM_CUT
+	ld_move d, CUT
+	ld e, HM_CUT
 	call CheckPartyMove
 	jr c, .no
 

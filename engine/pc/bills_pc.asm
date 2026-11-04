@@ -629,17 +629,29 @@ CopyBetweenPartyAndTemp:
 ; If bit 0 of b is set, copies from party to temp, otherwise the reverse.
 	dec c
 	ld hl, wPartyMon1
+	bit 7, b
+	jr z, .record_address
+	ld hl, wOTPartyMon1
+.record_address
 	ld de, wTempMon
 	ld a, PARTYMON_STRUCT_LENGTH
 	call .Copy
 	farcall ConvertCopiedPartyTempIdentity
 
 	ld hl, wPartyMonNicknames
+	bit 7, b
+	jr z, .nickname_address
+	ld hl, wOTPartyMonNicknames
+.nickname_address
 	ld de, wTempMonNickname
 	ld a, MON_NAME_LENGTH
 	call .Copy
 
 	ld hl, wPartyMonOTs
+	bit 7, b
+	jr z, .ot_address
+	ld hl, wOTPartyMonOTs
+.ot_address
 	ld de, wTempMonOT
 	ld a, NAME_LENGTH
 	; fallthrough
@@ -647,15 +659,6 @@ CopyBetweenPartyAndTemp:
 .Copy:
 ; Copies c bytes from hl+c*a to de if b is 1, otherwise the reverse.
 	push bc
-	bit 7, b
-	jr z, .got_party
-
-	; Copies from OT party instead.
-	push bc
-	ld bc, wOTPartyMons - wPartyMons
-	add hl, bc
-	pop bc
-.got_party
 	ld b, 0
 	push af
 	rst AddNTimes
@@ -783,7 +786,7 @@ EncodeTempMon:
 	; Move Extra bytes.
 	; de == wEncodedTempMonExtra
 	ld hl, wTempMonExtra
-	ld bc, 3
+	ld bc, 2
 	rst CopyBytes
 
 	farcall EncodeNativeBoxIdentity
@@ -798,9 +801,11 @@ EncodeTempMon:
 	ld bc, PLAYER_NAME_LENGTH - 1
 	rst CopyBytes
 
+	farcall EncodeNativeBoxMoves
+
 	; Convert nickname+OT characters into reversible 7bit.
 	ld hl, wEncodedTempMonNickname
-	ld b, wEncodedTempMonEnd - wEncodedTempMonNickname
+	ld b, wEncodedTempMonMoveHighs - wEncodedTempMonNickname
 .charmap_loop
 	ld a, [hl]
 	; " " ($7f) -> $7a
@@ -837,7 +842,12 @@ ChecksumTempMon:
 	; Counterintuitive but harmless (originally a mistake, but fixing would
 	; needlessly break saves...).
 	ld bc, wEncodedTempMonNickname
-	ld d, $80 | (SAVEMON_STRUCT_LENGTH - SAVEMON_NICKNAME)
+	ld d, $80 | (SAVEMON_MOVE_HIGHS - SAVEMON_NICKNAME)
+	call .DoChecksum
+
+	; Full move high bytes are binary, including their high bits.
+	ld bc, wEncodedTempMonMoveHighs
+	ld d, NUM_MOVES
 	call .DoChecksum
 
 	; Compare and write the result
@@ -848,7 +858,7 @@ ChecksumTempMon:
 	; The padding being nonzero is also counted as invalid.
 	ld b, 0 ; used for checksum error detection
 	ld hl, wEncodedTempMonNickname
-	ld c, SAVEMON_STRUCT_LENGTH - SAVEMON_NICKNAME
+	ld c, SAVEMON_MOVE_HIGHS - SAVEMON_NICKNAME
 .WriteChecksum:
 	ld a, [hl]
 	and %01111111
@@ -894,11 +904,13 @@ DecodeTempMon:
 	call ChecksumTempMon
 	jr nz, .checked_identity
 	farcall DecodeNativeBoxIdentity
-	ld a, 1
+	jr c, .bad_identity
+	farcall DecodeNativeBoxMoves
 	jr c, .bad_identity
 	xor a
 	jr .checked_identity
 .bad_identity
+	ld a, 1
 	and a
 .checked_identity
 	push af
@@ -906,12 +918,15 @@ DecodeTempMon:
 	; Move extra data back
 	ld hl, wEncodedTempMonExtra
 	ld de, wTempMonExtra
-	ld bc, 3
+	ld bc, 2
 	rst CopyBytes
+	xor a
+	ld [wTempMonExtra + 1], a
+	ld [wTempMonExtra + 2], a
 
 	; Reverse the 7bit character encoding back to its original state.
 	ld hl, wEncodedTempMonNickname
-	ld b, wEncodedTempMonEnd - wEncodedTempMonNickname
+	ld b, wEncodedTempMonMoveHighs - wEncodedTempMonNickname
 .charmap_loop
 	ld a, [hl]
 	or $80
@@ -958,9 +973,9 @@ DecodeTempMon:
 	jr nz, .outer_loop
 
 	; Shift data past PP to leave room for PP data.
-	ld hl, wEncodedTempMonLevel
-	ld de, wTempMonLevel
-	lb bc, NUM_MOVES, wEncodedTempMonLevel - wEncodedTempMonPPUps
+	ld hl, wEncodedTempMonCaughtLocation
+	ld de, wTempMonCaughtLocation
+	lb bc, NUM_MOVES, wEncodedTempMonCaughtLocation - wEncodedTempMonPPUps
 .reverse_copybytes_loop
 	ld a, [hld]
 	ld [de], a
@@ -982,11 +997,19 @@ DecodeTempMon:
 	jr nz, .pp_loop
 
 	pop af
-	jr z, SetTempPartyMonData
+	jr nz, .bad_egg
+	farcall CalcLevel
+	ld a, d
+	ld [wTempMonLevel], a
+	and a
+	jr SetTempPartyMonData
+.bad_egg
 
 	ld hl, BadEggRLE
 	ld de, wTempMon
 	call CopyRLE
+	ld_move a, HIDDEN_POWER
+	ld [wTempMonMoves], a
 	call SetTempPartyMonData
 	scf
 	ret

@@ -120,11 +120,11 @@ LearnMove:
 	add hl, bc
 	ld a, [wPutativeTMHMMove]
 	ld b, PIKACHU_FLY_FORM
-	cp FLY
+	cp_move FLY
 	jr z, .got_form
 	assert PIKACHU_FLY_FORM + 1 == PIKACHU_SURF_FORM
 	inc b
-	cp SURF
+	cp_move SURF
 	jr nz, .done_pikachu
 .got_form
 	ld a, [hl]

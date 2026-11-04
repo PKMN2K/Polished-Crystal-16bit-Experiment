@@ -359,7 +359,7 @@ FixDataForLinkTransfer:
 	dec a
 	jr nz, .next2
 	push bc
-	ld b, 2 + PARTYMON_STRUCT_LENGTH * PARTY_LENGTH - SERIAL_PATCH_LIST_LENGTH + 1
+	ld b, 2 + (PARTYMON_STRUCT_LENGTH + NUM_MOVES) * PARTY_LENGTH - SERIAL_PATCH_LIST_LENGTH + 1
 	ld a, c
 	cp b
 	pop bc
@@ -411,6 +411,7 @@ Link_PrepPartyData_Gen2:
 
 	ld hl, wPartyMon1Species
 	call Link_SerializePartyMons
+	call Link_EncodeNativeMoves
 
 	ld hl, wPartyMonOTs
 	ld bc, PARTY_LENGTH * NAME_LENGTH
@@ -562,11 +563,14 @@ Link_LoadOTParty:
 ; before allocation as it is not aligned to the OT party's runtime fields.
 	call Link_ValidateNativeParty
 	ret c
+	call Link_ValidateNativeMoves
+	ret c
 	ld hl, wOTPartyMons
 	ld bc, PARTYMON_STRUCT_LENGTH * PARTY_LENGTH
 	xor a
 	call ByteFill
 	call Link_DecodeNativeParty
+	call Link_DecodeNativeMoves
 	ld hl, wLinkPlayerName
 	ld de, wOTPlayerName
 	ld bc, NAME_LENGTH
@@ -3053,4 +3057,134 @@ CheckPartyForMail:
 .has_mail
 	ld a, TRUE
 	ldh [hScriptVar], a
+	ret
+
+Link_EncodeNativeMoves:
+; Outgoing preamble is still present. The move highs follow all party records.
+	ld hl, wPartyMon1Moves
+	ld de, wLinkPlayerMoveHighs + SERIAL_PREAMBLE_LENGTH
+	ld a, [wPartyCount]
+	ld c, a
+	ld b, PARTY_LENGTH
+.record
+	push bc
+	ld a, c
+	and a
+	jr z, .empty
+	push hl
+	push de
+	ld de, wLinkPlayerPartyMon1Moves + SERIAL_PREAMBLE_LENGTH - wPartyMon1Moves
+	add hl, de
+	ld b, h
+	ld c, l
+	pop de
+	pop hl
+	ld a, NUM_MOVES
+.move
+	push af
+	ld a, [hli]
+	push hl
+	call GetMoveIndexFromID
+	ld a, l
+	ld [bc], a
+	inc bc
+	ld a, h
+	ld [de], a
+	inc de
+	pop hl
+	pop af
+	dec a
+	jr nz, .move
+	ld bc, PARTYMON_STRUCT_LENGTH - NUM_MOVES
+	add hl, bc
+	jr .next
+.empty
+	xor a
+rept NUM_MOVES
+	ld [de], a
+	inc de
+endr
+	ld bc, PARTYMON_STRUCT_LENGTH
+	add hl, bc
+.next
+	pop bc
+	ld a, c
+	and a
+	jr z, .next_record
+	dec c
+.next_record
+	dec b
+	jr nz, .record
+	ret
+
+Link_ValidateNativeMoves:
+; Reject unsupported words before allocating anything; inactive slots are zero.
+	ld hl, wLinkPlayerPartyMon1Moves
+	ld de, wLinkPlayerMoveHighs
+	ld a, [wLinkPartyCount]
+	ld c, a
+	ld b, PARTY_LENGTH
+.record
+	push bc
+	ld b, NUM_MOVES
+.move
+	ld a, [de]
+	inc de
+	push hl
+	ld l, [hl]
+	ld h, a
+	or l
+	jr z, .valid
+	ld a, c
+	and a
+	jr z, .invalid
+	farcall IsValidNativeMoveHL
+	jr z, .invalid
+.valid
+	pop hl
+	inc hl
+	dec b
+	jr nz, .move
+	ld bc, PARTYMON_STRUCT_LENGTH - NUM_MOVES
+	add hl, bc
+	pop bc
+	ld a, c
+	and a
+	jr z, .next
+	dec c
+.next
+	dec b
+	jr nz, .record
+	and a
+	ret
+.invalid
+	pop hl
+	pop bc
+	scf
+	ret
+
+Link_DecodeNativeMoves:
+; Decode to peer-local handles. Each written slot is immediately a GC root.
+	ld hl, wLinkPlayerPartyMon1Moves
+	ld de, wLinkPlayerMoveHighs
+	ld b, PARTY_LENGTH
+.record
+	push bc
+	ld b, NUM_MOVES
+.move
+	ld a, [de]
+	inc de
+	push hl
+	ld l, [hl]
+	ld h, a
+	call GetMoveIDFromIndex
+	pop hl
+	ld [hli], a
+	dec b
+	jr nz, .move
+	ld bc, PARTYMON_STRUCT_LENGTH - NUM_MOVES
+	add hl, bc
+	pop bc
+	dec b
+	jr nz, .record
 	ret

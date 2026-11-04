@@ -13,6 +13,7 @@ following UpdateBattleMonInParty entry only after the real end-turn cleanup
 instructions clear both FLINCHED bits.
 """
 from pyboy_hook_safety import hook_reset_subhit_after_push
+from pyboy_hook_safety import hook_set_fastest_turn_after_speed
 import argparse
 from pathlib import Path
 
@@ -4988,7 +4989,7 @@ def main():
         hook("BattleCommand_critical", observe_critical)
         hook("ResetCrit", observe_reset_crit)
         hook_future_sight_after_push(pyboy, symbols, data, offset, observe_future_sight)
-        hook("SetFastestTurn", observe_set_fastest_turn)
+        hook_set_fastest_turn_after_speed(pyboy, symbols, data, offset, observe_set_fastest_turn)
         hook("GetSpeed", observe_get_speed)
         hook("GetUserItemAfterUnnerve", observe_user_item_after_unnerve)
         # Observe immediately after the real nested Future Sight call. The

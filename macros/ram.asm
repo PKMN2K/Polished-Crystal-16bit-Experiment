@@ -124,10 +124,10 @@ MACRO savemon_struct
 \1CaughtBall::     db
 \1CaughtLevel::    db
 \1CaughtLocation:: db
-\1Level::          db
-\1Extra::          ds 3 ; superfluous OT name bytes
+\1Extra::          ds 2 ; hyper training + native species high byte
 \1Nickname::       ds MON_NAME_LENGTH - 1
 \1OT::             ds PLAYER_NAME_LENGTH - 1
+\1MoveHighs::      ds NUM_MOVES
 \1End::
 ENDM
 

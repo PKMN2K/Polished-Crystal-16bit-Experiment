@@ -6,15 +6,25 @@ CanLearnTMHMMove:
 	push hl
 
 	ld a, [wPutativeTMHMMove]
-	ld b, a
+	call GetMoveIndexFromID
+	ld d, h
+	ld e, l
 	ld c, 0
 	ld hl, TMHMMoves
 .loop
 	ld a, [hli]
-	and a
+	ld b, a
+	ld a, [hli]
+	or b
 	jr z, .end
-	cp b
+	dec hl
+	ld a, [hli]
+	cp d
+	jr nz, .next
+	ld a, b
+	cp e
 	jr z, .found
+.next
 	inc c
 	jr .loop
 
@@ -39,7 +49,9 @@ GetTMHMMove:
 	ld b, 0
 	ld c, a
 	add hl, bc
-	ld a, [hl]
+	add hl, bc
+	ld a, BANK(TMHMMoves)
+	call ReadMoveWordFromHL
 	ld [wTempTMHM], a
 	ret
 

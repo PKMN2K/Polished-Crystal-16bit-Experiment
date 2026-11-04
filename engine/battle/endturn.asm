@@ -442,7 +442,7 @@ HandleFutureSight:
 	ld a, BATTLE_VARS_MOVE
 	call GetBattleVarAddr
 	push af
-	ld [hl], FUTURE_SIGHT
+	ld_move [hl], FUTURE_SIGHT
 	farcall UpdateMoveData
 
 	xor a

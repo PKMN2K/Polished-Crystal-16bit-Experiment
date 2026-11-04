@@ -748,6 +748,7 @@ SECTION "16-bit ID stuff", ROMX
 INCLUDE "engine/16/table_functions.asm"
 INCLUDE "engine/16/native_species.asm"
 INCLUDE "engine/16/runtime_species.asm"
+INCLUDE "engine/16/native_moves.asm"
 
 
 SECTION "Native species metadata", ROMX

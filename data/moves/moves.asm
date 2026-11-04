@@ -1,5 +1,5 @@
 MACRO move
-	db \1 ; animation
+	db 0 ; runtime handle is installed by GetFixedMoveStruct
 	db \2 ; effect
 	db \3 ; power (0 for status moves, 1 for nonstandard base power)
 	db \4 ; type
@@ -11,6 +11,14 @@ MACRO move
 ENDM
 
 Moves::
+	indirect_table MOVE_LENGTH, 1
+	indirect_entries NUM_ATTACKS, MoveData
+if NUM_WIDE_MOVES
+	indirect_alias NUM_ATTACKS + 1, MoveData, WIDE_TEST_MOVE_ALIAS - 1
+endc
+	indirect_table_end
+
+MoveData::
 ; entries correspond to move ids (see constants/move_constants.asm)
 	table_width MOVE_LENGTH
 	move ACROBATICS,      EFFECT_CONDITIONAL_BOOST,  55, FLYING,    100, 15,   0, PHYSICAL
@@ -338,3 +346,4 @@ endc
 	move DISARM_VOICE,    EFFECT_ALWAYS_HIT,         40, FAIRY,      -1, 15,   0, SPECIAL
 	move STRUGGLE,        EFFECT_RECOIL_HIT,         50, UNKNOWN_T,  -1,  1,   0, PHYSICAL
 	assert_table_length NUM_ATTACKS
+MoveData.IndirectEnd:

@@ -184,7 +184,7 @@ ReadTrainerParty:
 ; moves?
 	ld a, [wOtherTrainerType]
 	bit TRNTYPE_MOVES, a
-	jr z, .not_moves
+	jmp z, .not_moves
 
 	push hl
 	ld a, [wOTPartyCount]
@@ -198,12 +198,13 @@ ReadTrainerParty:
 
 	ld b, NUM_MOVES
 .copy_moves
-	call GetNextTrainerDataByte
+	ld a, [wTrainerGroupBank]
+	call ReadMoveIDFromHL
 	ld [de], a
 	inc de
-	cp RETURN
+	cp_move RETURN
 	jr z, .return
-	cp GYRO_BALL
+	cp_move GYRO_BALL
 	jr nz, .done_special_moves
 
 	; Set speed EVs and IVs to 0
