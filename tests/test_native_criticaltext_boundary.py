@@ -1573,7 +1573,18 @@ def main():
         hook("BattleCommand_failuretext", observe_failuretext)
         hook("GetFailureResultText", observe_failure_result_text)
         hook("BattleCommand_applydamage", observe_applydamage)
-        hook("ResetSubHit", observe_applydamage_reset_subhit)
+        # ResetSubHit falls through from LD A, imm8 directly into
+        # ResetMoveHitState (PUSH HL; LD HL, imm16). Observe after PUSH HL
+        # to avoid an entry-hook loop inside a single PyBoy tick.
+        reset_subhit_offset = offset("ResetSubHit")
+        assert offset("ResetMoveHitState") == reset_subhit_offset + 2
+        assert data[reset_subhit_offset] == 0x3E
+        assert data[reset_subhit_offset + 2:reset_subhit_offset + 4] == bytes((0xE5, 0x21))
+        reset_subhit_bank, reset_subhit_addr = symbols["ResetSubHit"]
+        pyboy.hook_register(
+            reset_subhit_bank, reset_subhit_addr + 3,
+            observe_applydamage_reset_subhit, None,
+        )
         hook("CheckSubstituteOpp", observe_applydamage_check_sub)
         hook("GetOpponentItem", observe_applydamage_item)
         hook("TakeDamage", observe_applydamage_take_damage)
