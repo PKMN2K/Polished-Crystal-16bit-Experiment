@@ -1,6 +1,6 @@
 # DanielOlivaw 16-bit migration status
 
-**Status: native species and move-ID port integrated; wild/trainer battles, capture, PC/daycare transfers, move learning, evolution, hatching, linked-emulator trades/battles and cold save reload validated. Full playthrough and physical hardware validation remain.**
+**Status: native species and move-ID port integrated; wild/trainer battles, capture, PC/daycare transfers, breeding and Egg collection, move learning, evolution, hatching, linked-emulator trades/battles and cold save reload validated. Full playthrough and physical hardware validation remain.**
 
 Branch: `migration/danielolivaw-16bit` in
 `PKMN2K/Polished-Crystal-16bit-Experiment`.
@@ -121,14 +121,15 @@ bits are rejected before destination records or either allocator are changed.
 
 ## Verification
 
-`docs/16bit-link-validation.json` records the linked-emulator results and exact
-ROM hashes. `docs/16bit-lifecycle-validation.json`,
+`docs/16bit-breeding-validation.json` records the daycare gameplay results and
+exact ROM hashes. `docs/16bit-link-validation.json` records linked-emulator results.
+`docs/16bit-lifecycle-validation.json`,
 `docs/16bit-gameplay-validation.json` and `docs/16bit-validation.json`
 retain the earlier lifecycle, encounter and move-ID phase evidence. GitHub Actions status
 must be checked separately for the published
-commit. CI covers 24 configurations: eight production combinations, five
-species fixtures, eight move fixtures, one combined fixture and two playable
-gameplay/link fixtures. Normal and debug each run 166 CPU test programs. Static audits
+commit. CI covers 25 configurations: eight production combinations, five
+species fixtures, eight move fixtures, one combined fixture and three playable
+gameplay/link/breeding fixtures. Normal and debug each run 166 CPU test programs. Static audits
 reject byte-only symbolic move boundaries and known unsafe emulator entry
 hooks; the upstream optimization check remains enabled.
 
@@ -234,6 +235,30 @@ Polished Crystal's existing receptionist explicitly rejects Pokémon carrying
 mail. This restriction is unchanged; delivery of mail is not claimed as covered.
 The test-only gifts and shortcut are absent from production builds.
 
+`tests/fixtures/native_breeding.py` starts a fresh game, receives a wide parent
+with native Ember, Ditto and a spare Pikachu, and enters the actual daycare map.
+Joypad input deposits both parents with the two NPCs, saves, cold-reloads and
+walks until the ordinary breeding step/RNG code produces an Egg. It leaves by
+the west door and collects the Egg from Grandpa on Route 34. The Egg retains
+species `$02ff`, native Ember `$fd01`, full PP and the non-Ditto parent's Great
+Ball. Growl and Transform are correctly excluded from its Egg moves.
+
+The test retrieves both parents, verifies their identities and moves, saves and
+cold-reloads the Egg, walks through all 20 hatch cycles, observes the complete
+hatch animation, then saves and cold-reloads the hatchling. It preserves species,
+form/gender, DVs, personality, trainer ID, ball, moves and PP. The local run took
+273,355 emulated frames, with no hooks, memory/register writes, ROM patches,
+save states, shortened Egg timers or forced RNG. CI retains screenshots and all
+three SRAM/RTC pairs. The test-only setup skips unrelated Lyra/Odd Egg events;
+the daycare NPCs, generation, collection, withdrawal and hatching are unchanged.
+
+This phase also corrects the wide test species' Egg-list terminator from `$00ff`
+to `$ffff`. An absent-move regression reproduced the old scanner overread and
+now checks its exact stopping address in every species fixture. Only the new
+breeding fixture adds native Ember to that test species' Egg moves. A normal
+production rebuild remains byte-identical to `52c8023`; no production behavior
+or save/link format changes are introduced.
+
 Example fixture builds (run `make tidy` between configurations):
 
 ```sh
@@ -251,6 +276,9 @@ make tidy
 make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_link_test=1
 python3 tools/build_link_emulator.py
 python3 tests/fixtures/native_link.py polishedcrystal-native-test-3.2.3.gbc --boot build/sameboy/build/bin/BootROMs/cgb_boot.bin
+make tidy
+make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_breeding_test=1
+python3 tests/fixtures/native_breeding.py polishedcrystal-native-test-3.2.3.gbc
 ```
 
 ## Remaining work before a completed migration
@@ -258,9 +286,9 @@ python3 tests/fixtures/native_link.py polishedcrystal-native-test-3.2.3.gbc --bo
 1. Validate protocol 7 on physical hardware and an actual cable. The linked
    emulator now covers complete trade animations and a complete battle; mail
    trading remains disabled by the existing game policy.
-2. Extend joypad-driven coverage to daycare breeding/egg collection, long allocator
-   lifetimes across many distinct identities, additional gameplay systems and a
-   full playthrough. Gift-Egg hatching is covered; it is not breeding UI coverage.
+2. Extend joypad-driven coverage to long allocator lifetimes across many distinct
+   identities, additional gameplay systems and a full playthrough. Daycare
+   breeding now covers one wide-species/Ditto pair, not every breeding combination.
 3. Add and test the intended expanded roster/move content and any corresponding
    forms/classification tables. Provide explicit save-import tooling if older
    saves must migrate.

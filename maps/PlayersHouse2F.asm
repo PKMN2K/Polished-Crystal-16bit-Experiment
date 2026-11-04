@@ -48,6 +48,9 @@ PlayersHousePoster:
 	describedecoration 0
 
 PlayersHouseRadio:
+if DEF(NATIVE_BREEDING_TEST)
+	sjumpfwd NativeBreedingScenario
+endc
 if DEF(NATIVE_LINK_TEST)
 	sjumpfwd NativeLinkScenario
 endc
@@ -419,4 +422,8 @@ endc
 
 if DEF(NATIVE_LINK_TEST)
 INCLUDE "tests/fixtures/native_link.asm"
+endc
+
+if DEF(NATIVE_BREEDING_TEST)
+INCLUDE "tests/fixtures/native_breeding.asm"
 endc

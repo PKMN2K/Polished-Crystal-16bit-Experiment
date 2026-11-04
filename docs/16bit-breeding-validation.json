@@ -1,0 +1,179 @@
+{
+  "base_commit": "52c80238822589bd9c221419cbb618852d2b29bf",
+  "scope": "Joypad-only daycare breeding and Egg collection for native species $02ff and move $fd01 (Ember).",
+  "toolchain": {
+    "rgbds": "1.0.4",
+    "pyboy": "2.7.0",
+    "pillow": "13.0.0"
+  },
+  "build_flags": "native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_breeding_test=1",
+  "fixture_rom": {
+    "size": 2097152,
+    "sha256": "64b6741276094f5d2f7252918b786973d32dd87e3e8886e57940cabd491fc742"
+  },
+  "normal_rom": {
+    "size": 2097152,
+    "sha256": "35ad3e0a2caa90e3d02c5aa7ecd1cab7084b5ab6c9d55014d1bb86d0bfa12187"
+  },
+  "normal_rom_unchanged_from_base": true,
+  "result": "passed",
+  "emulated_frames": 273355,
+  "hatch_cycles": 20,
+  "cold_reloads": 3,
+  "checkpoints": [
+    {
+      "name": "parents-ready",
+      "frame": 5415
+    },
+    {
+      "name": "wide-parent-deposited",
+      "frame": 6155
+    },
+    {
+      "name": "ditto-deposited",
+      "frame": 7300
+    },
+    {
+      "name": "parents-saved",
+      "frame": 7885
+    },
+    {
+      "name": "parents-cold-continue",
+      "frame": 8590
+    },
+    {
+      "name": "egg-ready",
+      "frame": 42520
+    },
+    {
+      "name": "bred-egg-collected",
+      "frame": 43920
+    },
+    {
+      "name": "parents-withdrawn",
+      "frame": 46300
+    },
+    {
+      "name": "egg-saved",
+      "frame": 46795
+    },
+    {
+      "name": "egg-cold-continue",
+      "frame": 47500
+    },
+    {
+      "name": "bred-egg-hatched",
+      "frame": 271780
+    },
+    {
+      "name": "hatched-saved",
+      "frame": 272605
+    },
+    {
+      "name": "hatched-cold-continue",
+      "frame": 273310
+    }
+  ],
+  "collected_egg": {
+    "species": 767,
+    "form": 225,
+    "level": 1,
+    "exp": 0,
+    "id": "15ed",
+    "dvs": "5ec040",
+    "personality": 68,
+    "ball": 2,
+    "moves": [
+      33,
+      64769,
+      0,
+      0
+    ],
+    "pp": [
+      35,
+      25,
+      0,
+      0
+    ]
+  },
+  "hatched_child": {
+    "species": 767,
+    "form": 161,
+    "level": 1,
+    "exp": 0,
+    "id": "15ed",
+    "dvs": "5ec040",
+    "personality": 68,
+    "ball": 2,
+    "moves": [
+      33,
+      64769,
+      0,
+      0
+    ],
+    "pp": [
+      35,
+      25,
+      0,
+      0
+    ]
+  },
+  "battery_files": {
+    "egg.ram": {
+      "size": 32768,
+      "sha256": "393ac1846e5728c851fc30ed429353fb137e97b936661675d22f3f8bc247fc97"
+    },
+    "hatched.ram": {
+      "size": 32768,
+      "sha256": "da6fed5297f7f666902d8121983dd37a9cf6ce5f55af7724434bfa4899aeff61"
+    },
+    "parents.ram": {
+      "size": 32768,
+      "sha256": "a23a6a60e27663254b040a9921204ee2fd391cc1f369584702a31f2aee103bf5"
+    },
+    "egg.rtc": {
+      "size": 10,
+      "sha256": "c228da82a8045599e534d20f478eb290874e953e4c191d09a5075ad84e1e48f9"
+    },
+    "hatched.rtc": {
+      "size": 10,
+      "sha256": "c228da82a8045599e534d20f478eb290874e953e4c191d09a5075ad84e1e48f9"
+    },
+    "parents.rtc": {
+      "size": 10,
+      "sha256": "c228da82a8045599e534d20f478eb290874e953e4c191d09a5075ad84e1e48f9"
+    }
+  },
+  "assertions": [
+    "Both parents are deposited and retrieved through actual daycare NPC menus.",
+    "Ordinary movement and unmodified RNG produce the Egg; all 20 hatch cycles use walking.",
+    "The collected Egg and hatchling retain native species $02ff, move $fd01, full PP and the non-Ditto parent ball.",
+    "Growl and Transform are absent from the inherited moves.",
+    "The parents, Egg and hatchling survive independent menu saves and cold Continue from SRAM/RTC.",
+    "DVs, personality, trainer ID, form/gender, ball, moves and PP survive the tested transitions.",
+    "No CPU hooks, memory/register writes, ROM patches, save states or timer shortcuts are used."
+  ],
+  "regression": {
+    "file": "data/pokemon/egg_moves.asm",
+    "table": "WideTestEggSpeciesMoves",
+    "cause": "The test-only list ended with $00ff instead of the native word sentinel $ffff.",
+    "before": "An absent Growl lookup did not return within the CPU test budget on the base ROM.",
+    "after": "The absent lookup returns without inheritance and stops exactly at the $ffff sentinel.",
+    "test": "tests/fixtures/wide_species.py",
+    "production_affected": false
+  },
+  "local_checks": [
+    "Wide-species integration",
+    "Native move IDs",
+    "Native link packet transfers",
+    "Daycare generation",
+    "Trainer/daycare readers",
+    "Joypad daycare breeding",
+    "Normal production build/hash comparison"
+  ],
+  "limits": [
+    "One wide-species/Ditto pairing is covered; this is not an exhaustive breeding matrix.",
+    "Physical hardware/cable testing and a full playthrough remain outstanding.",
+    "CI status is tracked separately for the published commit."
+  ]
+}

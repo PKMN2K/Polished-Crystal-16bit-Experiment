@@ -72,6 +72,9 @@ endif
 ifeq ($(native_link_test),1)
 RGBASMFLAGS += -DNATIVE_LINK_TEST
 endif
+ifeq ($(native_breeding_test),1)
+RGBASMFLAGS += -DNATIVE_BREEDING_TEST
+endif
 ifeq ($(filter pocket,$(MAKECMDGOALS)),pocket)
 MODIFIERS :=
 NAME := pkpc

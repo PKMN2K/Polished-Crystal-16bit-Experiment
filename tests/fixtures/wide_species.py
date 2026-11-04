@@ -60,6 +60,20 @@ def main():
             assert bc() == native-1
         invoke('GetLegacySpeciesAndFormFromNativeIDBC', bc=native, a=1)
         runtime = bc()
+        # An absent move must stop on the word sentinel, without reading into
+        # unrelated ROM data or allocating a bogus $00ff move handle.
+        put('wTempMonSpecies', runtime & 255)
+        put('wTempMonForm', runtime >> 8)
+        write('wTempMonMoves', bytes(4))
+        invoke('GetMoveIDFromIndex', hl=45)  # Growl is not a fixture Egg move.
+        invoke('InheritEggMove', de=r.A << 8)
+        assert not any(get('wTempMonMoves', 4)), 'absent Egg move was inherited'
+        bank, start = syms['WideTestEggSpeciesMoves']
+        offset = bank * 0x4000 + start % 0x4000
+        # The optional breeding fixture adds native Ember after Tackle.
+        length = 9 if 'NativeBreedingScenario' in syms else 7
+        assert data[offset+length-2:offset+length] == b'\xff\xff', 'Egg move terminator must be $ffff'
+        assert r.HL == start + length - 2, 'Egg move scanner overran its list'
         invoke('GetBaseDataFromNativeIDBC', bc=0x123)
         expected_stats = get('wCurBaseData', addr('wCurBaseDataEnd')-addr('wCurBaseData'))
         put('wCurSpecies', runtime & 255)

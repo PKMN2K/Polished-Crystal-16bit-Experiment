@@ -1244,5 +1244,9 @@ NoEggSpeciesMoves:
 if DEF(NATIVE_SPECIES_TEST)
 WideTestEggSpeciesMoves:
 	native_species_form WIDE_TEST_SPECIES, PLAIN_FORM
-	dw TACKLE, $ff
+	dw TACKLE
+if DEF(NATIVE_BREEDING_TEST)
+	dw WIDE_TEST_MOVE
+endc
+	dw $ffff
 endc
