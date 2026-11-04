@@ -76,7 +76,8 @@
   "toolchain": {
     "rgbds": "1.0.4",
     "pyboy": "2.7.0",
-    "python": "3.12"
+    "python": "3.12",
+    "pillow": "13.0.0"
   },
   "gameplay": {
     "species": "0x2ff",
@@ -313,7 +314,7 @@
     "no added production roster/move content or old-save importer"
   ],
   "source_sha256": {
-    ".github/workflows/16bit-migration.yml": "03d82a7be87beaf18ed4d17f90f79e0ada476f7b8b4f5d78828b3db672d9600f",
+    ".github/workflows/16bit-migration.yml": "c3ebdda1f697e36daffa2f75882732fdb327d21ec3d734462b267e54f30b0018",
     "Makefile": "b2498c02e5c26f70cef1435c764baced045a597e7081bbf86a78a17b842998f9",
     "engine/events/pokerus/pokerus.asm": "39597d03c8dbe64d17f64ed8e560c2242af2eb01ce1599551c68ddcf302945b9",
     "engine/overworld/scripting.asm": "66e7e840bb705333340d8b3b6d7c42f42f9cf85f7f545c2c217d90562b53176d",

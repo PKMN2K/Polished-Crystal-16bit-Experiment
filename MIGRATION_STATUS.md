@@ -10,7 +10,7 @@ Branch: `migration/danielolivaw-16bit` in
 - Polished Crystal source: `Rangi42/polishedcrystal@bd535b89f8e1337151b715f76a235296c26a60c7`.
 - Requested donor: `DanielOlivaw/pokecrystal16@ace283e879e8dd683fc0ccc26e8b85e70dc72313`.
 - Compatible Polished adapters reused from `migration/battle-party-readers@f2089e9e6580c0113217c13db4bdee4ec39db28c`.
-- Toolchain: RGBDS 1.0.4, PyBoy 2.7.0, Python 3.12.
+- Toolchain: RGBDS 1.0.4, PyBoy 2.7.0, Python 3.12; Pillow 13.0.0 for gameplay screenshots.
 
 The donor shares the original aaaaaa123456789/pokecrystal16 index architecture.
 Conversion-table macros, bank-safe home wrappers, table allocation and indirect
@@ -187,6 +187,7 @@ python3 tests/test_native_move_ids.py polishedcrystal-3.2.3.gbc
 python3 tests/test_native_link_packets.py polishedcrystal-3.2.3.gbc
 make tidy
 make native-test NATIVE_TEST_SPECIES=767 native_move_test=1 NATIVE_TEST_MOVE=64769 native_gameplay_test=1
+python3 -m pip install pyboy==2.7.0 Pillow==13.0.0
 python3 tests/fixtures/native_gameplay.py polishedcrystal-native-test-3.2.3.gbc
 ```
 

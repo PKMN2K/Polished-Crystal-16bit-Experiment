@@ -61,6 +61,9 @@ jobs:
       - name: Install CPU test dependency
         if: matrix.tests || matrix.fixture || matrix.moves
         run: python -m pip install pyboy==2.7.0
+      - name: Install gameplay screenshot dependency
+        if: matrix.gameplay
+        run: python -m pip install Pillow==13.0.0
       - name: Audit move ID boundaries
         run: python tools/audit_move_ids.py
       - name: Audit hook safety
